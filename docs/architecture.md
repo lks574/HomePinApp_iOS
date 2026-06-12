@@ -54,6 +54,16 @@ status: draft
 > 가드(@Observable 가 @Model 보유 금지)" 규칙을 **대체**한다. 로컬 SwiftData 직결이라
 > 영속화 전용 service 계층은 두지 않는다.
 
+### 데이터 모델 / 마이그레이션
+
+- 위치·물건 데이터 모델(Space/Area/Spot/Item/Category/Tag)은 위키 결정 노트
+  `docs/wiki/Decision/2026-06-12-위치-물건-데이터모델.md` 참고.
+- 마이그레이션 방침은 `docs/wiki/Decision/2026-06-12-swiftdata-마이그레이션-방침.md`:
+  **개발 단계는 파괴적 리셋**(`VersionedSchema` 없이, `DEBUG` 에서 스키마 불일치 시
+  스토어 자동 삭제·재생성), **첫 릴리스 때 `SchemaV1` 동결 + `SchemaMigrationPlan`
+  도입**. `ModelContainer` 생성은 단일 팩토리(`AppModelContainer`)에 모은다. 변경은
+  가산적 우선, 이름 변경은 `@Attribute(originalName:)`.
+
 ### 테스트 정책
 
 테스트는 개발 초기에 작성하지 않고 후반 테스트 단계에서 작성한다. 상세는 `CLAUDE.md`
