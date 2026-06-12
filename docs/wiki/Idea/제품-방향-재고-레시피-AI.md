@@ -56,7 +56,7 @@ status: draft
 ## 결정 / 미정
 
 - ✅ 식재료 모델: **Item 통합(a)** — [[2026-06-12-식재료-모델-Item-통합]]
-- ⬜ `Recipe` 모델 설계(재료 라인·단계·연동 방식)
+- ✅ `Recipe` 모델 설계 — [[2026-06-12-레시피-모델]] (재료=@Model, 단계=Codable값)
 - ⬜ 홈 내부 push/modal 네비게이션(typed Route/Router 여부)
 - ⬜ AI 한국어/기기 지원 범위·fallback UX 구체화
 
