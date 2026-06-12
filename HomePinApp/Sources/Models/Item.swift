@@ -70,6 +70,17 @@ final class Item {
     return parts.compactMap { $0 }.joined(separator: " > ")
   }
 
+  /// 유통기한까지 남은 일수(없으면 nil).
+  var daysUntilExpiry: Int? {
+    expiresAt.map { Int($0.timeIntervalSince(.now) / 86_400) }
+  }
+
+  /// 유통기한 임박(0~3일, 지난 것 제외)인가.
+  var isExpiringSoon: Bool {
+    guard let days = daysUntilExpiry else { return false }
+    return days >= 0 && days <= 3
+  }
+
   /// 이름 정규화: 소문자 + 앞뒤/연속 공백 정리. (동의어 사전은 후속.)
   static func normalize(_ raw: String) -> String {
     raw.lowercased()

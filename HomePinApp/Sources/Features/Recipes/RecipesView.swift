@@ -1,9 +1,6 @@
 import SwiftData
 import SwiftUI
 
-/// 임박 재료 소비 시점까지의 기준 일수.
-private let soonThresholdDays = 3
-
 enum IngredientStatus { case have, soon, missing }
 
 /// 레시피 — 임박 카드 + "임박 재료로 만들기" + "내 재료로 만들 수 있어요".
@@ -71,15 +68,9 @@ struct RecipesView: View {
     return filteredRecipes.filter { !soonIDs.contains($0.id) }
   }
 
-  private func isSoon(_ item: Item) -> Bool {
-    guard let exp = item.expiresAt else { return false }
-    return dDay(item) >= 0 && dDay(item) <= soonThresholdDays && exp >= .now.addingTimeInterval(-86_400)
-  }
+  private func isSoon(_ item: Item) -> Bool { item.isExpiringSoon }
 
-  private func dDay(_ item: Item) -> Int {
-    guard let exp = item.expiresAt else { return .max }
-    return Int(exp.timeIntervalSince(.now) / 86_400)
-  }
+  private func dDay(_ item: Item) -> Int { item.daysUntilExpiry ?? .max }
 
   private func status(_ ing: RecipeIngredient) -> IngredientStatus {
     guard ing.isInStock, let item = ing.item else { return .missing }
