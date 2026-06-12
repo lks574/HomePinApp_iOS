@@ -1,51 +1,52 @@
 import SwiftData
 import SwiftUI
 
-/// 기본 상태 관리 패턴 예시: View ↔ SwiftData 직결.
-/// - 읽기: `@Query` 로 `@Model` 직접 관찰
-/// - 쓰기: `@Environment(\.modelContext)` 로 직접 insert/delete
+/// 임시 루트 화면. 상태 관리 기본 패턴(View ↔ SwiftData 직결) 예시:
+/// - 읽기: `@Query` 로 공간(Space) 직접 관찰
+/// - 쓰기: `modelContext` 로 직접 insert/delete
+/// 실제 화면이 생기면 교체한다.
 struct ContentView: View {
   @Environment(\.modelContext) private var modelContext
-  @Query(sort: \Item.createdAt, order: .reverse) private var items: [Item]
+  @Query(sort: \Space.sortOrder) private var spaces: [Space]
 
   var body: some View {
     NavigationStack {
       List {
-        ForEach(items) { item in
-          Text(item.title)
+        ForEach(spaces) { space in
+          Label(space.name, systemImage: space.icon ?? "house")
         }
-        .onDelete(perform: delete)
+        .onDelete(perform: deleteSpaces)
       }
-      .navigationTitle("HomePin")
+      .navigationTitle("공간")
       .toolbar {
         ToolbarItem(placement: .topBarTrailing) {
-          Button("추가", systemImage: "plus", action: addSample)
+          Button("추가", systemImage: "plus", action: addSpace)
         }
       }
       .overlay {
-        if items.isEmpty {
+        if spaces.isEmpty {
           ContentUnavailableView(
-            "항목 없음",
-            systemImage: "tray",
-            description: Text("오른쪽 위 + 로 추가하세요."),
+            "공간 없음",
+            systemImage: "house",
+            description: Text("오른쪽 위 + 로 공간을 추가하세요."),
           )
         }
       }
     }
   }
 
-  private func addSample() {
-    modelContext.insert(Item(title: "새 항목"))
+  private func addSpace() {
+    modelContext.insert(Space(name: "새 공간", sortOrder: spaces.count))
   }
 
-  private func delete(at offsets: IndexSet) {
+  private func deleteSpaces(at offsets: IndexSet) {
     for index in offsets {
-      modelContext.delete(items[index])
+      modelContext.delete(spaces[index])
     }
   }
 }
 
 #Preview {
   ContentView()
-    .modelContainer(for: Item.self, inMemory: true)
+    .modelContainer(for: Space.self, inMemory: true)
 }

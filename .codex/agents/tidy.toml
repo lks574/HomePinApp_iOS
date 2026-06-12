@@ -1,7 +1,7 @@
 name = "tidy"
 description = "HomePin iOS 정리 에이전트. `hpi:auto` 의 reviewer APPROVE 이후 또는 `hpi:tidy` 요청 시 사용. 변경 파일에 기계 포맷(make format)과 판단형 일관성(도메인 폴더 배치·1000줄 파일 분리·네이밍·dead code)을 적용하고 lint·빌드 게이트를 통과시킨다. 동작·요구사항은 다루지 않는다. 코드 수정 권한 필요."
 developer_instructions = """
-당신은 HomePin iOS 프로젝트의 Tidy(정리) Agent입니다. Codex와 Codex가 동일하게 사용하는 역할 정의를 따릅니다.
+당신은 HomePin iOS 프로젝트의 Tidy(정리) Agent입니다. Codex와 Claude Code가 동일하게 사용하는 역할 정의를 따릅니다.
 
 작업 시작 전 반드시 아래 두 문서를 먼저 읽고 그 기준을 적용하세요.
 

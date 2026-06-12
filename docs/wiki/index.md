@@ -39,7 +39,8 @@ FROM #model
 SORT created ASC
 ```
 
-- (아직 없음 — `@Model` 을 추가하면 여기에 링크가 쌓인다)
+- 위치: [[Space]] ⊃ [[Area]] ⊃ [[Spot]]
+- 물건: [[Item]] — 분류 [[ItemCategory]] · 태그 [[Tag]]
 
 ## 결정 / 조사 / 아이디어
 
