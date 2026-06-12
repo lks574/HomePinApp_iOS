@@ -78,9 +78,10 @@ Tuist 단일 앱 타깃(`Project.swift`). 번들 ID `com.sro.homepinappios`. 소
 Project.swift            # Tuist manifest (단일 소스; .xcodeproj/.xcworkspace 는 생성물, git 무시)
 mise.toml                # tuist 4.192.3 핀
 HomePinApp/
-  Sources/App/           # @main App(HomePinAppApp), 루트 View(ContentView)
-  Sources/Models/        # SwiftData @Model (예: Item)
-  Sources/Features/      # (생기면) 화면당 폴더 — feature-first
+  Sources/App/           # @main App, AppModel(앱 단계), AppRootView(셸)
+  Sources/Models/        # SwiftData @Model 6종
+  Sources/Persistence/   # AppModelContainer (스키마·DEBUG 리셋)
+  Sources/Features/      # 화면당 폴더 (Splash, Home, …) — feature-first
   Sources/Shared/        # (생기면) 공용 컴포넌트/확장
   Resources/             # Assets.xcassets
 ```
@@ -88,13 +89,22 @@ HomePinApp/
 - 생성: `tuist generate`. 빌드: `xcodebuild -workspace HomePinApp.xcworkspace -scheme HomePinApp ...`.
 - 테스트 타깃은 후반 테스트 단계에서 추가한다(`CLAUDE.md` "테스트 정책").
 
+## 네비게이션 (부분 확정)
+
+- **루트 단계 전환**: 앱 셸 `AppModel.Phase`(`splash` / `home` …)을 `AppRootView` 가
+  스위치한다. 스플래시는 **분기지점** — 다음 단계 결정 로직은 `AppModel.start()` 에
+  둔다(뷰는 표시만). 단계 추가 예정: `onboarding` 등. 화면: [[Splash]] → [[Home]].
+- **화면 내부 push/modal 네비게이션은 아직 미확정** — Home 에 하위 화면(구역·물건
+  상세 등)이 생길 때 typed `Route` + Router 도입 여부를 정한다. 그 전까지 각 화면은
+  자체 `NavigationStack` 으로 충분.
+
 ## 미확정 (정해지면 작성)
 
 > [!note] 작성 예정
 > 정해지는 대로 아래를 작성하고, 진입점 규칙 요약은 `CLAUDE.md` "아키텍처" 섹션에
 > 반영한다.
 
-- 네비게이션 — push/modal 소유권, 라우팅 규칙
+- 화면 내부 push/modal 네비게이션 — typed `Route`/Router 도입 여부·소유권
 - 의존성 / side-effect — 알림·파일 등 비영속 외부 작업의 service 경계
   (영속화는 SwiftData 직결이라 별도 service 불필요)
 - 금지 패턴 — 도입하지 않을 안티패턴

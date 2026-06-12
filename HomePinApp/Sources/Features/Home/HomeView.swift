@@ -1,11 +1,9 @@
 import SwiftData
 import SwiftUI
 
-/// 임시 루트 화면. 상태 관리 기본 패턴(View ↔ SwiftData 직결) 예시:
-/// - 읽기: `@Query` 로 공간(Space) 직접 관찰
-/// - 쓰기: `modelContext` 로 직접 insert/delete
-/// 실제 화면이 생기면 교체한다.
-struct ContentView: View {
+/// 홈 — 스플래시 다음의 메인 화면. 현재는 공간(Space) 목록(임시).
+/// 상태 관리 기본 패턴(View ↔ SwiftData 직결): 읽기 `@Query`, 쓰기 `modelContext`.
+struct HomeView: View {
   @Environment(\.modelContext) private var modelContext
   @Query(sort: \Space.sortOrder) private var spaces: [Space]
 
@@ -17,7 +15,7 @@ struct ContentView: View {
         }
         .onDelete(perform: deleteSpaces)
       }
-      .navigationTitle("공간")
+      .navigationTitle("홈")
       .toolbar {
         ToolbarItem(placement: .topBarTrailing) {
           Button("추가", systemImage: "plus", action: addSpace)
@@ -47,6 +45,6 @@ struct ContentView: View {
 }
 
 #Preview {
-  ContentView()
+  HomeView()
     .modelContainer(for: Space.self, inMemory: true)
 }
