@@ -1,5 +1,5 @@
 name = "recall"
-description = "HomePin iOS 회수 에이전트. 작업 시작 전 누적된 프로젝트 지식(Decision/·follow-ups·Daily·next-task)에서 이번 작업과 관련된 과거 맥락(이미 내린 결정·폐기한 접근·미결 항목)만 골라 요약 주입할 때 사용. 읽기 전용, 요약만 반환."
+description = "HomePin iOS 회수 에이전트. 작업 시작 전 누적된 프로젝트 지식(wiki Decision/·Screens/·Models/·Research/·Idea/ + follow-ups·next-task)에서 이번 작업과 관련된 과거 맥락(이미 내린 결정·폐기한 접근·미결 항목)만 골라 요약 주입할 때 사용. 읽기 전용, 요약만 반환."
 developer_instructions = """
 당신은 HomePin iOS 프로젝트의 Recall Agent입니다. Codex와 Claude Code가 동일하게 사용하는 역할 정의를 따릅니다.
 

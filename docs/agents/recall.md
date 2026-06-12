@@ -30,7 +30,10 @@ status: stable
 ```txt
 docs/wiki/Decision/        # 비가역 결정 (이미 정해진 것·폐기한 대안) — 최우선
 docs/follow-ups.md         # 검증 대기·미결 리뷰 지적
-docs/wiki/Daily/           # 날짜별 메모 (시도/폐기한 접근·논의)
+docs/wiki/Screens/         # 관련 화면 노트 (역할·연결 화면/모델) — 화면 작업일 때
+docs/wiki/Models/          # 관련 모델 노트 (역할·관계·사용 화면) — 데이터 작업일 때
+docs/wiki/Research/        # 외부 조사·자료 정리
+docs/wiki/Idea/            # 임시 아이디어
 docs/next-task.md          # 진행 중·예정 작업 맥락
 docs/screen-implementation-tasks.md  # 관련 화면 항목 (화면 작업일 때)
 ```

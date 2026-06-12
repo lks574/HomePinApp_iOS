@@ -33,7 +33,6 @@ HomePin iOS 개발 워크플로의 전체 그림이다. 각 역할의 세부 절
 | reviewer | 단일 패스 리뷰 + AI 실패 5패턴 가드 | 읽기 전용 | `hpi:review` | [[reviewer]] |
 | hunt | 5렌즈 병렬 리뷰 + 반증 검증 (깊은 리뷰) | 읽기 전용 | `hpi:hunt` | [[hunt]] |
 | tidy | 포맷·구조 일관성 정리 | 코드(스타일만) | `hpi:tidy` | [[tidy]] |
-| daily | 하루치 세션 정리·문서 초안 | 문서만 | `hpi:daily` | [[daily]] |
 
 ## hpi:auto 메인 플로우
 
@@ -74,17 +73,17 @@ flowchart TD
 flowchart LR
     subgraph K[지식 레이어]
         DOC[docs/<br/>next-task · follow-ups<br/>screen-tasks · architecture]
-        WIKI[docs/wiki/<br/>Decision · Daily · Research]
+        WIKI[docs/wiki/<br/>Screens · Models<br/>Decision · Research · Idea]
         MEM[memory/<br/>사용자 피드백]
     end
     RECALL[recall<br/>작업 전 회수] -->|읽기| K
     K -->|주입| FLOW[planner · developer]
-    FLOW -->|작업 후 갱신| K
-    DAILY[daily] -->|세션 정리| K
+    FLOW -->|작업 후 갱신<br/>화면·모델 노트| K
 ```
 
-선순환: developer·daily 가 결정·진도를 문서에 쌓고 → recall 이 다음 작업 시작 때
-꺼내 주입 → 같은 실수·폐기한 접근 반복을 막는다 ("탐색 품질이 결과 품질을 결정").
+선순환: developer 가 결정·진도·화면/모델 노트를 문서에 쌓고 → recall 이 다음 작업
+시작 때 꺼내 주입 → 같은 실수·폐기한 접근 반복을 막는다 ("탐색 품질이 결과 품질을
+결정").
 
 지식 → 코드 문서 동기화 규칙은 `CLAUDE.md` "문서 동기화" 표를 따른다.
 
@@ -93,13 +92,13 @@ flowchart LR
 `hpi:auto` 만 체인 전체를 돈다. 나머지는 한 역할만 콕 집어 실행한다.
 
 ```txt
-hpi:plan    기획/범위        hpi:hunt    다중 렌즈 깊은 리뷰
-hpi:dev     구현             hpi:tidy    스타일·구조 정리
-hpi:review  단일 리뷰        hpi:recall  과거 맥락 회수
-hpi:auto    전체 자동 진행    hpi:daily   하루치 세션 정리
+hpi:plan    기획/범위        hpi:tidy    스타일·구조 정리
+hpi:dev     구현             hpi:recall  과거 맥락 회수
+hpi:review  단일 리뷰        hpi:hunt    다중 렌즈 깊은 리뷰
+hpi:auto    전체 자동 진행
 ```
 
-`hpi:daily` 와 `hpi:recall` 은 체인 밖 보조 워크플로다.
+`hpi:recall` 은 체인 밖 보조 워크플로다.
 
 ## Claude / Codex 공유
 

@@ -24,6 +24,9 @@ HomePin iOS의 실제 코드와 필요한 문서를 구현하는 에이전트입
 - 도메인 로직·비동기 동작을 (나중에) 테스트 가능한 구조로 분리한다.
 - 화면 구현 전 `docs/screen-map.md`, `docs/screen-implementation-tasks.md`,
   프로토타입을 확인한다.
+- **화면·`@Model` 을 추가·변경하면 `docs/wiki/Screens/`·`docs/wiki/Models/` 의 해당
+  노트를 코드와 함께 생성·갱신한다** (역할·생성일·연결 화면/모델을 `[[위키링크]]` 와
+  태그로 표기 — `docs/wiki/notes-guide.md` 템플릿/규약). 별도 데일리 워크플로 없음.
 - 구현 중 제품/기술 결정이 바뀌면 관련 문서도 함께 업데이트한다.
 
 ## 필수 컨텍스트
@@ -87,7 +90,8 @@ Tests
    로직·service contract 를 대상으로 한 번에 작성). 다만 도메인 로직·의존성은 나중에
    테스트하기 쉽게 분리해 둔다.
 6. 문서 업데이트 필요 여부를 확인한다.
-7. 구현한 화면의 상태를 `docs/screen-implementation-tasks.md`에 반영한다.
+7. 구현한 화면의 상태를 `docs/screen-implementation-tasks.md`에 반영하고, 추가·변경된
+   화면·모델의 `docs/wiki/Screens|Models` 노트를 생성·갱신한다(연결 링크·태그 포함).
 8. 완료한 작업과 다음 작업에 맞춰 `docs/next-task.md`를 갱신한다.
 9. 검증 리듬(아래 "검증" 참고)에 따라 의미 단위마다 기계 검증을 통과시킨다.
 
