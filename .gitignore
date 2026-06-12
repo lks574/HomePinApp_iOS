@@ -1,0 +1,90 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+
+# Xcode
+DerivedData/
+Derived/
+build/
+Build/
+*.xcuserstate
+*.xcworkspace/xcuserdata/
+*.xcodeproj/xcuserdata/
+*.xcodeproj/project.xcworkspace/xcuserdata/
+*.moved-aside
+*.xccheckout
+*.xcscmblueprint
+*.xcresult
+*.xcactivitylog
+
+# Xcode user settings
+xcuserdata/
+*.xcuserdatad/
+
+# Swift Package Manager
+.build/
+.build_xc/
+.swiftpm/
+
+# Tuist
+Tuist/.build/
+Tuist/Dependencies/
+Tuist/ProjectDescriptionHelpers/.build/
+Tuist/ProjectDescriptionHelpers/Package.resolved
+.tuist-cache/
+.tuist-derived/
+.tuist-generated/
+
+# Generated projects and workspaces (Tuist generate 산출물)
+*.xcodeproj/
+*.xcworkspace/
+
+# CocoaPods / Carthage
+Pods/
+Carthage/Build/
+
+# Fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/**/*.png
+fastlane/test_output/
+
+# Secrets and local configuration
+*.env
+*.env.*
+!.env.example
+*.xcconfig.local
+*.local.xcconfig
+GoogleService-Info.plist
+.mise.local.toml
+.netrc
+
+# Logs
+*.log
+
+# Archives and symbols
+*.xcarchive
+*.dSYM
+*.dSYM.zip
+*.ipa
+*.app
+
+# Playgrounds
+timeline.xctimeline
+playground.xcworkspace
+
+# Editors
+.vscode/
+.idea/
+*.swp
+
+# Claude Code (세션 워크트리·로컬 설정)
+.claude/worktrees/
+.claude/settings.local.json
+
+# Obsidian
+.obsidian/
+.trash/
+.obsidian.vimrc
