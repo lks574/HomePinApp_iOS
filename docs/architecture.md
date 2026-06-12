@@ -89,22 +89,23 @@ HomePinApp/
 - 생성: `tuist generate`. 빌드: `xcodebuild -workspace HomePinApp.xcworkspace -scheme HomePinApp ...`.
 - 테스트 타깃은 후반 테스트 단계에서 추가한다(`CLAUDE.md` "테스트 정책").
 
-## 네비게이션 (부분 확정)
+## 네비게이션 (확정)
 
-- **루트 단계 전환**: 앱 셸 `AppModel.Phase`(`splash` / `home` …)을 `AppRootView` 가
-  스위치한다. 스플래시는 **분기지점** — 다음 단계 결정 로직은 `AppModel.start()` 에
-  둔다(뷰는 표시만). 단계 추가 예정: `onboarding` 등. 화면: [[Splash]] → [[Home]].
-- **화면 내부 push/modal 네비게이션은 아직 미확정** — Home 에 하위 화면(구역·물건
-  상세 등)이 생길 때 typed `Route` + Router 도입 여부를 정한다. 그 전까지 각 화면은
-  자체 `NavigationStack` 으로 충분.
+상세: `docs/wiki/Decision/2026-06-12-네비게이션-UI구조.md`.
+
+- **루트 단계 전환**: `AppModel.Phase`(`splash` → `home`)을 `AppRootView` 가 스위치.
+  스플래시는 분기지점(`AppModel.start()`).
+- **탭바 5-슬롯**: 홈 / 장소 / [중앙 🎤 NL 추가] / 레시피 / 설정. 중앙은 목적지가
+  아니라 입력 시트(modal).
+- **화면 내부 push 는 각 탭의 `NavigationStack`** (장소→장소상세→물건상세 등). typed
+  `Route`/Router 전역화는 도입하지 않음(탭별 스택으로 충분).
+- **위치 2레벨 UI ↔ 3레벨 모델**: `Space` 숨김(단일 기본), UI "장소"=`Area`,
+  "수납공간"=`Spot`.
 
 ## 미확정 (정해지면 작성)
 
 > [!note] 작성 예정
-> 정해지는 대로 아래를 작성하고, 진입점 규칙 요약은 `CLAUDE.md` "아키텍처" 섹션에
-> 반영한다.
 
-- 화면 내부 push/modal 네비게이션 — typed `Route`/Router 도입 여부·소유권
 - 의존성 / side-effect — 알림·파일 등 비영속 외부 작업의 service 경계
   (영속화는 SwiftData 직결이라 별도 service 불필요)
 - 금지 패턴 — 도입하지 않을 안티패턴

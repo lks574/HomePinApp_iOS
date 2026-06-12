@@ -12,7 +12,7 @@ struct AppRootView: View {
         SplashView()
           .transition(.opacity)
       case .home:
-        HomeView()
+        RootTabView()
           .transition(.opacity)
       }
     }

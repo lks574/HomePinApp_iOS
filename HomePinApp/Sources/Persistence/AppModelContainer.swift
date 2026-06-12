@@ -16,17 +16,19 @@ enum AppModelContainer {
     Recipe.self, RecipeIngredient.self,
   ]
 
+  @MainActor
   static func make() -> ModelContainer {
     let schema = Schema(models)
     let configuration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
+    let container: ModelContainer
     do {
-      return try ModelContainer(for: schema, configurations: configuration)
+      container = try ModelContainer(for: schema, configurations: configuration)
     } catch {
       #if DEBUG
       // 개발 단계 파괴적 리셋: 스토어를 지우고 한 번 더 시도한다.
       eraseStore(at: configuration.url)
       do {
-        return try ModelContainer(for: schema, configurations: configuration)
+        container = try ModelContainer(for: schema, configurations: configuration)
       } catch {
         fatalError("ModelContainer 재생성 실패: \(error)")
       }
@@ -34,6 +36,11 @@ enum AppModelContainer {
       fatalError("ModelContainer 생성 실패: \(error)")
       #endif
     }
+    #if DEBUG
+    // 개발 중 빈 스토어면 시드 주입.
+    SeedData.populateIfEmpty(container.mainContext)
+    #endif
+    return container
   }
 
   #if DEBUG
