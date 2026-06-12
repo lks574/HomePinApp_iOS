@@ -67,15 +67,16 @@ references/prototypes/homepin
 
 ## 권장 구조
 
-> [!note] 폴더/모듈 구조는 미확정 (Tuist `Project.swift` 구성과 함께 정한다).
-> 아래는 임시 예시이며 확정되면 교체한다.
+Tuist 단일 앱 타깃. 소스는 `HomePinApp/Sources/` 아래. (상세는 `docs/architecture.md`
+"프로젝트 구성 / 폴더".)
 
 ```txt
-Sources/App
-Sources/Features
-Sources/Models
-Sources/Shared
-Tests
+Project.swift            # Tuist manifest
+HomePinApp/Sources/App        # @main App, 루트 View
+HomePinApp/Sources/Models     # SwiftData @Model
+HomePinApp/Sources/Features   # (생기면) 화면당 폴더
+HomePinApp/Sources/Shared     # (생기면) 공용 컴포넌트/확장
+HomePinApp/Resources          # Assets.xcassets
 ```
 
 ## 작업 절차

@@ -17,14 +17,19 @@ status: draft
 ## 빌드 / 검증
 
 ```bash
-tuist generate     # manifest -> .xcodeproj 생성
-# 빌드는 생성된 프로젝트로 (Makefile 정비되면 make build 로 래핑 예정)
+mise trust                    # 최초 1회, mise.toml 신뢰
+tuist generate                # Project.swift -> HomePinApp.xcworkspace 생성 (.xcodeproj 는 생성물)
+# 생성된 워크스페이스로 빌드:
+xcodebuild build \
+  -workspace HomePinApp.xcworkspace -scheme HomePinApp \
+  -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO
 ```
 
+- `tuist generate` 산출물(`*.xcworkspace`/`*.xcodeproj`/`Derived/`)은 git 무시.
+  매니페스트(`Project.swift`)만 추적한다.
 - 검증 기본은 **빌드 green**(컴파일·동작 확인). 테스트는 후반 단계에서 작성한다
   (`CLAUDE.md` "테스트 정책"). 그 전까지 `make test` 를 게이트로 강제하지 않는다.
-- 포맷·lint(`make format`/`make lint`, SwiftFormat/SwiftLint)는 도구가 정비되면
-  루트 설정을 우선 사용한다.
 
 > [!note] 작성 예정
-> Makefile/Tuist 타깃·스킴이 정비되면 정확한 명령(빌드/실행/생성)을 여기에 채운다.
+> Makefile(`make build`/`make format`/`make lint`)과 SwiftFormat/SwiftLint 설정이
+> 정비되면 명령을 래핑해 여기에 추가한다.

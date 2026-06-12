@@ -1,0 +1,4 @@
+# HomePinApp 도구 버전 핀 (mise)
+# tuist 는 프로젝트 생성/관리에 쓴다. swiftformat/swiftlint 는 정비되면 여기 핀한다.
+[tools]
+tuist = "4.192.3"

@@ -59,6 +59,25 @@ status: draft
 테스트는 개발 초기에 작성하지 않고 후반 테스트 단계에서 작성한다. 상세는 `CLAUDE.md`
 "테스트 정책" 을 단일 기준으로 한다.
 
+## 프로젝트 구성 / 폴더 (초기 확정)
+
+Tuist 단일 앱 타깃(`Project.swift`). 번들 ID `com.sro.homepinappios`. 소스는
+`HomePinApp/Sources/` 아래.
+
+```text
+Project.swift            # Tuist manifest (단일 소스; .xcodeproj/.xcworkspace 는 생성물, git 무시)
+mise.toml                # tuist 4.192.3 핀
+HomePinApp/
+  Sources/App/           # @main App(HomePinAppApp), 루트 View(ContentView)
+  Sources/Models/        # SwiftData @Model (예: Item)
+  Sources/Features/      # (생기면) 화면당 폴더 — feature-first
+  Sources/Shared/        # (생기면) 공용 컴포넌트/확장
+  Resources/             # Assets.xcassets
+```
+
+- 생성: `tuist generate`. 빌드: `xcodebuild -workspace HomePinApp.xcworkspace -scheme HomePinApp ...`.
+- 테스트 타깃은 후반 테스트 단계에서 추가한다(`CLAUDE.md` "테스트 정책").
+
 ## 미확정 (정해지면 작성)
 
 > [!note] 작성 예정
@@ -66,7 +85,6 @@ status: draft
 > 반영한다.
 
 - 네비게이션 — push/modal 소유권, 라우팅 규칙
-- 폴더/모듈 구조 — feature-first 등 (Tuist `Project.swift` 구성과 함께)
 - 의존성 / side-effect — 알림·파일 등 비영속 외부 작업의 service 경계
   (영속화는 SwiftData 직결이라 별도 service 불필요)
 - 금지 패턴 — 도입하지 않을 안티패턴

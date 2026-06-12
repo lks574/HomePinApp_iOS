@@ -109,10 +109,27 @@ status: draft
 즉 화면 대부분은 직결, 복잡한 에디터/플로우만 모델 하나를 갖는다. 모든 작은 SwiftUI
 컴포넌트를 모델로 만들지 않는다.
 
+### 프로젝트 구성 / 폴더 (초기 확정)
+
+Tuist 단일 앱 타깃으로 시작한다(`Project.swift`). 소스는 `HomePinApp/Sources/`
+아래 둔다.
+
+```text
+Project.swift            # Tuist manifest (단일 소스, .xcodeproj 는 생성물)
+mise.toml                # tuist 버전 핀
+HomePinApp/
+  Sources/
+    App/                 # @main App, 루트 View
+    Models/              # SwiftData @Model
+    Features/            # (생기면) 화면당 폴더
+    Shared/              # (생기면) 공용 컴포넌트/확장
+  Resources/             # Assets.xcassets 등
+```
+
+생성/빌드: `tuist generate` → Xcode, 또는 `xcodebuild ... -scheme HomePinApp`.
+`Features/`·`Shared/` 는 코드가 생기면 추가한다(feature-first).
+
 > [!note] 미확정 (정해지면 이 섹션에 추가)
-> 아래는 아직 정하지 않았다. 확정 전까지 관련 규칙은 강제하지 않는다.
->
-> - 폴더/모듈 구조 (feature-first 등) — Tuist `Project.swift` 구성과 함께
 > - 네비게이션 — push/modal 소유권, 라우팅 규칙
 > - 의존성 / side-effect — 알림·파일 등 비영속 외부 작업의 service 경계 (영속화는
 >   SwiftData 직결이라 별도 service 불필요)
