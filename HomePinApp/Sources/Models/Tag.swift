@@ -1,7 +1,8 @@
 import Foundation
 import SwiftData
 
-/// 태그 — 물건 자유 라벨. 물건과 N:N (inverse 는 Item.tags 에 선언).
+/// 태그 — 자유 라벨. 물건(`Item`)·레시피(`Recipe`)와 N:N 으로 공유한다.
+/// (inverse 는 각각 `Item.tags`·`Recipe.tags` 에 선언.)
 @Model
 final class Tag {
   @Attribute(.unique) var id: UUID
@@ -10,6 +11,7 @@ final class Tag {
   var updatedAt: Date
 
   var items: [Item]
+  var recipes: [Recipe]
 
   init(
     id: UUID = UUID(),
@@ -22,5 +24,6 @@ final class Tag {
     self.createdAt = createdAt
     self.updatedAt = updatedAt
     self.items = []
+    self.recipes = []
   }
 }

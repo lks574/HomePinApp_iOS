@@ -8,7 +8,7 @@ status: in-progress
 
 # Tag (태그)
 
-물건 자유 라벨. 물건과 N:N(다대다). 재사용·이름변경·자동완성 용도.
+자유 라벨. 물건·레시피와 N:N(다대다)로 **공유**. 재사용·이름변경·자동완성 용도.
 
 ## 보유 데이터
 
@@ -21,6 +21,7 @@ status: in-progress
 ## 관계
 
 - ↔ [[Item]] : `items: [Item]` (N:N, inverse 는 `Item.tags` 에 선언)
+- ↔ [[Recipe]] : `recipes: [Recipe]` (N:N, inverse 는 `Recipe.tags` 에 선언)
 
 ## 메모
 

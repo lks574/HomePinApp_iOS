@@ -13,6 +13,7 @@ enum AppModelContainer {
   /// 스키마에 등록할 모델. 새 `@Model` 추가 시 여기에 등록한다.
   static let models: [any PersistentModel.Type] = [
     Space.self, Area.self, Spot.self, Item.self, ItemCategory.self, Tag.self,
+    Recipe.self, RecipeIngredient.self,
   ]
 
   static func make() -> ModelContainer {

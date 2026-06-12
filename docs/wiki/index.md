@@ -41,6 +41,7 @@ SORT created ASC
 
 - 위치: [[Space]] ⊃ [[Area]] ⊃ [[Spot]]
 - 물건: [[Item]] — 분류 [[ItemCategory]] · 태그 [[Tag]]
+- 레시피: [[Recipe]] ⊃ [[RecipeIngredient]] (재고 [[Item]] 매칭)
 
 ## 결정 / 조사 / 아이디어
 

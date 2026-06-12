@@ -17,6 +17,7 @@ nullify 로 보존된다.
 | --- | --- | --- |
 | `id` | `UUID` | `@Attribute(.unique)` |
 | `name` | `String` | `#Index` |
+| `normalizedName` | `String` | `#Index`, 매칭/검색 키(소문자·공백정리). `Item.normalize()` |
 | `quantity` | `Int` | 기본 1 |
 | `photoData` | `Data?` | `@Attribute(.externalStorage)` |
 | `memo` | `String?` | |
@@ -30,6 +31,7 @@ nullify 로 보존된다.
 - → [[Spot]] : `spot: Spot?` (선택)
 - → [[ItemCategory]] : `category: ItemCategory?` (분류 1개)
 - ↔ [[Tag]] : `tags: [Tag]` **N:N** (inverse 를 여기 선언)
+- ↔ [[RecipeIngredient]] : `usedInIngredients` `.nullify` (이 물건을 쓰는 레시피 재료 — 역참조·임박 추천)
 
 ## 사용 화면
 
