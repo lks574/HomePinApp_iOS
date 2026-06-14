@@ -52,15 +52,7 @@ struct CaptureSheet: View {
 
         Spacer()
 
-        Button(action: add) {
-          Text("추가")
-            .font(.system(size: 17, weight: .bold)).foregroundStyle(.white)
-            .frame(maxWidth: .infinity).frame(height: 52)
-            .background(canAdd ? AppColor.accent : AppColor.textMuted,
-                        in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-        }
-        .buttonStyle(.plain)
-        .disabled(!canAdd)
+        AppFullWidthPrimaryButton(title: "추가", isEnabled: canAdd, action: add)
       }
       .padding(20)
       .background(AppColor.screenBackground)

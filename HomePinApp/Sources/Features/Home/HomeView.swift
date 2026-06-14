@@ -15,16 +15,17 @@ struct HomeView: View {
             .foregroundStyle(AppColor.textPrimary)
             .padding(.bottom, 14)
 
-          searchBar.padding(.bottom, 22)
+          AppSearchBar(placeholder: "무엇을 찾으세요?")
+            .padding(.bottom, 22)
 
           if !expiringItems.isEmpty {
             expiringCard.padding(.bottom, 26)
           }
 
-          sectionTitle("장소 바로가기")
+          AppSectionTitle(title: "장소 바로가기")
           placeShortcuts.padding(.bottom, 26)
 
-          sectionTitle("최근 추가")
+          AppSectionTitle(title: "최근 추가")
           recentList
         }
         .padding(20)
@@ -40,25 +41,6 @@ struct HomeView: View {
   }
 
   private var recentItems: [Item] { Array(items.prefix(5)) }
-
-  private func sectionTitle(_ text: String) -> some View {
-    Text(text)
-      .font(.system(size: 13, weight: .bold))
-      .foregroundStyle(AppColor.textTertiary)
-      .padding(.bottom, 12)
-      .frame(maxWidth: .infinity, alignment: .leading)
-  }
-
-  private var searchBar: some View {
-    HStack(spacing: 10) {
-      Image(systemName: "magnifyingglass").foregroundStyle(AppColor.textMuted)
-      Text("무엇을 찾으세요?").foregroundStyle(AppColor.textMuted)
-      Spacer()
-    }
-    .font(.system(size: 16))
-    .padding(.horizontal, 15).frame(height: 48)
-    .appCard(radius: 14)
-  }
 
   private var expiringCard: some View {
     VStack(alignment: .leading, spacing: 10) {
@@ -88,11 +70,7 @@ struct HomeView: View {
       HStack(spacing: 10) {
         ForEach(areas) { area in
           VStack(spacing: 6) {
-            Text(String(area.name.prefix(1)))
-              .font(.system(size: 17, weight: .bold))
-              .foregroundStyle(AppColor.badgeText)
-              .frame(width: 50, height: 50)
-              .background(AppColor.badgeBackground, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            AppInitialBadge(text: area.name, size: 50, radius: 14)
             Text(area.name).font(.system(size: 12.5, weight: .semibold)).foregroundStyle(AppColor.textSecondary)
           }
         }

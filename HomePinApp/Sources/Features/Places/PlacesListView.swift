@@ -45,17 +45,7 @@ struct PlacesListView: View {
         .font(.system(size: 34, weight: .heavy))
         .foregroundStyle(AppColor.textPrimary)
       Spacer()
-      Button(action: addPlace) {
-        HStack(spacing: 6) {
-          Image(systemName: "plus").font(.system(size: 13, weight: .bold))
-          Text("장소 추가").font(.system(size: 14, weight: .bold))
-        }
-        .foregroundStyle(.white)
-        .padding(.horizontal, 14)
-        .frame(height: 36)
-        .background(AppColor.accent, in: Capsule())
-      }
-      .buttonStyle(.plain)
+      AppPrimaryButton(title: "장소 추가", systemImage: "plus", action: addPlace)
     }
     .padding(.bottom, 4)
   }
@@ -81,11 +71,7 @@ private struct PlaceCard: View {
   var body: some View {
     VStack(alignment: .leading, spacing: 0) {
       HStack {
-        Text(String(area.name.prefix(1)))
-          .font(.system(size: 17, weight: .bold))
-          .foregroundStyle(AppColor.badgeText)
-          .frame(width: 42, height: 42)
-          .background(AppColor.badgeBackground, in: RoundedRectangle(cornerRadius: 13, style: .continuous))
+        AppInitialBadge(text: area.name)
         Spacer()
         Text("\(areaItemCount(area))")
           .font(.system(size: 13, weight: .bold))

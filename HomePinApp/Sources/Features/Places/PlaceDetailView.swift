@@ -11,7 +11,8 @@ struct PlaceDetailView: View {
       VStack(alignment: .leading, spacing: 0) {
         backButton
         headerRow
-        searchBar
+        AppSearchBar(placeholder: "\(area.name)에서 찾기", style: .field)
+          .padding(.vertical, 20)
         ForEach(sortedSpots) { spot in
           spotCard(title: spot.name, items: spot.items)
         }
@@ -39,11 +40,7 @@ struct PlaceDetailView: View {
 
   private var headerRow: some View {
     HStack(spacing: 14) {
-      Text(String(area.name.prefix(1)))
-        .font(.system(size: 22, weight: .bold))
-        .foregroundStyle(AppColor.badgeText)
-        .frame(width: 54, height: 54)
-        .background(AppColor.badgeBackground, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+      AppInitialBadge(text: area.name, size: 54, fontSize: 22, radius: 16)
       VStack(alignment: .leading, spacing: 2) {
         Text(area.name)
           .font(.system(size: 30, weight: .heavy))
@@ -54,19 +51,6 @@ struct PlaceDetailView: View {
       }
       Spacer()
     }
-  }
-
-  private var searchBar: some View {
-    HStack(spacing: 9) {
-      Image(systemName: "magnifyingglass").foregroundStyle(AppColor.textTertiary)
-      Text("\(area.name)에서 찾기").foregroundStyle(AppColor.textTertiary)
-      Spacer()
-    }
-    .font(.system(size: 16))
-    .padding(.horizontal, 14)
-    .frame(height: 44)
-    .background(AppColor.fieldBackground, in: RoundedRectangle(cornerRadius: 13, style: .continuous))
-    .padding(.vertical, 20)
   }
 
   private var sortedSpots: [Spot] {

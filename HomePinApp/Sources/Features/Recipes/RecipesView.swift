@@ -1,8 +1,6 @@
 import SwiftData
 import SwiftUI
 
-enum IngredientStatus { case have, soon, missing }
-
 /// 레시피 — 임박 카드 + "임박 재료로 만들기" + "내 재료로 만들 수 있어요".
 struct RecipesView: View {
   @Query(sort: \Recipe.title) private var recipes: [Recipe]
@@ -21,7 +19,8 @@ struct RecipesView: View {
             .font(.system(size: 14)).foregroundStyle(AppColor.textTertiary)
             .padding(.bottom, 16)
 
-          searchBar
+          AppSearchBar(placeholder: "레시피 · 재료 검색")
+            .padding(.bottom, 14)
           cuisineChips
           dishChips
 
@@ -30,14 +29,14 @@ struct RecipesView: View {
           }
 
           if !soonRecipes.isEmpty {
-            sectionTitle("임박 재료로 만들기")
+            AppSectionTitle(title: "임박 재료로 만들기", uppercase: true)
             VStack(spacing: 13) {
               ForEach(soonRecipes) { RecipeSoonCard(recipe: $0, status: status, dDay: dDay) }
             }
             .padding(.bottom, 26)
           }
 
-          sectionTitle("내 재료로 만들 수 있어요")
+          AppSectionTitle(title: "내 재료로 만들 수 있어요", uppercase: true)
           VStack(spacing: 13) {
             ForEach(otherRecipes) { RecipeCompactRow(recipe: $0, haveCount: haveCount) }
           }
@@ -72,7 +71,7 @@ struct RecipesView: View {
 
   private func dDay(_ item: Item) -> Int { item.daysUntilExpiry ?? .max }
 
-  private func status(_ ing: RecipeIngredient) -> IngredientStatus {
+  private func status(_ ing: RecipeIngredient) -> AppIngredientChipState {
     guard ing.isInStock, let item = ing.item else { return .missing }
     return isSoon(item) ? .soon : .have
   }
@@ -83,38 +82,11 @@ struct RecipesView: View {
 
   // MARK: 조각
 
-  private func sectionTitle(_ text: String) -> some View {
-    Text(text)
-      .font(.system(size: 13, weight: .bold))
-      .foregroundStyle(AppColor.textTertiary)
-      .textCase(.uppercase)
-      .padding(.bottom, 12)
-      .frame(maxWidth: .infinity, alignment: .leading)
-  }
-
-  private var searchBar: some View {
-    HStack(spacing: 10) {
-      Image(systemName: "magnifyingglass").foregroundStyle(AppColor.textMuted)
-      Text("레시피 · 재료 검색").foregroundStyle(AppColor.textMuted)
-      Spacer()
-    }
-    .font(.system(size: 16))
-    .padding(.horizontal, 15).frame(height: 46)
-    .appCard(radius: 14)
-    .padding(.bottom, 14)
-  }
-
   private var cuisineChips: some View {
     ScrollView(.horizontal, showsIndicators: false) {
       HStack(spacing: 8) {
         ForEach(cuisines, id: \.self) { c in
-          let on = cuisine == c
-          Text(c)
-            .font(.system(size: 14, weight: .semibold))
-            .foregroundStyle(on ? .white : AppColor.textSecondary)
-            .padding(.horizontal, 15).padding(.vertical, 8)
-            .background(on ? AppColor.accent : AppColor.card, in: Capsule())
-            .onTapGesture { cuisine = c }
+          AppFilterChip(title: c, isSelected: cuisine == c) { cuisine = c }
         }
       }
     }
@@ -125,11 +97,7 @@ struct RecipesView: View {
     ScrollView(.horizontal, showsIndicators: false) {
       HStack(spacing: 8) {
         ForEach(dishes, id: \.self) { d in
-          Text(d)
-            .font(.system(size: 14, weight: .semibold))
-            .foregroundStyle(Color(hex: 0x6F4A38))
-            .padding(.horizontal, 15).padding(.vertical, 8)
-            .overlay(Capsule().strokeBorder(Color(hex: 0xE0D3C6)))
+          AppOutlinedChip(title: d)
         }
       }
     }
@@ -164,7 +132,7 @@ struct RecipesView: View {
 
 private struct RecipeSoonCard: View {
   let recipe: Recipe
-  let status: (RecipeIngredient) -> IngredientStatus
+  let status: (RecipeIngredient) -> AppIngredientChipState
   let dDay: (Item) -> Int
 
   var body: some View {
@@ -176,10 +144,7 @@ private struct RecipeSoonCard: View {
         }
         Spacer()
         if let badge = soonBadge {
-          Text(badge)
-            .font(.system(size: 12, weight: .bold)).foregroundStyle(.white)
-            .padding(.horizontal, 10).padding(.vertical, 4)
-            .background(AppColor.accent, in: Capsule())
+          AppStatusPill(title: badge, style: .accent)
         }
       }
       chips.padding(.top, 13)
@@ -227,48 +192,14 @@ private struct RecipeSoonCard: View {
 /// 재료 칩들을 줄바꿈 배치.
 private struct FlowChips: View {
   let ingredients: [RecipeIngredient]
-  let status: (RecipeIngredient) -> IngredientStatus
+  let status: (RecipeIngredient) -> AppIngredientChipState
 
   var body: some View {
     // 간단히 가로 래핑 대신 2줄 한도 내 HStack 래핑 효과를 위해 FlowLayout 사용.
     FlowLayout(spacing: 6) {
       ForEach(ingredients) { ing in
-        IngredientChip(name: ing.name, status: status(ing))
+        AppIngredientChip(name: ing.name, state: status(ing))
       }
-    }
-  }
-}
-
-private struct IngredientChip: View {
-  let name: String
-  let status: IngredientStatus
-
-  var body: some View {
-    Text(status == .missing ? "\(name) 부족" : name)
-      .font(.system(size: 13, weight: .semibold))
-      .foregroundStyle(textColor)
-      .padding(.horizontal, 11).padding(.vertical, 5)
-      .background(background, in: Capsule())
-      .overlay {
-        if status == .missing {
-          Capsule().strokeBorder(AppColor.chipMissingBorder, style: StrokeStyle(lineWidth: 1, dash: [3]))
-        }
-      }
-  }
-
-  private var textColor: Color {
-    switch status {
-    case .have: AppColor.chipHaveText
-    case .soon: AppColor.chipSoonText
-    case .missing: AppColor.chipMissingText
-    }
-  }
-
-  private var background: Color {
-    switch status {
-    case .have: AppColor.chipHaveBackground
-    case .soon: AppColor.chipSoonBackground
-    case .missing: .clear
     }
   }
 }
@@ -284,11 +215,7 @@ private struct RecipeCompactRow: View {
         Text("\(recipe.totalMinutes ?? 0)분").font(.system(size: 13)).foregroundStyle(AppColor.textMuted)
       }
       Spacer()
-      Text(haveLabel)
-        .font(.system(size: 13, weight: .bold))
-        .foregroundStyle(ready ? AppColor.chipReadyText : AppColor.textSecondary)
-        .padding(.horizontal, 11).padding(.vertical, 5)
-        .background(ready ? AppColor.chipReadyBackground : AppColor.chipHaveBackground, in: Capsule())
+      AppStatusPill(title: haveLabel, style: ready ? .ready : .neutral)
     }
     .padding(EdgeInsets(top: 15, leading: 17, bottom: 15, trailing: 17))
     .appCard(radius: 18)
