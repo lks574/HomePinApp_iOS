@@ -31,6 +31,8 @@ flowchart TD
     Capture --> ItemEditor
     Mic --> Capture[NL 추가 시트<br/>텍스트+음성 → 확인]
     Recipes --> RecipeDetail[레시피 상세]
+    Recipes --> RecipeEditor[레시피 추가/편집]
+    RecipeDetail --> RecipeEditor
 ```
 
 ## 화면 목록
@@ -43,10 +45,11 @@ flowchart TD
 | PlaceDetail (장소 상세) | Spot별 Item 목록·물건 추가/편집 진입·장소 편집/삭제 | in-progress |
 | PlaceEditor (장소 추가/편집) | Area 추가/편집 공용 시트(이름) | in-progress |
 | SpotEditor (세부위치 추가/편집) | Spot 추가/편집 공용 시트(이름) | in-progress |
-| Recipes (레시피) | 임박 카드 + 추천 목록 | 개발 중 |
+| Recipes (레시피) | 임박 카드 + 추천 목록·상세 진입·레시피 추가 | in-progress |
 | Capture (NL 추가) | 텍스트+음성 → 에디터 확인 | in-progress |
 | Settings | 설정 | stub |
 | ItemEditor | 물건 추가/편집 공용 시트 | in-progress |
-| RecipeDetail | 상세 | 예정 |
+| RecipeDetail (레시피 상세) | 재료(보유 상태)·조리 단계·재고 요약·편집/삭제 진입 | in-progress |
+| RecipeEditor (레시피 추가/편집) | 기본정보 + 재료/단계 동적 편집 공용 시트 | in-progress |
 
 UI 우선 — seed 데이터로 화면을 먼저 만들고 AI/로직은 뒤에 채운다.

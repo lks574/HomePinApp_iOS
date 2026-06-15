@@ -33,6 +33,7 @@ SORT created ASC
 - [[Places]] · [[PlaceDetail]] → [[PlaceEditor]] — 장소 추가/편집
 - [[PlaceDetail]] → [[SpotEditor]] — 세부위치 추가/편집
 - [[Home]] · [[Capture]] → [[ItemEditor]] — 물건 추가/편집 공용 에디터
+- [[Recipes]] → [[RecipeDetail]] → [[RecipeEditor]] — 레시피 상세·추가/편집
 
 ## 모델 `#model`
 

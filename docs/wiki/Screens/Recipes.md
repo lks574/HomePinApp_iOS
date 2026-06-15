@@ -15,12 +15,14 @@ screen-id: screen-01
 
 - 유통기한 임박 [[Item]] 을 요약 카드로 보여준다.
 - 임박 재료를 쓰는 [[Recipe]] 와 보유 재료로 만들 수 있는 레시피를 나눠 나열한다.
-- 요리 종류(한식/일식 등)·메뉴 칩으로 필터(현재 UI, 실제 필터는 후속).
+- 요리권(한식/일식…) 칩과 요리 종류(국·찌개/볶음…) 칩으로 필터([[Recipe]]
+  `cuisine`·`dishType` AND 필터).
 
 ## 연결된 화면
 
 - 들어옴 ←: 탭바 (5-슬롯 중 레시피 탭)
-- 이동 →: RecipeDetail — 레시피 카드 탭 (`screen-03`, 미구현)
+- 이동 →: [[RecipeDetail]] — 레시피 카드 탭(`NavigationLink`, `screen-03`)
+- 이동 →: [[RecipeEditor]] — "레시피 추가" 버튼(`.create`, `screen-07`). `.sheet(item:)`
 
 ## 사용 모델
 
@@ -41,4 +43,4 @@ screen-id: screen-01
 
 - 코드: `HomePinApp/Sources/Features/Recipes/RecipesView.swift`
 - 임박/보유 판정·추천은 현재 seed 기반 단순 로직. AI 추천은 후속.
-- RecipeDetail(`screen-03`) 추가 시 이 노트의 "연결된 화면" 을 `[[RecipeDetail]]` 로 갱신.
+- 카드 → [[RecipeDetail]] push, "레시피 추가" → [[RecipeEditor]] 시트 연결됨.

@@ -6,15 +6,23 @@ struct RecipesView: View {
   @Query(sort: \Recipe.title) private var recipes: [Recipe]
   @Query private var items: [Item]
   @State private var cuisine = "전체"
+  @State private var dish = "전체"
+  @State private var editorRoute: RecipeEditorRoute?
 
   private let cuisines = ["전체", "한식", "일식", "중식", "양식", "분식"]
-  private let dishes = ["국·찌개", "볶음", "구이", "조림", "밥·면", "반찬"]
+  private let dishes = ["전체", "국·찌개", "볶음", "구이", "조림", "밥·면", "반찬"]
 
   var body: some View {
     NavigationStack {
       ScrollView {
         VStack(alignment: .leading, spacing: 0) {
-          Text("레시피").font(.appScreenTitle).foregroundStyle(AppColor.textPrimary)
+          HStack(alignment: .firstTextBaseline) {
+            Text("레시피").font(.appScreenTitle).foregroundStyle(AppColor.textPrimary)
+            Spacer()
+            AppPrimaryButton(title: "레시피 추가", systemImage: "plus") {
+              editorRoute = RecipeEditorRoute(mode: .create)
+            }
+          }
           Text("냉장고 재료로 만들 수 있는 요리")
             .font(.system(size: 14)).foregroundStyle(AppColor.textTertiary)
             .padding(.bottom, 16)
@@ -35,27 +43,40 @@ struct RecipesView: View {
           if !soonRecipes.isEmpty {
             AppSectionTitle(title: "임박 재료로 만들기", uppercase: true)
             VStack(spacing: 13) {
-              ForEach(soonRecipes) { recipeSoonCard($0) }
+              ForEach(soonRecipes) { recipe in
+                NavigationLink(value: recipe) { recipeSoonCard(recipe) }
+                  .buttonStyle(.plain)
+              }
             }
             .padding(.bottom, 26)
           }
 
           AppSectionTitle(title: "내 재료로 만들 수 있어요", uppercase: true)
           VStack(spacing: 13) {
-            ForEach(otherRecipes) { recipeCompactRow($0) }
+            ForEach(otherRecipes) { recipe in
+              NavigationLink(value: recipe) { recipeCompactRow(recipe) }
+                .buttonStyle(.plain)
+            }
           }
         }
         .padding(20)
       }
       .background(AppColor.screenBackground)
       .toolbar(.hidden, for: .navigationBar)
+      .navigationDestination(for: Recipe.self) { RecipeDetailView(recipe: $0) }
+      .sheet(item: $editorRoute) { route in
+        RecipeEditorView(mode: route.mode)
+      }
     }
   }
 
   // MARK: 파생
 
   private var filteredRecipes: [Recipe] {
-    cuisine == "전체" ? recipes : recipes.filter { $0.cuisine == cuisine }
+    recipes.filter { recipe in
+      (cuisine == "전체" || recipe.cuisine == cuisine)
+        && (dish == "전체" || recipe.dishType == dish)
+    }
   }
 
   private var soonItems: [Item] { items.expiringSoonByExpiry }
@@ -95,7 +116,7 @@ struct RecipesView: View {
     ScrollView(.horizontal, showsIndicators: false) {
       HStack(spacing: 8) {
         ForEach(dishes, id: \.self) { d in
-          AppOutlinedChip(title: d)
+          AppFilterChip(title: d, isSelected: dish == d) { dish = d }
         }
       }
     }
