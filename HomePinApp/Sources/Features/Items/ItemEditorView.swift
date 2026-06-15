@@ -13,6 +13,7 @@ struct ItemEditorView: View {
 
   @State private var showingAreaPicker = false
   @State private var showingSpotPicker = false
+  @State private var showingDeleteConfirm = false
   @FocusState private var focusedField: ItemEditorField?
 
   init(mode: ItemEditorModel.Mode, onSaved: (() -> Void)? = nil) {
@@ -28,6 +29,9 @@ struct ItemEditorView: View {
           basicInfoCard
           locationCard
           optionCard
+          if model.isEditing {
+            deleteButton
+          }
         }
         .padding(20)
       }
@@ -51,7 +55,29 @@ struct ItemEditorView: View {
           focusedField = .name
         }
       }
+      .confirmationDialog(
+        "이 물건을 삭제할까요?",
+        isPresented: $showingDeleteConfirm,
+        titleVisibility: .visible
+      ) {
+        Button("삭제", role: .destructive) { deleteItem() }
+        Button("취소", role: .cancel) {}
+      }
     }
+  }
+
+  private var deleteButton: some View {
+    Button(role: .destructive) {
+      showingDeleteConfirm = true
+    } label: {
+      Text("물건 삭제")
+        .font(.appRowLabel)
+        .foregroundStyle(.red)
+        .frame(maxWidth: .infinity)
+        .frame(height: 52)
+    }
+    .buttonStyle(.plain)
+    .appCard(radius: 18)
   }
 
   private var basicInfoCard: some View {
@@ -165,6 +191,12 @@ struct ItemEditorView: View {
   private func save() {
     guard model.canSave else { return }
     model.save(into: modelContext)
+    onSaved?()
+    dismiss()
+  }
+
+  private func deleteItem() {
+    model.delete(from: modelContext)
     onSaved?()
     dismiss()
   }

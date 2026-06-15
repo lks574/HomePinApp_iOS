@@ -12,6 +12,24 @@ struct PlaceDetailView: View {
   @State private var pendingSpotDelete: Spot?
   let area: Area
 
+  /// 이 장소의 물건·세부위치를 `@Query` 로 직접 관찰한다(관계 배열 직접 읽기는
+  /// insert 직후 in-memory 갱신이 보장되지 않아 추가분이 바로 반영되지 않는다).
+  @Query private var items: [Item]
+  @Query private var spots: [Spot]
+
+  init(area: Area) {
+    self.area = area
+    let areaID = area.id
+    _items = Query(
+      filter: #Predicate<Item> { $0.area?.id == areaID },
+      sort: \Item.createdAt
+    )
+    _spots = Query(
+      filter: #Predicate<Spot> { $0.area?.id == areaID },
+      sort: \Spot.sortOrder
+    )
+  }
+
   var body: some View {
     ScrollView {
       VStack(alignment: .leading, spacing: 0) {
@@ -19,11 +37,11 @@ struct PlaceDetailView: View {
         headerRow
         AppSearchBar(placeholder: "\(area.name)에서 찾기", style: .field)
           .padding(.vertical, 20)
-        ForEach(sortedSpots) { spot in
-          spotCard(title: spot.name, items: spot.items, spot: spot)
+        ForEach(spots) { spot in
+          spotCard(title: spot.name, items: items(in: spot), spot: spot)
         }
-        if !area.items.isEmpty {
-          spotCard(title: "수납공간 미지정", items: area.items, spot: nil)
+        if !unassignedItems.isEmpty {
+          spotCard(title: "수납공간 미지정", items: unassignedItems, spot: nil)
         }
       }
       .padding(20)
@@ -46,7 +64,7 @@ struct PlaceDetailView: View {
       Button("삭제", role: .destructive) { deletePlace() }
       Button("취소", role: .cancel) {}
     } message: {
-      Text("수납공간 \(area.spots.count)곳도 함께 삭제됩니다. 보관 중인 물건은 삭제되지 않고 위치만 해제됩니다.")
+      Text("수납공간 \(spots.count)곳도 함께 삭제됩니다. 보관 중인 물건은 삭제되지 않고 위치만 해제됩니다.")
     }
     .confirmationDialog(
       "‘\(pendingSpotDelete?.name ?? "")’ 세부위치를 삭제할까요?",
@@ -56,7 +74,7 @@ struct PlaceDetailView: View {
       Button("삭제", role: .destructive) { deleteSpot(spot) }
       Button("취소", role: .cancel) {}
     } message: { spot in
-      Text("보관 중인 물건 \(spot.items.count)개는 삭제되지 않고 ‘수납공간 미지정’ 으로 이동합니다.")
+      Text("보관 중인 물건 \(items(in: spot).count)개는 삭제되지 않고 ‘수납공간 미지정’ 으로 이동합니다.")
     }
   }
 
@@ -91,7 +109,7 @@ struct PlaceDetailView: View {
         Text(area.name)
           .font(.system(size: 30, weight: .heavy))
           .foregroundStyle(AppColor.textPrimary)
-        Text("\(area.itemCount)개 · 수납공간 \(area.spots.count)곳")
+        Text("\(items.count)개 · 수납공간 \(spots.count)곳")
           .font(.appFootnote)
           .foregroundStyle(AppColor.textTertiary)
       }
@@ -132,8 +150,12 @@ struct PlaceDetailView: View {
     dismiss()
   }
 
-  private var sortedSpots: [Spot] {
-    area.spots.sorted { $0.sortOrder < $1.sortOrder }
+  private func items(in spot: Spot) -> [Item] {
+    items.filter { $0.spot?.id == spot.id }
+  }
+
+  private var unassignedItems: [Item] {
+    items.filter { $0.spot == nil }
   }
 
   private func spotCard(title: String, items: [Item], spot: Spot?) -> some View {

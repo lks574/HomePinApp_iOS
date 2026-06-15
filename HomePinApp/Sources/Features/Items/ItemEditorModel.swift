@@ -62,6 +62,11 @@ final class ItemEditorModel {
     !trimmedName.isEmpty && selectedArea != nil && quantity > 0
   }
 
+  var isEditing: Bool {
+    if case .edit = mode { return true }
+    return false
+  }
+
   private var trimmedName: String {
     name.trimmingCharacters(in: .whitespacesAndNewlines)
   }
@@ -99,5 +104,11 @@ final class ItemEditorModel {
       item.memo = trimmedMemo
       item.updatedAt = .now
     }
+  }
+
+  /// 편집 중인 물건을 삭제한다(create 모드면 무시).
+  func delete(from modelContext: ModelContext) {
+    guard case let .edit(item) = mode else { return }
+    modelContext.delete(item)
   }
 }
