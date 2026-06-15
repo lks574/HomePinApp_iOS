@@ -26,10 +26,10 @@ struct AppOutlinedChip: View {
   var body: some View {
     Text(title)
       .font(.system(size: 14, weight: .semibold))
-      .foregroundStyle(Color(hex: 0x6F4A38))
+      .foregroundStyle(Color(lightHex: 0x6F4A38, darkHex: 0xC8A48E))
       .padding(.horizontal, 15)
       .padding(.vertical, 8)
-      .overlay(Capsule().strokeBorder(Color(hex: 0xE0D3C6)))
+      .overlay(Capsule().strokeBorder(Color(lightHex: 0xE0D3C6, darkHex: 0x4C443A)))
   }
 }
 
