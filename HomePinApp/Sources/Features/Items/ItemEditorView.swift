@@ -22,7 +22,6 @@ struct ItemEditorView: View {
   }
 
   var body: some View {
-    @Bindable var model = model
     NavigationStack {
       ScrollView {
         VStack(spacing: 18) {
@@ -81,8 +80,7 @@ struct ItemEditorView: View {
   }
 
   private var basicInfoCard: some View {
-    @Bindable var model = model
-    return VStack(spacing: 0) {
+    VStack(spacing: 0) {
       VStack(alignment: .leading, spacing: 8) {
         Text("이름")
           .font(.appRowLabel)
@@ -152,8 +150,7 @@ struct ItemEditorView: View {
   }
 
   private var optionCard: some View {
-    @Bindable var model = model
-    return VStack(spacing: 0) {
+    VStack(spacing: 0) {
       Toggle(isOn: $model.hasExpiration) {
         Text("유통기한")
           .font(.appRowLabel)
