@@ -92,13 +92,16 @@ struct ItemEditorView: View {
 
   private var basicInfoCard: some View {
     VStack(spacing: 0) {
-      AppEditorTextField(
-        title: "이름",
-        placeholder: "예: AA 건전지",
-        text: $name,
-        focusedField: $focusedField,
-        focusValue: .name
-      )
+      VStack(alignment: .leading, spacing: 8) {
+        Text("이름")
+          .font(.system(size: 15, weight: .semibold))
+          .foregroundStyle(AppColor.textPrimary)
+        TextField("예: AA 건전지", text: $name)
+          .font(.system(size: 17))
+          .foregroundStyle(AppColor.textPrimary)
+          .focused($focusedField, equals: .name)
+      }
+      .padding(16)
       Divider().padding(.leading, 16)
       quantityRow
     }
@@ -264,27 +267,6 @@ struct ItemEditorRoute: Identifiable {
 private enum ItemEditorField: Hashable {
   case name
   case memo
-}
-
-private struct AppEditorTextField: View {
-  let title: String
-  let placeholder: String
-  @Binding var text: String
-  var focusedField: FocusState<ItemEditorField?>.Binding
-  let focusValue: ItemEditorField
-
-  var body: some View {
-    VStack(alignment: .leading, spacing: 8) {
-      Text(title)
-        .font(.system(size: 15, weight: .semibold))
-        .foregroundStyle(AppColor.textPrimary)
-      TextField(placeholder, text: $text)
-        .font(.system(size: 17))
-        .foregroundStyle(AppColor.textPrimary)
-        .focused(focusedField, equals: focusValue)
-    }
-    .padding(16)
-  }
 }
 
 private struct AppEditorSelectionRow: View {

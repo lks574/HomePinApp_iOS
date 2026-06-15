@@ -31,14 +31,14 @@ struct RecipesView: View {
           if !soonRecipes.isEmpty {
             AppSectionTitle(title: "임박 재료로 만들기", uppercase: true)
             VStack(spacing: 13) {
-              ForEach(soonRecipes) { RecipeSoonCard(recipe: $0, status: status, dDay: dDay) }
+              ForEach(soonRecipes) { recipeSoonCard($0) }
             }
             .padding(.bottom, 26)
           }
 
           AppSectionTitle(title: "내 재료로 만들 수 있어요", uppercase: true)
           VStack(spacing: 13) {
-            ForEach(otherRecipes) { RecipeCompactRow(recipe: $0, haveCount: haveCount) }
+            ForEach(otherRecipes) { recipeCompactRow($0) }
           }
         }
         .padding(20)
@@ -128,101 +128,68 @@ struct RecipesView: View {
       in: RoundedRectangle(cornerRadius: 20, style: .continuous)
     )
   }
-}
 
-private struct RecipeSoonCard: View {
-  let recipe: Recipe
-  let status: (RecipeIngredient) -> AppIngredientChipState
-  let dDay: (Item) -> Int
+  // MARK: 레시피 카드
 
-  var body: some View {
-    VStack(alignment: .leading, spacing: 0) {
+  /// 임박 재료가 있는 레시피 카드 — 진행률 + 재료 칩.
+  private func recipeSoonCard(_ recipe: Recipe) -> some View {
+    let ingredients = recipe.ingredients.sorted { $0.sortOrder < $1.sortOrder }
+    let soon = ingredients.filter { status($0) == .soon }
+    let badge = soon.isEmpty ? nil : (soon.count == 1 ? "임박 \(soon[0].name)" : "임박 \(soon.count)개")
+    let have = ingredients.filter(\.isInStock).count
+    let total = ingredients.count
+    let pct = total == 0 ? 0 : Double(have) / Double(total)
+
+    return VStack(alignment: .leading, spacing: 0) {
       HStack(alignment: .top) {
         VStack(alignment: .leading, spacing: 2) {
           Text(recipe.title).font(.system(size: 18, weight: .bold)).foregroundStyle(AppColor.textPrimary)
-          Text(meta).font(.system(size: 13)).foregroundStyle(AppColor.textMuted)
+          Text("\(recipe.totalMinutes ?? 0)분").font(.system(size: 13)).foregroundStyle(AppColor.textMuted)
         }
         Spacer()
-        if let badge = soonBadge {
+        if let badge {
           AppStatusPill(title: badge, style: .accent)
         }
       }
-      chips.padding(.top, 13)
-      progress.padding(.top, 14)
+      FlowLayout(spacing: 6) {
+        ForEach(ingredients) { ing in
+          AppIngredientChip(name: ing.name, state: status(ing))
+        }
+      }
+      .padding(.top, 13)
+      HStack(spacing: 9) {
+        GeometryReader { geo in
+          ZStack(alignment: .leading) {
+            Capsule().fill(Color(hex: 0xEFE7DD))
+            Capsule().fill(AppColor.accent).frame(width: geo.size.width * pct)
+          }
+        }
+        .frame(height: 6)
+        Text("재료 \(have)/\(total)")
+          .font(.system(size: 13, weight: .semibold)).foregroundStyle(AppColor.textSecondary)
+          .fixedSize()
+      }
+      .padding(.top, 14)
     }
     .padding(EdgeInsets(top: 17, leading: 17, bottom: 15, trailing: 17))
     .appCard()
   }
 
-  private var sortedIngredients: [RecipeIngredient] {
-    recipe.ingredients.sorted { $0.sortOrder < $1.sortOrder }
-  }
+  /// 보유 재료로 만들 수 있는 레시피 한 줄.
+  private func recipeCompactRow(_ recipe: Recipe) -> some View {
+    let have = haveCount(recipe)
+    let total = recipe.ingredients.count
+    let ready = total > 0 && have == total
 
-  private var meta: String { "\(recipe.totalMinutes ?? 0)분" }
-
-  private var soonBadge: String? {
-    let soon = sortedIngredients.filter { status($0) == .soon }
-    guard !soon.isEmpty else { return nil }
-    return soon.count == 1 ? "임박 \(soon[0].name)" : "임박 \(soon.count)개"
-  }
-
-  private var chips: some View {
-    FlowChips(ingredients: sortedIngredients, status: status)
-  }
-
-  private var progress: some View {
-    let have = sortedIngredients.filter(\.isInStock).count
-    let total = sortedIngredients.count
-    let pct = total == 0 ? 0 : Double(have) / Double(total)
-    return HStack(spacing: 9) {
-      GeometryReader { geo in
-        ZStack(alignment: .leading) {
-          Capsule().fill(Color(hex: 0xEFE7DD))
-          Capsule().fill(AppColor.accent).frame(width: geo.size.width * pct)
-        }
-      }
-      .frame(height: 6)
-      Text("재료 \(have)/\(total)")
-        .font(.system(size: 13, weight: .semibold)).foregroundStyle(AppColor.textSecondary)
-        .fixedSize()
-    }
-  }
-}
-
-/// 재료 칩들을 줄바꿈 배치.
-private struct FlowChips: View {
-  let ingredients: [RecipeIngredient]
-  let status: (RecipeIngredient) -> AppIngredientChipState
-
-  var body: some View {
-    // 간단히 가로 래핑 대신 2줄 한도 내 HStack 래핑 효과를 위해 FlowLayout 사용.
-    FlowLayout(spacing: 6) {
-      ForEach(ingredients) { ing in
-        AppIngredientChip(name: ing.name, state: status(ing))
-      }
-    }
-  }
-}
-
-private struct RecipeCompactRow: View {
-  let recipe: Recipe
-  let haveCount: (Recipe) -> Int
-
-  var body: some View {
-    HStack(spacing: 14) {
+    return HStack(spacing: 14) {
       VStack(alignment: .leading, spacing: 2) {
         Text(recipe.title).font(.system(size: 17, weight: .bold)).foregroundStyle(AppColor.textPrimary)
         Text("\(recipe.totalMinutes ?? 0)분").font(.system(size: 13)).foregroundStyle(AppColor.textMuted)
       }
       Spacer()
-      AppStatusPill(title: haveLabel, style: ready ? .ready : .neutral)
+      AppStatusPill(title: ready ? "재료 완비" : "재료 \(have)/\(total)", style: ready ? .ready : .neutral)
     }
     .padding(EdgeInsets(top: 15, leading: 17, bottom: 15, trailing: 17))
     .appCard(radius: 18)
   }
-
-  private var have: Int { haveCount(recipe) }
-  private var total: Int { recipe.ingredients.count }
-  private var ready: Bool { total > 0 && have == total }
-  private var haveLabel: String { ready ? "재료 완비" : "재료 \(have)/\(total)" }
 }

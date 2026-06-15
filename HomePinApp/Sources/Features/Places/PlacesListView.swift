@@ -27,7 +27,7 @@ struct PlacesListView: View {
           LazyVGrid(columns: columns, spacing: 12) {
             ForEach(areas) { area in
               NavigationLink(value: area) {
-                PlaceCard(area: area)
+                placeCard(area)
               }
               .buttonStyle(.plain)
               .contextMenu {
@@ -94,18 +94,10 @@ struct PlacesListView: View {
     modelContext.delete(area)
     pendingDelete = nil
   }
-}
 
-/// 한 장소(Area)의 물건 수 = 직속 + 하위 수납공간(Spot)의 물건.
-func areaItemCount(_ area: Area) -> Int {
-  area.items.count + area.spots.reduce(0) { $0 + $1.items.count }
-}
-
-private struct PlaceCard: View {
-  let area: Area
-
-  var body: some View {
-    VStack(alignment: .leading, spacing: 0) {
+  private func placeCard(_ area: Area) -> some View {
+    let preview = (area.items + area.spots.flatMap(\.items)).map(\.name).prefix(4).joined(separator: " · ")
+    return VStack(alignment: .leading, spacing: 0) {
       HStack {
         AppInitialBadge(text: area.name)
         Spacer()
@@ -129,9 +121,9 @@ private struct PlaceCard: View {
     .frame(maxWidth: .infinity, alignment: .leading)
     .appCard()
   }
+}
 
-  private var preview: String {
-    let names = (area.items + area.spots.flatMap(\.items)).map(\.name)
-    return names.prefix(4).joined(separator: " · ")
-  }
+/// 한 장소(Area)의 물건 수 = 직속 + 하위 수납공간(Spot)의 물건.
+func areaItemCount(_ area: Area) -> Int {
+  area.items.count + area.spots.reduce(0) { $0 + $1.items.count }
 }
