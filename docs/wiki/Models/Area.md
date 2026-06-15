@@ -2,7 +2,7 @@
 aliases: [Area, 구역]
 tags: [model]
 created: 2026-06-12
-updated: 2026-06-12
+updated: 2026-06-15
 status: in-progress
 ---
 
@@ -29,7 +29,10 @@ status: in-progress
 
 ## 사용 화면
 
-- (예정)
+- [[Places]] — 그리드 목록·삭제
+- [[PlaceDetail]] — 상세·편집/삭제
+- [[PlaceEditor]] — 추가/편집 쓰기
+- [[ItemEditor]] — 물건 위치(장소) 선택
 
 ## 메모
 

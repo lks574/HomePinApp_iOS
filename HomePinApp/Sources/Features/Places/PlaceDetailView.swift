@@ -4,7 +4,10 @@ import SwiftUI
 /// 장소 상세 — 수납공간(Spot)별 물건 목록 + 직속 물건.
 struct PlaceDetailView: View {
   @Environment(\.dismiss) private var dismiss
+  @Environment(\.modelContext) private var modelContext
   @State private var editorRoute: ItemEditorRoute?
+  @State private var placeEditorRoute: PlaceEditorRoute?
+  @State private var showingDeleteConfirm = false
   let area: Area
 
   var body: some View {
@@ -27,6 +30,18 @@ struct PlaceDetailView: View {
     .toolbar(.hidden, for: .navigationBar)
     .sheet(item: $editorRoute) { route in
       ItemEditorView(mode: route.mode)
+    }
+    .sheet(item: $placeEditorRoute) { route in
+      PlaceEditorView(mode: route.mode)
+    }
+    .confirmationDialog(
+      "‘\(area.name)’ 장소를 삭제할까요?",
+      isPresented: $showingDeleteConfirm
+    ) {
+      Button("삭제", role: .destructive) { deletePlace() }
+      Button("취소", role: .cancel) {}
+    } message: {
+      Text("수납공간 \(area.spots.count)곳도 함께 삭제됩니다. 보관 중인 물건은 삭제되지 않고 위치만 해제됩니다.")
     }
   }
 
@@ -54,10 +69,35 @@ struct PlaceDetailView: View {
           .foregroundStyle(AppColor.textTertiary)
       }
       Spacer()
-      AppPrimaryButton(title: "물건 추가", systemImage: "plus") {
-        editorRoute = ItemEditorRoute(mode: .create(area: area))
+      VStack(alignment: .trailing, spacing: 8) {
+        Menu {
+          Button {
+            placeEditorRoute = PlaceEditorRoute(mode: .edit(area))
+          } label: {
+            Label("장소 이름 수정", systemImage: "pencil")
+          }
+          Button(role: .destructive) {
+            showingDeleteConfirm = true
+          } label: {
+            Label("장소 삭제", systemImage: "trash")
+          }
+        } label: {
+          Image(systemName: "ellipsis")
+            .font(.system(size: 17, weight: .semibold))
+            .foregroundStyle(AppColor.textSecondary)
+            .frame(width: 36, height: 36)
+            .background(AppColor.card, in: Circle())
+        }
+        AppPrimaryButton(title: "물건 추가", systemImage: "plus") {
+          editorRoute = ItemEditorRoute(mode: .create(area: area))
+        }
       }
     }
+  }
+
+  private func deletePlace() {
+    modelContext.delete(area)
+    dismiss()
   }
 
   private var sortedSpots: [Spot] {

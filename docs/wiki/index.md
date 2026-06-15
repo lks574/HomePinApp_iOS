@@ -30,6 +30,7 @@ SORT created ASC
 - [[Splash]] → [[Home]] (루트 흐름)
 - 탭: [[Home]] · [[Places]] · [[Capture]] (🎤) · [[Recipes]] · [[Settings]]
 - [[Places]] → [[PlaceDetail]] → [[ItemEditor]]
+- [[Places]] · [[PlaceDetail]] → [[PlaceEditor]] — 장소 추가/편집
 - [[Home]] · [[Capture]] → [[ItemEditor]] — 물건 추가/편집 공용 에디터
 
 ## 모델 `#model`

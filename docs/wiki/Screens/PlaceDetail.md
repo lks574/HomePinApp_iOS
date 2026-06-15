@@ -4,7 +4,7 @@ tags: [screen, screen/place]
 created: 2026-06-12
 updated: 2026-06-15
 status: in-progress
-screen-id: screen-01
+screen-id: screen-01, screen-05
 ---
 
 # PlaceDetail (장소 상세)
@@ -16,11 +16,13 @@ screen-id: screen-01
 - 선택한 [[Area]] 의 [[Spot]] 별 [[Item]] 목록을 카드로 보여준다.
 - `Spot` 에 속하지 않은 직속 물건은 "수납공간 미지정" 카드로 묶는다.
 - 물건 행/추가 버튼을 탭하면 [[ItemEditor]] 시트를 연다(`editorRoute` 로 라우팅).
+- 헤더 ⋯ 메뉴로 장소 이름 수정([[PlaceEditor]] 편집) / 장소 삭제(확인 후 `dismiss`)를 한다.
 
 ## 연결된 화면
 
 - 들어옴 ←: [[Places]] — 장소 카드 탭
 - 이동 →: [[ItemEditor]] — 물건 행 탭(편집), 추가 버튼(생성). `.sheet(item:)`
+- 이동 →: [[PlaceEditor]] — 헤더 메뉴 "장소 이름 수정"(편집)
 
 ## 사용 모델
 
@@ -30,8 +32,8 @@ screen-id: screen-01
 
 ## 상태 관리
 
-- 직결(View ↔ SwiftData). 전달받은 `Area` 의 관계를 직접 읽는다.
-- 비영속 UI 상태는 `@State editorRoute` 하나(에디터 시트 표시용)뿐.
+- 직결(View ↔ SwiftData). 전달받은 `Area` 의 관계를 직접 읽고, 삭제는 `modelContext.delete` 후 `dismiss`.
+- 비영속 UI 상태: 물건 에디터 `editorRoute`, 장소 에디터 `placeEditorRoute`, 삭제 확인 `showingDeleteConfirm`.
 
 ## 관련 태스크 / 결정
 

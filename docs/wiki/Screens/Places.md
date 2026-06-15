@@ -4,7 +4,7 @@ tags: [screen, screen/place]
 created: 2026-06-12
 updated: 2026-06-15
 status: in-progress
-screen-id: screen-01
+screen-id: screen-01, screen-05
 ---
 
 # Places (장소 목록)
@@ -16,11 +16,14 @@ screen-id: screen-01
 - 모든 [[Area]] 를 `sortOrder` 순 2열 그리드로 나열한다.
 - 상단에 전체 장소 수와 총 보관 물건 수를 요약한다.
 - 장소 카드를 탭하면 `navigationDestination` 으로 [[PlaceDetail]] 로 이동한다.
+- "장소 추가" 버튼으로 [[PlaceEditor]] 생성 시트를 연다.
+- 카드 long-press 컨텍스트 메뉴로 이름 수정([[PlaceEditor]] 편집) / 삭제(확인 다이얼로그)를 한다.
 
 ## 연결된 화면
 
 - 들어옴 ←: 탭바 (5-슬롯 중 장소 탭)
 - 이동 →: [[PlaceDetail]] — 장소 카드 탭 (`NavigationLink(value: area)`)
+- 이동 →: [[PlaceEditor]] — 추가 버튼(생성), 카드 컨텍스트 메뉴 "이름 수정"(편집)
 
 ## 사용 모델
 
@@ -30,7 +33,8 @@ screen-id: screen-01
 
 ## 상태 관리
 
-- 직결(View ↔ SwiftData). `@Query` 로 관찰만 하고 별도 모델은 두지 않는다.
+- 직결(View ↔ SwiftData). `@Query` 로 관찰, 삭제는 `modelContext.delete`.
+- 비영속 UI 상태: 에디터 라우팅 `editorRoute`, 삭제 확인 대상 `pendingDelete`.
 
 ## 관련 태스크 / 결정
 

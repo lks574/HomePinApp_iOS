@@ -2,7 +2,7 @@
 aliases: [screen-map, 화면 맵]
 tags: [doc/code, screens]
 created: 2026-06-12
-updated: 2026-06-12
+updated: 2026-06-15
 status: draft
 ---
 
@@ -23,6 +23,8 @@ flowchart TD
       Settings[설정]
     end
     Places --> PlaceDetail[장소 상세<br/>수납공간별 물건]
+    Places --> PlaceEditor[장소 추가/편집]
+    PlaceDetail --> PlaceEditor
     PlaceDetail --> ItemEditor[물건 추가/편집]
     Home --> ItemEditor
     Capture --> ItemEditor
@@ -36,8 +38,9 @@ flowchart TD
 | --- | --- | --- |
 | Splash | 진입 분기 | done |
 | Home | 대시보드(검색·임박·바로가기) | in-progress |
-| Places (장소 목록) | Area 그리드(개수·미리보기) | in-progress |
-| PlaceDetail (장소 상세) | Spot별 Item 목록·물건 추가/편집 진입 | in-progress |
+| Places (장소 목록) | Area 그리드(개수·미리보기)·장소 추가/편집/삭제 진입 | in-progress |
+| PlaceDetail (장소 상세) | Spot별 Item 목록·물건 추가/편집 진입·장소 편집/삭제 | in-progress |
+| PlaceEditor (장소 추가/편집) | Area 추가/편집 공용 시트(이름) | in-progress |
 | Recipes (레시피) | 임박 카드 + 추천 목록 | 개발 중 |
 | Capture (NL 추가) | 텍스트+음성 → 에디터 확인 | in-progress |
 | Settings | 설정 | stub |
