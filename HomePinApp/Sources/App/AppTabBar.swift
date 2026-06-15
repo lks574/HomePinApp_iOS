@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// 시안 C 5-슬롯 탭바: 홈 / 장소 / [중앙 🎤] / 레시피 / 설정.
-/// 중앙 마이크는 목적지가 아니라 NL 추가 시트를 띄운다.
+/// 중앙 버튼은 목적지가 아니라 [추가 | 검색] 시트를 띄운다.
 struct AppTabBar: View {
   @Binding var selection: AppTab
   var onMic: () -> Void
@@ -52,6 +52,6 @@ struct AppTabBar: View {
     .buttonStyle(.plain)
     .frame(maxWidth: .infinity)
     .offset(y: -14)
-    .accessibilityLabel("음성·텍스트로 추가")
+    .accessibilityLabel("추가하거나 검색")
   }
 }
