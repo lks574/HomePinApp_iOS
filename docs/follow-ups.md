@@ -29,8 +29,18 @@ UI 우선 1차(시안 C 화면 골격)에서 의도적으로 뒤로 미룬 것�
 - [ ] **AI 자연어 파싱 미연동** — 추가 시트(`CaptureSheet`)는 텍스트를 이름 draft 로
   `ItemEditor` 에 넘기는 스텁. Foundation Models `@Generable` 로 물건·장소·분류 추출 +
   확인 드래프트 + 없으면생성/있으면매핑은 미구현. (제품 방향: [[제품-방향-재고-레시피-AI]])
-- [ ] **음성(STT) 미연동** — 마이크 버튼은 안내만 표시. SpeechAnalyzer/받아쓰기 →
-  텍스트 → 같은 파서 경로 필요. (텍스트+음성 2-입력, 음성 v1 결정)
+- [x] **음성(STT) 입력기 연동 완료** — `SpeechDictation`(iOS 26 `SpeechAnalyzer` +
+  `SpeechTranscriber` 온디바이스 받아쓰기)을 `CaptureSheet` 마이크 버튼에 실연동.
+  받아쓰기 결과를 활성 모드 필드(추가=`text`, 검색=`searchText`)에 주입, 권한·불가용·
+  거부 시 텍스트 폴백. (결정: `docs/wiki/Decision/2026-06-15-음성입력-STT-아키텍처.md`)
+  잔여는 아래 3개 항목으로 분리.
+- [ ] **음성 → AI 파서 경로 재사용** — 받아쓰기로 채운 텍스트를 위 "AI 자연어 파싱"
+  파서에 그대로 흘려 물건·장소·분류 구조화. 텍스트·음성 공용 단일 파서 경로로 묶는다.
+- [ ] **한국어 받아쓰기 모델 다운로드 UX** — 현재는 모델 미설치·미지원 시 `state`
+  를 `.unavailable` 로 떨어뜨려 텍스트 폴백만 안내. 진행률·다운로드 동의 UI 미구현
+  (`AssetInventory.assetInstallationRequest` 진행률 노출).
+- [ ] **음성 입력 기기 게이팅** — `SpeechTranscriber.isAvailable`·로케일 지원으로
+  마이크 진입 자체를 사전 차단/안내하는 게이팅은 미구현(현재는 시작 시점 판단).
 - [ ] **검색 동작 미구현** — 홈/장소/레시피의 검색바는 정적 placeholder. 실제 필터·
   자연어 검색(`#Predicate`) 연결 필요.
 - [ ] **물건 고급 편집·레시피 상세 화면 없음** — 물건 기본 추가/편집은 `ItemEditor`

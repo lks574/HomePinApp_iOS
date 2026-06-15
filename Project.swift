@@ -40,6 +40,8 @@ let project = Project(
         "UIApplicationSceneManifest": [
           "UIApplicationSupportsMultipleScenes": false,
         ],
+        "NSMicrophoneUsageDescription": "물건을 말로 빠르게 추가·검색하기 위해 마이크를 사용해요.",
+        "NSSpeechRecognitionUsageDescription": "말한 내용을 텍스트로 받아쓰기 위해 음성 인식을 사용해요.",
       ]),
       sources: ["HomePinApp/Sources/**"],
       resources: ["HomePinApp/Resources/**"],

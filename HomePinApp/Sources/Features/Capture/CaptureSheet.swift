@@ -5,14 +5,15 @@ import SwiftUI
 /// - 추가: 텍스트를 이름 draft 로 넘겨 사용자가 위치/수량을 확인한 뒤 저장한다.
 /// - 검색: `Item.normalizedName` 기반 이름 검색 → 결과에 위치 경로. 결과를 누르면
 ///   해당 물건 편집 시트로 진입한다. (자연어 검색은 후속)
-/// - 음성(🎤): 모드 토글 아래 공용. 받아쓰기 결과는 활성 모드의 입력 필드(추가=`text`,
-///   검색=`searchText`)로 들어간다. STT 연동은 후속이라 지금은 안내 힌트만 띄운다.
+/// - 음성(🎤): 모드 토글 아래 공용. 받아쓰기(`SpeechDictation`) 결과는 활성 모드의 입력
+///   필드(추가=`text`, 검색=`searchText`)로 들어간다. STT 는 텍스트를 채우는 입력기일 뿐
+///   텍스트 입력 경로는 항상 살아 있어 불가용·거부 시 폴백된다. (AI 파서는 후속)
 struct CaptureSheet: View {
   @Environment(\.dismiss) private var dismiss
   @State private var mode: CaptureMode = .add
   @State private var text = ""
   @State private var searchText = ""
-  @State private var showMicHint = false
+  @State private var dictation = SpeechDictation()
   @State private var editorRoute: ItemEditorRoute?
   @FocusState private var focusedField: CaptureField?
 
@@ -25,8 +26,8 @@ struct CaptureSheet: View {
       VStack(spacing: 16) {
         modePicker
         micRow
-        if showMicHint {
-          Text("음성 입력은 곧 지원돼요. 지금은 텍스트로 입력해 주세요.")
+        if let micHint {
+          Text(micHint)
             .font(.appFootnote).foregroundStyle(AppColor.textMuted)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
@@ -49,9 +50,13 @@ struct CaptureSheet: View {
       }
       .onAppear { focusedField = mode == .add ? .add : .search }
       .onChange(of: mode) { _, newMode in
-        showMicHint = false
+        dictation.reset()
         focusedField = newMode == .add ? .add : .search
       }
+      .onChange(of: dictation.transcript) { _, newTranscript in
+        applyTranscript(newTranscript)
+      }
+      .onDisappear { dictation.reset() }
     }
   }
 
@@ -68,27 +73,34 @@ struct CaptureSheet: View {
 
   // MARK: - 공용 음성 입력
 
-  /// 모드 공용 음성 진입. 받아쓰기 결과는 활성 모드의 입력 필드로 들어간다(후속 STT).
+  /// 모드 공용 음성 진입. 받아쓰기 결과는 활성 모드의 입력 필드로 들어간다.
   private var micRow: some View {
-    HStack(spacing: 12) {
-      Button { showMicHint = true } label: {
-        Image(systemName: "mic.fill")
+    let isRecording = dictation.state == .recording
+    return HStack(spacing: 12) {
+      Button { Task { await dictation.toggle() } } label: {
+        Image(systemName: isRecording ? "stop.fill" : "mic.fill")
           .font(.system(size: 18, weight: .semibold))
           .foregroundStyle(.white)
           .frame(width: 44, height: 44)
-          .background(AppColor.accent, in: Circle())
+          .background(isRecording ? AppColor.accentDark : AppColor.accent, in: Circle())
       }
       .buttonStyle(.plain)
-      .accessibilityLabel(mode == .add ? "말해서 추가" : "말해서 검색")
+      .accessibilityLabel(isRecording ? "받아쓰기 멈추기" : (mode == .add ? "말해서 추가" : "말해서 검색"))
       VStack(alignment: .leading, spacing: 2) {
-        Text("말하기").font(.appRowLabel).foregroundStyle(AppColor.textSecondary)
-        Text(mode == .add ? "말하면 추가돼요" : "말하면 검색해요")
+        Text(isRecording ? "듣는 중…" : "말하기")
+          .font(.appRowLabel).foregroundStyle(AppColor.textSecondary)
+        Text(micSubtitle)
           .font(.appCaption).foregroundStyle(AppColor.textMuted)
       }
       Spacer()
     }
     .padding(14)
     .appCard(radius: 16)
+  }
+
+  private var micSubtitle: String {
+    if dictation.state == .recording { return "다시 누르면 멈춰요" }
+    return mode == .add ? "말하면 추가돼요" : "말하면 검색해요"
   }
 
   // MARK: - 추가
@@ -192,6 +204,31 @@ struct CaptureSheet: View {
       .overlay(alignment: .top) { Divider().padding(.leading, 16) }
     }
     .buttonStyle(.plain)
+  }
+
+  // MARK: - 음성 입력
+
+  /// 받아쓰기 상태별 안내. 정상 대기 상태에서는 힌트를 숨긴다(텍스트 필드는 항상 노출).
+  private var micHint: String? {
+    switch dictation.state {
+    case .denied:
+      "마이크·음성 인식 권한이 꺼져 있어요. 설정에서 허용하거나 텍스트로 입력해 주세요."
+    case .unavailable(let reason):
+      "\(reason) 텍스트로 입력해 주세요."
+    case .idle, .preparing, .recording:
+      nil
+    }
+  }
+
+  /// 받아쓰기 텍스트를 활성 모드 필드에 채운다. 검색은 단일 라인이라 개행을 제거한다.
+  private func applyTranscript(_ transcript: String) {
+    guard !transcript.isEmpty else { return }
+    switch mode {
+    case .add:
+      text = transcript
+    case .search:
+      searchText = transcript.replacingOccurrences(of: "\n", with: " ")
+    }
   }
 
   // MARK: - 로직
