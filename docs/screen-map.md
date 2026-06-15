@@ -48,7 +48,7 @@ flowchart TD
 | SpotEditor (세부위치 추가/편집) | Spot 추가/편집 공용 시트(이름) | in-progress |
 | Recipes (레시피) | 임박 카드 + 추천 목록·상세 진입·레시피 추가 | in-progress |
 | Capture (NL 추가) | 텍스트+음성 → 에디터 확인 | in-progress |
-| Settings | 설정 | stub |
+| Settings (설정) | 표시(테마)·데이터(현황·전체 정리)·정보 | in-progress |
 | ItemEditor | 물건 추가/편집 공용 시트 | in-progress |
 | RecipeDetail (레시피 상세) | 재료(보유 상태)·조리 단계·재고 요약·편집/삭제 진입 | in-progress |
 | RecipeEditor (레시피 추가/편집) | 기본정보 + 재료/단계 동적 편집 공용 시트 | in-progress |

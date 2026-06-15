@@ -3,18 +3,21 @@ aliases: [Settings, 설정]
 tags: [screen, screen/settings]
 created: 2026-06-12
 updated: 2026-06-15
-status: stub
-screen-id: screen-01
+status: in-progress
+screen-id: screen-08
 ---
 
 # Settings (설정)
 
-앱 정보 위주의 설정 탭. 현재는 stub 으로, 버전·저장 방식·앱 소개만 보여준다.
+표시(테마) · 데이터(현황·전체 정리) · 정보 3개 섹션의 설정 탭.
 
 ## 역할
 
-- 버전, 저장 방식(이 기기 / SwiftData), 앱 한 줄 소개를 정적으로 보여준다.
-- 실제 설정 항목(데이터 관리·알림 등)은 아직 없다.
+- **표시**: 테마(시스템/라이트/다크) 선택. `@AppStorage` 로 저장, 루트에서
+  `preferredColorScheme` 적용 → 앱 전체 반영.
+- **데이터**: 저장 현황(물건·장소·레시피 개수) 표시 + **전체 데이터 정리**(확인
+  다이얼로그 후 전 모델 일괄 삭제, 앱 동작 위해 기본 [[Space]] "우리집" 복구).
+- **정보**: 버전(번들)·저장 위치·앱 소개 + 로컬 저장 안내.
 
 ## 연결된 화면
 
@@ -23,17 +26,22 @@ screen-id: screen-01
 
 ## 사용 모델
 
-- 없음(정적 정보 stub).
+- [[Item]]·[[Area]]·[[Recipe]] — 읽기 `@Query`(저장 현황 개수)
+- 전체 정리: [[Item]]·[[RecipeIngredient]]·[[Recipe]]·[[Spot]]·[[Area]]·
+  [[ItemCategory]]·[[Tag]]·[[Space]] 를 `modelContext.delete(model:)` 로 일괄 삭제.
 
 ## 상태 관리
 
-- 상태 없음. 정적 `List`.
+- 직결(View ↔ SwiftData) + 테마는 `@AppStorage`.
+- 비영속 UI 상태: 전체 정리 확인 `showingClearConfirm`.
 
 ## 관련 태스크 / 결정
 
-- `[screen-01]` (docs/screen-implementation-tasks.md)
+- `[screen-08]` (docs/screen-implementation-tasks.md)
+- 테마/다크: [[2026-06-12-네비게이션-UI구조]] §3(디자인 토큰).
 
 ## 메모
 
-- 코드: `HomePinApp/Sources/Features/Settings/SettingsView.swift`
-- 데이터 초기화/내보내기·알림 설정 등이 추가되면 모델·상태 섹션을 갱신.
+- 코드: `HomePinApp/Sources/Features/Settings/SettingsView.swift`,
+  `App/AppRootView.swift`(테마 적용), `Shared/DesignSystem/AppThemePreference.swift`
+- 후속: 데이터 내보내기/가져오기, 유통기한 알림, AI/입력 토글.

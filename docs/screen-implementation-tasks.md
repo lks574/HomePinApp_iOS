@@ -18,6 +18,7 @@ status: draft
 | screen-06 | SpotEditor (세부위치 CRUD) | in-progress | 세부위치(Spot) 추가/편집 공용 에디터 + 상세에서 삭제(확인). 추가·편집은 상세 ⋯/카드 메뉴, 삭제 시 물건은 nullify 로 ‘수납공간 미지정’ 이동. |
 | screen-03 | RecipeDetail (레시피 상세) | in-progress | 레시피 카드 → 상세 push. 헤더(메타·요약)·재고 요약·재료 목록(보유/임박/없음 칩)·조리 단계. 상단 ⋯ 로 편집/삭제(확인). |
 | screen-07 | RecipeEditor (레시피 CRUD) | in-progress | 레시피 추가/편집 공용 시트 + 상세에서 삭제. 기본정보(제목·종류·인분·시간·요약) + 재료/단계 동적 행 편집. 저장 시 재료 이름→보유 물건 매칭으로 재고 상태 연동. |
+| screen-08 | Settings (설정 고도화) | in-progress | 표시(테마 시스템/라이트/다크, `@AppStorage`+`preferredColorScheme`) · 데이터(저장 현황 + 전체 데이터 정리, 기본 Space 복구) · 정보. 다크는 디자인 토큰 라이트/다크 동적화로 앱 전체 적용. |
 
 ## 후속 후보
 
