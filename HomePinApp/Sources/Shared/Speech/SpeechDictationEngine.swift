@@ -128,10 +128,26 @@ final class SpeechDictationEngine: @unchecked Sendable {
     // 결과 루프(`transcriber.results`)는 Task.cancel 만으로는 깨지 않을 수 있으므로, 취소 시
     // 입력 스트림을 finish 시켜 analyzer→결과 시퀀스를 끝낸다. `Continuation.finish()` 는
     // 스레드 안전·멱등이라 종료 컨텍스트에서 호출해도 엔진 `var` 상태를 건드리지 않는다.
-    await withTaskCancellationHandler {
-      await consumeResults(from: transcriber, emitting: continuation)
-    } onCancel: {
+    //
+    // 결과 소비와 오디오 인터럽션 감시를 같은 run Task 생명주기 안에서 함께 돈다. 둘 중
+    // 무엇이 먼저 끝나든(결과 자연 종료 / 인터럽션 `.began`) 입력 스트림을 finish 시키고
+    // 그룹의 남은 자식을 cancel 해 함께 정리한다 — 고아 Task 를 남기지 않는다.
+    await withTaskGroup(of: Void.self) { group in
+      group.addTask {
+        await self.consumeResults(from: transcriber, emitting: continuation)
+      }
+      group.addTask {
+        // 인터럽션 감시는 클로저 기반 addObserver 대신 구조적 동시성 친화 AsyncSequence 로
+        // run Task 컨텍스트 안에서 소비한다(백그라운드 큐 콜백이 MainActor 격리를 상속해
+        // 런타임 격리 트랩으로 크래시났던 이력 방지). `inputContinuation` 은 로컬 값으로
+        // 캡처돼 finish() 만 호출 — 엔진 `self.var` 상태는 건드리지 않는다(스레드 안전·멱등).
+        await monitorInterruptions(finishingInputWith: inputContinuation)
+      }
+      // 먼저 끝난 자식(결과 자연 종료 또는 인터럽션 `.began`) 처리 후, 입력 스트림을 finish
+      // 시켜 다른 자식(analyzer→결과 루프 / 감시)을 깨우고 그룹 전체를 취소·정리한다.
+      await group.next()
       inputContinuation.finish()
+      group.cancelAll()
     }
     continuation.finish()
   }
@@ -274,6 +290,35 @@ private func requestSpeechPermissionStatus() async -> Bool {
     }
   @unknown default:
     return false
+  }
+}
+
+/// `.recording` 동안 오디오 세션 인터럽션을 감시한다. `.began`(전화·Siri·타 앱 점유)이 오면
+/// 입력 스트림을 finish 시켜 받아쓰기 세션을 깔끔히 끝낸다 — analyzer→결과 루프가 종료되고
+/// `run()` 의 `defer` 가 teardown 하며, ViewModel `state` 는 스트림 자연 종료 경로로 `.idle`
+/// 로 떨어진다(transcript 누적분은 보존).
+///
+/// 클로저 기반 `NotificationCenter.addObserver` 대신 구조적 동시성 친화 AsyncSequence 를
+/// run Task 컨텍스트 안에서 `for await` 로 소비한다. 콜백이 임의 큐에서 호출돼 MainActor
+/// 격리를 상속하며 런타임 격리 트랩으로 크래시났던 이력을 막는다. `.ended`(`.shouldResume`
+/// 포함)에서는 받아쓰기를 자동 재개하지 않는다 — 사용자가 마이크를 다시 눌러 재시작한다.
+private func monitorInterruptions(
+  finishingInputWith inputContinuation: AsyncStream<AnalyzerInput>.Continuation,
+) async {
+  let notifications = NotificationCenter.default.notifications(
+    named: AVAudioSession.interruptionNotification
+  )
+  for await notification in notifications {
+    guard
+      let rawType = notification.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt,
+      let type = AVAudioSession.InterruptionType(rawValue: rawType)
+    else { continue }
+    if type == .began {
+      // 입력 스트림만 닫는다(로컬 캡처값·멱등). 엔진 상태/teardown 은 run Task 가 담당.
+      inputContinuation.finish()
+      return
+    }
+    // `.ended` 등은 자동 재개하지 않고 계속 감시(취소되면 for-await 가 빠져나간다).
   }
 }
 

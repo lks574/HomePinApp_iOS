@@ -88,6 +88,16 @@ final class SpeechDictationViewModel {
       if state == .recording || state == .preparing {
         state = .unavailable(reason: "받아쓰기를 사용할 수 없어요.")
       }
+      return
+    }
+
+    // 스트림이 사용자 stop 없이 자연 종료됨(인터럽션·인식 자연 종료 등). 이 경로로 빠지면
+    // `state` 가 아직 `.recording`/`.preparing` 에 끼어 마이크 버튼이 "멈추기" 로 고착되므로
+    // `.idle` 로 되돌린다. transcript 누적분은 그대로 둔다.
+    // cancel(stop()/reset()) 로 인한 종료는 그쪽에서 이미 상태를 정하므로 건드리지 않는다.
+    guard !Task.isCancelled else { return }
+    if state == .recording || state == .preparing {
+      state = .idle
     }
   }
 

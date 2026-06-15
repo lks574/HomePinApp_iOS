@@ -39,6 +39,11 @@ screen-id: screen-01
   `DictationEvent` 스트림을 경계로 ViewModel 과 통신한다(actor 경계 분리). 시스템
   콜백을 MainActor 밖에서 만들어 격리 트랩을 피하고, 엔진 자원은 세션 Task cancel→
   스트림 종료 teardown 으로 정리한다.
+- 녹음 중 오디오 인터럽션(전화·Siri·타 앱 점유) 시 엔진이 `AVAudioSession`
+  `interruptionNotification` 을 구조적 동시성 AsyncSequence 로 감시하다가 `.began`
+  에서 입력 스트림을 닫아 세션을 끝낸다. 스트림 자연 종료 경로로 ViewModel `state`
+  가 `.idle` 로 복귀(마이크 버튼 stop 고착 해소)하고 transcript 누적분은 보존한다.
+  `.ended` 에서 자동 재개하지 않으며 사용자가 마이크를 다시 눌러 재시작한다.
 
 ## 권한 / 받아쓰기 플로우
 
