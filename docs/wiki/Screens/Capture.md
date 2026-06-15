@@ -2,7 +2,7 @@
 aliases: [Capture, NL 추가, 빠른 추가]
 tags: [screen, screen/item]
 created: 2026-06-12
-updated: 2026-06-15
+updated: 2026-06-16
 status: in-progress
 screen-id: screen-01
 ---
@@ -35,6 +35,10 @@ screen-id: screen-01
   보유한다(비영속 UI 상태 + 단일 세션 Task 소유). `dictation.transcript` 변화를
   `.onChange` 으로 받아 활성 모드 필드에 주입하고, 모드 전환·시트 종료 시 `reset()`.
   호출부 시그니처(`transcript`/`state`/`toggle()`/`reset()`)는 이전과 동일하다.
+- 무음 자동 종료: `.recording` 진입 시 ViewModel 이 3초 무음 타이머를 무장하고
+  `transcript` 가 실제로 바뀔 때마다 리셋한다. 3초간 텍스트 변화가 없으면 `stop()`
+  으로 녹음을 자동 종료(엔진 teardown → `.idle`, transcript 누적분 보존)한다.
+  `.preparing` 중에는 무장하지 않는다(모델 다운로드 시간 보호).
 - 권한/오디오/모델 처리는 비-MainActor `SpeechDictationEngine` 으로 분리돼
   `DictationEvent` 스트림을 경계로 ViewModel 과 통신한다(actor 경계 분리). 시스템
   콜백을 MainActor 밖에서 만들어 격리 트랩을 피하고, 엔진 자원은 세션 Task cancel→
