@@ -7,7 +7,9 @@ struct PlaceDetailView: View {
   @Environment(\.modelContext) private var modelContext
   @State private var editorRoute: ItemEditorRoute?
   @State private var placeEditorRoute: PlaceEditorRoute?
+  @State private var spotEditorRoute: SpotEditorRoute?
   @State private var showingDeleteConfirm = false
+  @State private var pendingSpotDelete: Spot?
   let area: Area
 
   var body: some View {
@@ -34,6 +36,9 @@ struct PlaceDetailView: View {
     .sheet(item: $placeEditorRoute) { route in
       PlaceEditorView(mode: route.mode)
     }
+    .sheet(item: $spotEditorRoute) { route in
+      SpotEditorView(mode: route.mode)
+    }
     .confirmationDialog(
       "‘\(area.name)’ 장소를 삭제할까요?",
       isPresented: $showingDeleteConfirm
@@ -43,6 +48,28 @@ struct PlaceDetailView: View {
     } message: {
       Text("수납공간 \(area.spots.count)곳도 함께 삭제됩니다. 보관 중인 물건은 삭제되지 않고 위치만 해제됩니다.")
     }
+    .confirmationDialog(
+      "‘\(pendingSpotDelete?.name ?? "")’ 세부위치를 삭제할까요?",
+      isPresented: spotDeleteConfirmationBinding,
+      presenting: pendingSpotDelete
+    ) { spot in
+      Button("삭제", role: .destructive) { deleteSpot(spot) }
+      Button("취소", role: .cancel) {}
+    } message: { spot in
+      Text("보관 중인 물건 \(spot.items.count)개는 삭제되지 않고 ‘수납공간 미지정’ 으로 이동합니다.")
+    }
+  }
+
+  private var spotDeleteConfirmationBinding: Binding<Bool> {
+    Binding(
+      get: { pendingSpotDelete != nil },
+      set: { if !$0 { pendingSpotDelete = nil } }
+    )
+  }
+
+  private func deleteSpot(_ spot: Spot) {
+    modelContext.delete(spot)
+    pendingSpotDelete = nil
   }
 
   private var backButton: some View {
@@ -71,6 +98,11 @@ struct PlaceDetailView: View {
       Spacer()
       VStack(alignment: .trailing, spacing: 8) {
         Menu {
+          Button {
+            spotEditorRoute = SpotEditorRoute(mode: .create(area: area))
+          } label: {
+            Label("세부위치 추가", systemImage: "plus.square.on.square")
+          }
           Button {
             placeEditorRoute = PlaceEditorRoute(mode: .edit(area))
           } label: {
@@ -110,6 +142,26 @@ struct PlaceDetailView: View {
         Text(title).font(.system(size: 15, weight: .bold)).foregroundStyle(AppColor.textPrimary)
         Spacer()
         Text("\(items.count)개").font(.system(size: 12.5, weight: .semibold)).foregroundStyle(AppColor.textFaint)
+        if let spot {
+          Menu {
+            Button {
+              spotEditorRoute = SpotEditorRoute(mode: .edit(spot))
+            } label: {
+              Label("이름 수정", systemImage: "pencil")
+            }
+            Button(role: .destructive) {
+              pendingSpotDelete = spot
+            } label: {
+              Label("삭제", systemImage: "trash")
+            }
+          } label: {
+            Image(systemName: "ellipsis")
+              .font(.system(size: 15, weight: .semibold))
+              .foregroundStyle(AppColor.textFaint)
+              .frame(width: 28, height: 28)
+          }
+          .buttonStyle(.plain)
+        }
         Button {
           editorRoute = ItemEditorRoute(mode: .create(area: area, spot: spot))
         } label: {

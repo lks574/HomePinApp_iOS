@@ -2,7 +2,7 @@
 aliases: [Spot, 세부위치]
 tags: [model]
 created: 2026-06-12
-updated: 2026-06-12
+updated: 2026-06-15
 status: in-progress
 ---
 
@@ -27,7 +27,9 @@ status: in-progress
 
 ## 사용 화면
 
-- (예정)
+- [[PlaceDetail]] — 세부위치별 물건 목록·추가/편집/삭제
+- [[SpotEditor]] — 추가/편집 쓰기
+- [[ItemEditor]] — 물건 세부위치 선택
 
 ## 메모
 

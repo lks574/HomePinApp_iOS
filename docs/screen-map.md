@@ -25,6 +25,7 @@ flowchart TD
     Places --> PlaceDetail[장소 상세<br/>수납공간별 물건]
     Places --> PlaceEditor[장소 추가/편집]
     PlaceDetail --> PlaceEditor
+    PlaceDetail --> SpotEditor[세부위치 추가/편집]
     PlaceDetail --> ItemEditor[물건 추가/편집]
     Home --> ItemEditor
     Capture --> ItemEditor
@@ -41,6 +42,7 @@ flowchart TD
 | Places (장소 목록) | Area 그리드(개수·미리보기)·장소 추가/편집/삭제 진입 | in-progress |
 | PlaceDetail (장소 상세) | Spot별 Item 목록·물건 추가/편집 진입·장소 편집/삭제 | in-progress |
 | PlaceEditor (장소 추가/편집) | Area 추가/편집 공용 시트(이름) | in-progress |
+| SpotEditor (세부위치 추가/편집) | Spot 추가/편집 공용 시트(이름) | in-progress |
 | Recipes (레시피) | 임박 카드 + 추천 목록 | 개발 중 |
 | Capture (NL 추가) | 텍스트+음성 → 에디터 확인 | in-progress |
 | Settings | 설정 | stub |
