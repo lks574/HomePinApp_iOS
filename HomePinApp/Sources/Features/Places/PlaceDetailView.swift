@@ -75,7 +75,7 @@ struct PlaceDetailView: View {
   private var backButton: some View {
     Button(action: { dismiss() }) {
       HStack(spacing: 4) {
-        Image(systemName: "chevron.left").font(.system(size: 15, weight: .semibold))
+        Image(systemName: "chevron.left").font(.appRowLabel)
         Text("장소").font(.system(size: 16, weight: .semibold))
       }
       .foregroundStyle(AppColor.accent)
@@ -92,7 +92,7 @@ struct PlaceDetailView: View {
           .font(.system(size: 30, weight: .heavy))
           .foregroundStyle(AppColor.textPrimary)
         Text("\(area.itemCount)개 · 수납공간 \(area.spots.count)곳")
-          .font(.system(size: 13))
+          .font(.appFootnote)
           .foregroundStyle(AppColor.textTertiary)
       }
       Spacer()
@@ -141,7 +141,7 @@ struct PlaceDetailView: View {
       HStack {
         Text(title).font(.system(size: 15, weight: .bold)).foregroundStyle(AppColor.textPrimary)
         Spacer()
-        Text("\(items.count)개").font(.system(size: 12.5, weight: .semibold)).foregroundStyle(AppColor.textFaint)
+        Text("\(items.count)개").font(.appCaptionStrong).foregroundStyle(AppColor.textFaint)
         if let spot {
           Menu {
             Button {
@@ -156,7 +156,7 @@ struct PlaceDetailView: View {
             }
           } label: {
             Image(systemName: "ellipsis")
-              .font(.system(size: 15, weight: .semibold))
+              .font(.appRowLabel)
               .foregroundStyle(AppColor.textFaint)
               .frame(width: 28, height: 28)
           }
@@ -180,15 +180,15 @@ struct PlaceDetailView: View {
           editorRoute = ItemEditorRoute(mode: .edit(item))
         } label: {
           HStack(spacing: 10) {
-            Circle().fill(Color(hex: 0xE0CDBF)).frame(width: 6, height: 6)
-            Text(item.name).font(.system(size: 16)).foregroundStyle(AppColor.textPrimary)
+            Circle().fill(AppColor.itemDot).frame(width: 6, height: 6)
+            Text(item.name).font(.appItemBody).foregroundStyle(AppColor.textPrimary)
             Spacer()
             if item.quantity > 1 {
               Text("\(item.quantity)개")
-                .font(.system(size: 12.5, weight: .semibold))
+                .font(.appCaptionStrong)
                 .foregroundStyle(AppColor.textMuted)
             }
-            Image(systemName: "chevron.right").font(.system(size: 12, weight: .semibold)).foregroundStyle(AppColor.textFaint)
+            Image(systemName: "chevron.right").font(.appTag).foregroundStyle(AppColor.textFaint)
           }
           .padding(.horizontal, 16)
           .padding(.vertical, 11)

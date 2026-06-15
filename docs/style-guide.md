@@ -28,7 +28,7 @@ UI 를 작은 컴포넌트로 **과도하게 쪼개지 않는다.** 분리는 �
   인라인**한다(예: `basicInfoCard` 안의 수량 행). `body` 분해 ≠ 모든 작은 행을
   멤버로 만들기.
 - **2회 이상 재사용**되거나(예: `AppEditorSelectionRow` 2회), **여러 파일에서
-  공용**(`Shared/DesignSystem/AppComponents.swift` 의 `App*`)이거나, **리스트
+  공용**(`Shared/DesignSystem/Components/` 의 `App*`)이거나, **리스트
   아이템 뷰**(`ForEach` 행, 예: `placeCard`·`recipeSoonCard`)면 `private func`·
   `struct` 로 둔다.
 - **의미상 독립적인 화면**(예: `.sheet` 로 띄우는 picker, 자체 `NavigationStack`·
@@ -44,3 +44,17 @@ UI 를 작은 컴포넌트로 **과도하게 쪼개지 않는다.** 분리는 �
 
 > 요점: "재사용 또는 독립성" 이 있을 때만 컴포넌트를 만든다. 1회용 래퍼는
 > 인라인이 더 읽기 쉽다.
+
+## 디자인 토큰
+
+색·타이포·표면 스타일은 `Shared/DesignSystem` 의 토큰을 쓰고, 화면에 원시값을
+흩지 않는다.
+
+- **색**: `AppColor` (`AppTheme.swift`). `Color(hex:)` 를 화면에 직접 쓰지 않는다.
+- **타이포**: `Font` 토큰 (`AppTheme.swift`, `.appScreenTitle`·`.appRowLabel`·
+  `.appBadge` 등). **2회 이상 반복되는 역할만 토큰화**하고, 1회용 크기(splash 등)는
+  원시 `.system(size:)` 로 둔다(과토큰화 방지). 토큰 값은 기존 스펙과 1:1.
+- **표면/컴포넌트**: `appCard`·`appEditorSaveBar` 모디파이어, `App*` 컴포넌트
+  (`Shared/DesignSystem/Components/` — 역할별 파일: `Buttons`·`Chips`·`SearchBar`·
+  `Badge`·`SectionTitle`·`Banner`·`EditorComponents`).
+- 새 반복 패턴(색·폰트·뷰)이 **2회 이상** 생기면 토큰/컴포넌트로 올린다(위 분리 기준).

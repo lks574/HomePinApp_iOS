@@ -34,13 +34,7 @@ struct SpotEditorView: View {
         }
         .padding(20)
       }
-      .safeAreaInset(edge: .bottom, spacing: 0) {
-        AppFullWidthPrimaryButton(title: saveTitle, isEnabled: canSave, action: save)
-          .padding(.horizontal, 20)
-          .padding(.top, 12)
-          .padding(.bottom, 16)
-          .background(.regularMaterial)
-      }
+      .appEditorSaveBar(title: saveTitle, isEnabled: canSave, action: save)
       .background(AppColor.screenBackground)
       .navigationTitle(title)
       .navigationBarTitleDisplayMode(.inline)

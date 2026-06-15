@@ -14,7 +14,7 @@ struct RecipesView: View {
     NavigationStack {
       ScrollView {
         VStack(alignment: .leading, spacing: 0) {
-          Text("레시피").font(.system(size: 34, weight: .heavy)).foregroundStyle(AppColor.textPrimary)
+          Text("레시피").font(.appScreenTitle).foregroundStyle(AppColor.textPrimary)
           Text("냉장고 재료로 만들 수 있는 요리")
             .font(.system(size: 14)).foregroundStyle(AppColor.textTertiary)
             .padding(.bottom, 16)
@@ -118,7 +118,7 @@ struct RecipesView: View {
       HStack(alignment: .top) {
         VStack(alignment: .leading, spacing: 2) {
           Text(recipe.title).font(.system(size: 18, weight: .bold)).foregroundStyle(AppColor.textPrimary)
-          Text("\(recipe.totalMinutes ?? 0)분").font(.system(size: 13)).foregroundStyle(AppColor.textMuted)
+          Text("\(recipe.totalMinutes ?? 0)분").font(.appFootnote).foregroundStyle(AppColor.textMuted)
         }
         Spacer()
         if let badge {
@@ -134,13 +134,13 @@ struct RecipesView: View {
       HStack(spacing: 9) {
         GeometryReader { geo in
           ZStack(alignment: .leading) {
-            Capsule().fill(Color(hex: 0xEFE7DD))
+            Capsule().fill(AppColor.progressTrack)
             Capsule().fill(AppColor.accent).frame(width: geo.size.width * pct)
           }
         }
         .frame(height: 6)
         Text("재료 \(have)/\(total)")
-          .font(.system(size: 13, weight: .semibold)).foregroundStyle(AppColor.textSecondary)
+          .font(.appSectionLabel).foregroundStyle(AppColor.textSecondary)
           .fixedSize()
       }
       .padding(.top, 14)
@@ -157,8 +157,8 @@ struct RecipesView: View {
 
     return HStack(spacing: 14) {
       VStack(alignment: .leading, spacing: 2) {
-        Text(recipe.title).font(.system(size: 17, weight: .bold)).foregroundStyle(AppColor.textPrimary)
-        Text("\(recipe.totalMinutes ?? 0)분").font(.system(size: 13)).foregroundStyle(AppColor.textMuted)
+        Text(recipe.title).font(.appValueStrong).foregroundStyle(AppColor.textPrimary)
+        Text("\(recipe.totalMinutes ?? 0)분").font(.appFootnote).foregroundStyle(AppColor.textMuted)
       }
       Spacer()
       AppStatusPill(title: ready ? "재료 완비" : "재료 \(have)/\(total)", style: ready ? .ready : .neutral)

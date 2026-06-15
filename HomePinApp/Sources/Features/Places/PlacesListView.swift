@@ -69,7 +69,7 @@ struct PlacesListView: View {
   private var header: some View {
     HStack(alignment: .bottom) {
       Text("장소")
-        .font(.system(size: 34, weight: .heavy))
+        .font(.appScreenTitle)
         .foregroundStyle(AppColor.textPrimary)
       Spacer()
       AppPrimaryButton(title: "장소 추가", systemImage: "plus") {
@@ -102,7 +102,7 @@ struct PlacesListView: View {
         AppInitialBadge(text: area.name)
         Spacer()
         Text("\(area.itemCount)")
-          .font(.system(size: 13, weight: .bold))
+          .font(.appBadge)
           .foregroundStyle(AppColor.textFaint)
       }
       .padding(.bottom, 22)
@@ -111,7 +111,7 @@ struct PlacesListView: View {
         .font(.system(size: 16, weight: .bold))
         .foregroundStyle(AppColor.textPrimary)
       Text(preview)
-        .font(.system(size: 12.5))
+        .font(.appCaption)
         .foregroundStyle(AppColor.textMuted)
         .lineLimit(2)
         .frame(maxWidth: .infinity, alignment: .leading)

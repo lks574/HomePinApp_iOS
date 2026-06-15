@@ -13,13 +13,13 @@ struct CaptureSheet: View {
     NavigationStack {
       VStack(spacing: 18) {
         Text("말하거나 입력해서 추가")
-          .font(.system(size: 15, weight: .semibold))
+          .font(.appRowLabel)
           .foregroundStyle(AppColor.textTertiary)
           .frame(maxWidth: .infinity, alignment: .leading)
 
         VStack(spacing: 12) {
           TextField("예: 냉동실에 소고기 두 팩 넣었어", text: $text, axis: .vertical)
-            .font(.system(size: 17))
+            .font(.appFieldText)
             .lineLimit(2...5)
             .focused($focused)
           Divider()
@@ -32,7 +32,7 @@ struct CaptureSheet: View {
                 .background(AppColor.accent, in: Circle())
             }
             .buttonStyle(.plain)
-            Text("말하기").font(.system(size: 13)).foregroundStyle(AppColor.textMuted)
+            Text("말하기").font(.appFootnote).foregroundStyle(AppColor.textMuted)
             Spacer()
           }
         }
@@ -41,12 +41,12 @@ struct CaptureSheet: View {
 
         if showMicHint {
           Text("음성 입력은 곧 지원돼요. 지금은 텍스트로 추가할 수 있어요.")
-            .font(.system(size: 13)).foregroundStyle(AppColor.textMuted)
+            .font(.appFootnote).foregroundStyle(AppColor.textMuted)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
 
         Text("AI가 물건·장소·분류를 자동으로 채우는 기능은 곧 추가돼요. 지금은 이름만 빠르게 담깁니다.")
-          .font(.system(size: 12.5)).foregroundStyle(AppColor.textMuted)
+          .font(.appCaption).foregroundStyle(AppColor.textMuted)
           .frame(maxWidth: .infinity, alignment: .leading)
 
         Spacer()

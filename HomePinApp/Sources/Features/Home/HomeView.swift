@@ -12,7 +12,7 @@ struct HomeView: View {
       ScrollView {
         VStack(alignment: .leading, spacing: 0) {
           Text("HomePin")
-            .font(.system(size: 34, weight: .heavy))
+            .font(.appScreenTitle)
             .foregroundStyle(AppColor.textPrimary)
             .padding(.bottom, 14)
 
@@ -53,7 +53,7 @@ struct HomeView: View {
         ForEach(areas) { area in
           VStack(spacing: 6) {
             AppInitialBadge(text: area.name, size: 50, radius: 14)
-            Text(area.name).font(.system(size: 12.5, weight: .semibold)).foregroundStyle(AppColor.textSecondary)
+            Text(area.name).font(.appCaptionStrong).foregroundStyle(AppColor.textSecondary)
           }
         }
       }
@@ -70,12 +70,12 @@ struct HomeView: View {
             VStack(alignment: .leading, spacing: 2) {
               Text(item.name).font(.system(size: 16, weight: .semibold)).foregroundStyle(AppColor.textPrimary)
               if !item.locationPath.isEmpty {
-                Text(item.locationPath).font(.system(size: 12.5)).foregroundStyle(AppColor.textMuted)
+                Text(item.locationPath).font(.appCaption).foregroundStyle(AppColor.textMuted)
               }
             }
             Spacer()
             Image(systemName: "chevron.right")
-              .font(.system(size: 12, weight: .semibold))
+              .font(.appTag)
               .foregroundStyle(AppColor.textFaint)
           }
           .padding(.horizontal, 16).padding(.vertical, 12)

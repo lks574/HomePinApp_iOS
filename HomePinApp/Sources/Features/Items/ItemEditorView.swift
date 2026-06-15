@@ -31,13 +31,7 @@ struct ItemEditorView: View {
         }
         .padding(20)
       }
-      .safeAreaInset(edge: .bottom, spacing: 0) {
-        AppFullWidthPrimaryButton(title: model.saveTitle, isEnabled: model.canSave, action: save)
-          .padding(.horizontal, 20)
-          .padding(.top, 12)
-          .padding(.bottom, 16)
-          .background(.regularMaterial)
-      }
+      .appEditorSaveBar(title: model.saveTitle, isEnabled: model.canSave, action: save)
       .background(AppColor.screenBackground)
       .navigationTitle(model.title)
       .navigationBarTitleDisplayMode(.inline)
@@ -65,10 +59,10 @@ struct ItemEditorView: View {
     return VStack(spacing: 0) {
       VStack(alignment: .leading, spacing: 8) {
         Text("이름")
-          .font(.system(size: 15, weight: .semibold))
+          .font(.appRowLabel)
           .foregroundStyle(AppColor.textPrimary)
         TextField("예: AA 건전지", text: $model.name)
-          .font(.system(size: 17))
+          .font(.appFieldText)
           .foregroundStyle(AppColor.textPrimary)
           .focused($focusedField, equals: .name)
       }
@@ -76,14 +70,14 @@ struct ItemEditorView: View {
       Divider().padding(.leading, 16)
       HStack {
         Text("수량")
-          .font(.system(size: 15, weight: .semibold))
+          .font(.appRowLabel)
           .foregroundStyle(AppColor.textPrimary)
         Spacer()
         Button {
           model.quantity = max(1, model.quantity - 1)
         } label: {
           Image(systemName: "minus")
-            .font(.system(size: 13, weight: .bold))
+            .font(.appBadge)
             .frame(width: 34, height: 34)
         }
         .buttonStyle(.plain)
@@ -91,7 +85,7 @@ struct ItemEditorView: View {
         .disabled(model.quantity <= 1)
 
         Text("\(model.quantity)")
-          .font(.system(size: 17, weight: .bold))
+          .font(.appValueStrong)
           .foregroundStyle(AppColor.textPrimary)
           .monospacedDigit()
           .frame(minWidth: 34)
@@ -100,7 +94,7 @@ struct ItemEditorView: View {
           model.quantity += 1
         } label: {
           Image(systemName: "plus")
-            .font(.system(size: 13, weight: .bold))
+            .font(.appBadge)
             .frame(width: 34, height: 34)
         }
         .buttonStyle(.plain)
@@ -136,7 +130,7 @@ struct ItemEditorView: View {
     return VStack(spacing: 0) {
       Toggle(isOn: $model.hasExpiration) {
         Text("유통기한")
-          .font(.system(size: 15, weight: .semibold))
+          .font(.appRowLabel)
           .foregroundStyle(AppColor.textPrimary)
       }
       .tint(AppColor.accent)
@@ -146,7 +140,7 @@ struct ItemEditorView: View {
       if model.hasExpiration {
         Divider().padding(.leading, 16)
         DatePicker("날짜", selection: $model.expiresAt, displayedComponents: .date)
-          .font(.system(size: 15, weight: .semibold))
+          .font(.appRowLabel)
           .foregroundStyle(AppColor.textPrimary)
           .padding(.horizontal, 16)
           .frame(height: 58)
@@ -155,10 +149,10 @@ struct ItemEditorView: View {
       Divider().padding(.leading, 16)
       VStack(alignment: .leading, spacing: 8) {
         Text("메모")
-          .font(.system(size: 15, weight: .semibold))
+          .font(.appRowLabel)
           .foregroundStyle(AppColor.textPrimary)
         TextField("선택 입력", text: $model.memo, axis: .vertical)
-          .font(.system(size: 16))
+          .font(.appItemBody)
           .foregroundStyle(AppColor.textPrimary)
           .lineLimit(2...5)
           .focused($focusedField, equals: .memo)
@@ -196,14 +190,14 @@ private struct AppEditorSelectionRow: View {
     Button(action: action) {
       HStack {
         Text(title)
-          .font(.system(size: 15, weight: .semibold))
+          .font(.appRowLabel)
           .foregroundStyle(AppColor.textPrimary)
         Spacer()
         Text(value)
-          .font(.system(size: 15, weight: .semibold))
+          .font(.appRowLabel)
           .foregroundStyle(isPlaceholder ? AppColor.textMuted : AppColor.textSecondary)
         Image(systemName: "chevron.right")
-          .font(.system(size: 12, weight: .semibold))
+          .font(.appTag)
           .foregroundStyle(AppColor.textFaint)
       }
       .frame(height: 58)

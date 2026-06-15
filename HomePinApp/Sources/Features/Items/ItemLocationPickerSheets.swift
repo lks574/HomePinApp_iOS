@@ -107,7 +107,7 @@ private struct PickerRow: View {
             .font(.system(size: 16, weight: .bold))
             .foregroundStyle(AppColor.textPrimary)
           Text(subtitle)
-            .font(.system(size: 13))
+            .font(.appFootnote)
             .foregroundStyle(AppColor.textMuted)
         }
         Spacer()
