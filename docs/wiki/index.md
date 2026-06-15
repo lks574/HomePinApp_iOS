@@ -32,7 +32,8 @@ SORT created ASC
 - [[Places]] → [[PlaceDetail]] → [[ItemEditor]]
 - [[Places]] · [[PlaceDetail]] → [[PlaceEditor]] — 장소 추가/편집
 - [[PlaceDetail]] → [[SpotEditor]] — 세부위치 추가/편집
-- [[Home]] · [[Capture]] → [[ItemEditor]] — 물건 추가/편집 공용 에디터
+- [[Home]] · [[Capture]] → [[ItemEditor]] — 물건 추가/편집 공용 에디터(AI 미가용·실패 폴백)
+- [[Capture]] → [[DraftReview]] — AI 자연어 파싱 결과 확인 드래프트(다건 일괄 저장)
 - [[Recipes]] → [[RecipeDetail]] → [[RecipeEditor]] — 레시피 상세·추가/편집
 
 ## 모델 `#model`

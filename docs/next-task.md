@@ -13,9 +13,14 @@ UI 우선 1차(시안 C 화면 골격: 5탭·장소·레시피·홈·추가 시�
 
 ## 다음 후보 (우선순위순 제안)
 
-1. **AI 자연어 추가** — Foundation Models `@Generable` 로 문장 → 구조화 드래프트
-   (물건·장소·수량·분류). 기존 위치/카테고리 grounding, 확인 단계, 없으면생성/있으면매핑.
-   `CaptureSheet` 에 연결. (제품 방향: [[제품-방향-재고-레시피-AI]])
+1. **AI 자연어 추가** — 1차 구현 완료(screen-09). Foundation Models `@Generable`
+   (`NLItemParser`, 추출만·비-MainActor) → `NLParseViewModel`(@MainActor, 가용성
+   게이트·단일 세션 Task) → 확인 드래프트(`CaptureDraftReviewView`) → `AddDraftResolver`
+   다건 저장(grounding·없으면생성/있으면매핑·`Item.normalize` 매칭). `CaptureSheet.add()`
+   가 가용 시 파싱→확인, 미가용·실패·취소 시 단건 스텁 폴백. 텍스트·음성 공용 단일 경로.
+   잔여: 실기기 추론·한국어 품질 검증(시뮬레이터 미가용), 모델 다운로드 유도 UX(#5),
+   유통기한·메모·find/add 의도판별은 후속. (제품 방향: [[제품-방향-재고-레시피-AI]],
+   결정: [[2026-06-15-NL-추가-파서-FoundationModels]])
 2. **검색 동작** — 중앙 버튼 시트 [추가 | 검색] 모드 토글로 1차 완료(`screen-04`):
    `Item.normalizedName` 부분 일치 → 결과에 위치 경로, 결과 탭 시 `ItemEditor` 편집.
    잔여: 홈/장소/레시피 검색바 실연동, 자연어 검색 확장.
@@ -32,7 +37,10 @@ UI 우선 1차(시안 C 화면 골격: 5탭·장소·레시피·홈·추가 시�
    남은 범위는 물건 카테고리·태그·사진, 레시피 cuisine 분류/dish 칩 실제 필터.
    (장소 CRUD `screen-05`·세부위치 CRUD `screen-06` 완료 — 추가/편집은 `PlaceEditor`/`SpotEditor`, 삭제는 확인 다이얼로그.)
    장소/세부위치 에디터 확장(아이콘·Space 선택), 정렬 변경(drag) 이 후속.
-5. **기기 게이팅 + 한국어/폴백** — AI 미지원 환경 처리.
+5. **기기 게이팅 + 한국어/폴백** — AI 미지원 환경 처리. NL 추가 파서의 가용성 게이트
+   (`SystemLanguageModel.default.availability`)·단건 스텁 폴백은 #1 에서 구현됨. 잔여는
+   한국어 모델 다운로드/Apple Intelligence 미설치 유도 UX(진행률·동의), 시작 전 사전
+   게이팅(마이크/추가 진입 시 미가용 사전 안내), 실기기 한국어 인식·추론 정확도 검증.
 
 ## 진행 메모
 

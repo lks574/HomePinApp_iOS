@@ -19,7 +19,8 @@ status: draft
 | screen-03 | RecipeDetail (레시피 상세) | in-progress | 레시피 카드 → 상세 push. 헤더(메타·요약)·재고 요약·재료 목록(보유/임박/없음 칩)·조리 단계. 상단 ⋯ 로 편집/삭제(확인). |
 | screen-07 | RecipeEditor (레시피 CRUD) | in-progress | 레시피 추가/편집 공용 시트 + 상세에서 삭제. 기본정보(제목·종류·인분·시간·요약) + 재료/단계 동적 행 편집. 저장 시 재료 이름→보유 물건 매칭으로 재고 상태 연동. |
 | screen-08 | Settings (설정 고도화) | in-progress | 표시(테마 시스템/라이트/다크, `@AppStorage`+`preferredColorScheme`) · 데이터(저장 현황 + 전체 데이터 정리, 기본 Space 복구) · 정보. 다크는 디자인 토큰 라이트/다크 동적화로 앱 전체 적용. |
-| screen-04 | 검색 (중앙 시트) | in-progress | 중앙 버튼 시트에 [추가 \| 검색] 모드 토글 + 공용 음성 입력기 연동 완료(`SpeechDictation` 온디바이스 받아쓰기 → 활성 모드 필드, 권한·불가용·거부 폴백). 검색은 `Item.normalizedName` 부분 일치 → 결과에 위치 경로, 결과 탭 시 `ItemEditor` 편집 진입. 잔여: AI 파서 경로, 기기/모델 게이팅·다운로드 UX, 홈/장소/레시피 검색바 실연동·자연어 검색. |
+| screen-04 | 검색 (중앙 시트) | in-progress | 중앙 버튼 시트에 [추가 \| 검색] 모드 토글 + 공용 음성 입력기 연동 완료(`SpeechDictation` 온디바이스 받아쓰기 → 활성 모드 필드, 권한·불가용·거부 폴백). 추가 텍스트(타이핑·받아쓰기 공용)는 가용 시 AI 파서(`NLParseViewModel`)로 구조화 → screen-09 확인 화면, 미가용·실패·취소 시 단건 스텁 폴백(AI 파서 경로 해소). 검색은 `Item.normalizedName` 부분 일치 → 결과에 위치 경로, 결과 탭 시 `ItemEditor` 편집 진입. 잔여: 기기/모델 게이팅·다운로드 UX, 홈/장소/레시피 검색바 실연동·자연어 검색, 실기기 추론·한국어 품질 검증. |
+| screen-09 | 확인 드래프트 (AI 추가) | in-progress | AI 파서 결과를 확인/수정/삭제하는 push 화면(`CaptureSheet` 소유). 항목별 이름·수량·장소·세부위치·분류·태그, 신규 vs 기존 매칭 시각 구분(‘신규’ 칩), 다건 배열, 장소 비면 채워야 저장. 저장 시 `AddDraftResolver` 가 다건 일괄 insert + 신규 위치/분류/태그 생성(없으면생성/있으면매핑, `Item.normalize` 매칭) 후 시트 dismiss. |
 
 ## 후속 후보
 

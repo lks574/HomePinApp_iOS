@@ -26,16 +26,19 @@ status: draft
 
 UI 우선 1차(시안 C 화면 골격)에서 의도적으로 뒤로 미룬 것들.
 
-- [ ] **AI 자연어 파싱 미연동** — 추가 시트(`CaptureSheet`)는 텍스트를 이름 draft 로
-  `ItemEditor` 에 넘기는 스텁. Foundation Models `@Generable` 로 물건·장소·분류 추출 +
-  확인 드래프트 + 없으면생성/있으면매핑은 미구현. (제품 방향: [[제품-방향-재고-레시피-AI]])
+- [x] **AI 자연어 파싱 연동 완료(1차)** — 추가 시트(`CaptureSheet`)가 입력 텍스트를
+  온디바이스 Foundation Models 파서(`NLItemParser` `@Generable`)로 구조화하고 확인
+  드래프트(`CaptureDraftReviewView`, screen-09)에서 다건 확인/수정 후 `AddDraftResolver`
+  가 없으면생성/있으면매핑(`Item.normalize`)으로 일괄 저장. 가용성 게이트·실패·취소 시
+  단건 스텁 폴백. (결정: `docs/wiki/Decision/2026-06-15-NL-추가-파서-FoundationModels.md`)
+  잔여: 실기기 추론·한국어 품질 검증, 모델 다운로드 유도 UX, 유통기한·메모·find/add 의도.
 - [x] **음성(STT) 입력기 연동 완료** — `SpeechDictation`(iOS 26 `SpeechAnalyzer` +
   `SpeechTranscriber` 온디바이스 받아쓰기)을 `CaptureSheet` 마이크 버튼에 실연동.
   받아쓰기 결과를 활성 모드 필드(추가=`text`, 검색=`searchText`)에 주입, 권한·불가용·
   거부 시 텍스트 폴백. (결정: `docs/wiki/Decision/2026-06-15-음성입력-STT-아키텍처.md`)
   잔여는 아래 3개 항목으로 분리.
-- [ ] **음성 → AI 파서 경로 재사용** — 받아쓰기로 채운 텍스트를 위 "AI 자연어 파싱"
-  파서에 그대로 흘려 물건·장소·분류 구조화. 텍스트·음성 공용 단일 파서 경로로 묶는다.
+- [x] **음성 → AI 파서 경로 재사용 완료** — 받아쓰기로 채운 텍스트가 타이핑 텍스트와
+  같은 `CaptureSheet.add()` 파서 경로로 합류한다(추가 모드). 텍스트·음성 공용 단일 파서.
 - [ ] **한국어 받아쓰기 모델 다운로드 UX** — 현재는 모델 미설치·미지원 시 `state`
   를 `.unavailable` 로 떨어뜨려 텍스트 폴백만 안내. 진행률·다운로드 동의 UI 미구현
   (`AssetInventory.assetInstallationRequest` 진행률 노출).
@@ -58,8 +61,14 @@ UI 우선 1차(시안 C 화면 골격)에서 의도적으로 뒤로 미룬 것�
 - [ ] **Pretendard 미번들** — 우선 시스템 폰트. 폰트 파일 번들 + 적용 필요.
 - [ ] **비주얼 미세조정** — `음성 플로우` 시안은 컴포넌트 픽셀 미확인(개념 기준 구성).
   실기기 렌더 후 중앙 마이크 위치·탭바 여백·세이프에어리어 조정 필요.
-- [ ] **Apple Intelligence 기기 게이팅 / 한국어 지원 / fallback UX** — AI 연동 시
-  미지원 기기·언어 처리(텍스트 폴백은 구조상 확보).
+- [ ] **NL 추가 파서 실기기 검증** — 빌드 green·시뮬레이터 폴백 경로(미가용 → 단건
+  스텁 → `ItemEditor` 이름 prefill)·UI·매칭/저장 로직까지 시뮬레이터 검증 완료. 실제
+  온디바이스 추론·한국어 추출 품질(다건 분리·수량·위치 grounding 정확도)·`@Generable`
+  스키마 준수·확인 화면 신규/기존 매칭·다건 일괄 저장은 Apple Intelligence 가용 실기기
+  필수(시뮬레이터 `availability` 미가용). 결정: `docs/wiki/Decision/2026-06-15-NL-추가-파서-FoundationModels.md`
+- [ ] **Apple Intelligence 기기 게이팅 / 한국어 모델 다운로드 / fallback UX** — 미가용
+  기기·언어 처리(텍스트·단건 폴백은 구조상 확보). 잔여: 모델 미설치 시 다운로드 동의·
+  진행률 UI, 추가 진입 전 사전 게이팅 안내(현재는 `add()` 시점 가용성 판단).
 - [ ] **Space 단일 가정** — UI 가 "장소"=Area 만 노출(단일 "우리집"). 멀티홈 필요 시
   Space 스위처 노출.
 - [ ] **레시피 dish 필터 정적** — cuisine 필터만 동작, dish(국·찌개/볶음…) 필터는

@@ -2,19 +2,24 @@ import SwiftData
 import SwiftUI
 
 /// 중앙 버튼이 띄우는 시트 — [추가 | 검색] 두 모드 + 공용 음성 입력.
-/// - 추가: 텍스트를 이름 draft 로 넘겨 사용자가 위치/수량을 확인한 뒤 저장한다.
+/// - 추가: 입력 텍스트(타이핑·받아쓰기 공용)를 가용 시 온디바이스 AI 파서(`NLParseViewModel`)로
+///   구조화 드래프트로 바꿔 확인 화면(screen-09)으로 push 하고, 미가용·실패·취소·빈 결과면
+///   현 단건 스텁(이름 prefill 로 `ItemEditor` `create`)으로 폴백한다. 텍스트 경로는 항상 산다.
 /// - 검색: `Item.normalizedName` 기반 이름 검색 → 결과에 위치 경로. 결과를 누르면
 ///   해당 물건 편집 시트로 진입한다. (자연어 검색은 후속)
 /// - 음성(🎤): 모드 토글 아래 공용. 받아쓰기(`SpeechDictationViewModel`) 결과는 활성 모드의 입력
-///   필드(추가=`text`, 검색=`searchText`)로 들어간다. STT 는 텍스트를 채우는 입력기일 뿐
-///   텍스트 입력 경로는 항상 살아 있어 불가용·거부 시 폴백된다. (AI 파서는 후속)
+///   필드(추가=`text`, 검색=`searchText`)로 들어간 뒤, 추가 모드에선 텍스트와 같은 `add()`
+///   파서 경로로 합류한다. STT 는 텍스트를 채우는 입력기일 뿐 텍스트 경로는 항상 살아 있다.
 struct CaptureSheet: View {
   @Environment(\.dismiss) private var dismiss
+  @Environment(\.modelContext) private var modelContext
   @State private var mode: CaptureMode = .add
   @State private var text = ""
   @State private var searchText = ""
   @State private var dictation = SpeechDictationViewModel()
+  @State private var parser = NLParseViewModel()
   @State private var editorRoute: ItemEditorRoute?
+  @State private var reviewRoute: DraftReviewRoute?
   @FocusState private var focusedField: CaptureField?
 
   /// 검색 대상 전체 물건. 이름순으로 받아 정규화 키로 in-memory 필터한다(개인 재고
@@ -43,6 +48,9 @@ struct CaptureSheet: View {
       .toolbar {
         ToolbarItem(placement: .topBarTrailing) { Button("닫기") { dismiss() } }
       }
+      .navigationDestination(item: $reviewRoute) { route in
+        CaptureDraftReviewView(drafts: route.drafts) { dismiss() }
+      }
       .sheet(item: $editorRoute) { route in
         ItemEditorView(mode: route.mode) {
           dismiss()
@@ -51,12 +59,19 @@ struct CaptureSheet: View {
       .onAppear { focusedField = mode == .add ? .add : .search }
       .onChange(of: mode) { _, newMode in
         dictation.reset()
+        parser.reset()
         focusedField = newMode == .add ? .add : .search
       }
       .onChange(of: dictation.transcript) { _, newTranscript in
         applyTranscript(newTranscript)
       }
-      .onDisappear { dictation.reset() }
+      .onChange(of: parser.state) { _, newState in
+        applyParseState(newState)
+      }
+      .onDisappear {
+        dictation.reset()
+        parser.reset()
+      }
     }
   }
 
@@ -118,15 +133,43 @@ struct CaptureSheet: View {
         .focused($focusedField, equals: .add)
         .padding(16)
         .appCard(radius: 16)
+        .disabled(parser.isParsing)
 
-      Text("AI가 물건·장소·분류를 자동으로 채우는 기능은 곧 추가돼요. 지금은 이름만 빠르게 담깁니다.")
+      Text(addHint)
         .font(.appCaption).foregroundStyle(AppColor.textMuted)
         .frame(maxWidth: .infinity, alignment: .leading)
 
       Spacer()
 
-      AppFullWidthPrimaryButton(title: "추가", isEnabled: canAdd, action: add)
+      if parser.isParsing {
+        parsingIndicator
+      } else {
+        AppFullWidthPrimaryButton(title: "추가", isEnabled: canAdd, action: add)
+      }
     }
+  }
+
+  /// 파서 가용 여부에 따른 안내. 미가용이면 단건(이름만) 폴백을 알린다.
+  private var addHint: String {
+    parser.isAvailable
+      ? "말하거나 적으면 AI가 물건·장소·수량·분류를 정리해 확인 화면을 보여줘요. 여러 개도 한 번에 돼요."
+      : "이 기기에서는 AI 정리를 쓸 수 없어 이름만 빠르게 담겨요. 위치·수량은 다음 화면에서 채우세요."
+  }
+
+  /// 추론 중 진행 표시 + 취소. 추론이 끝나면 확인 화면으로 넘어가거나 폴백한다.
+  private var parsingIndicator: some View {
+    HStack(spacing: 12) {
+      ProgressView()
+      Text("정리하는 중…").font(.appRowLabel).foregroundStyle(AppColor.textSecondary)
+      Spacer()
+      Button("취소") { parser.cancel() }
+        .font(.appRowLabel)
+        .foregroundStyle(AppColor.accent)
+    }
+    .padding(.horizontal, 16)
+    .frame(height: 52)
+    .frame(maxWidth: .infinity)
+    .appCard(radius: 14)
   }
 
   // MARK: - 검색
@@ -234,11 +277,38 @@ struct CaptureSheet: View {
   // MARK: - 로직
 
   private var canAdd: Bool {
-    !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !parser.isParsing
   }
 
+  /// 추가 진입. 파서 가용 시 자연어 파싱(→ 확인 화면 push), 미가용·실패·취소·빈 결과면
+  /// 현 단건 스텁(이름 prefill)으로 폴백한다. 분기는 `parser.state` 변화를 받아 처리한다.
   private func add() {
     let name = text.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard !name.isEmpty else { return }
+    guard parser.isAvailable else {
+      fallbackToStub(name)
+      return
+    }
+    focusedField = nil
+    parser.parse(name, in: modelContext)
+  }
+
+  /// 파서 상태에 따라 분기한다. 성공이면 확인 화면 push, 실패·미가용이면 단건 스텁 폴백.
+  private func applyParseState(_ state: NLParseViewModel.State) {
+    switch state {
+    case let .drafts(drafts):
+      reviewRoute = DraftReviewRoute(drafts: drafts)
+      parser.reset()
+    case .unavailable, .failed:
+      fallbackToStub(text.trimmingCharacters(in: .whitespacesAndNewlines))
+      parser.reset()
+    case .idle, .parsing:
+      break
+    }
+  }
+
+  /// 현 단건 스텁: 이름만 prefill 한 `ItemEditor` create 로 넘긴다(텍스트 경로 보장).
+  private func fallbackToStub(_ name: String) {
     guard !name.isEmpty else { return }
     editorRoute = ItemEditorRoute(mode: .create(initialName: name))
   }
@@ -253,6 +323,21 @@ struct CaptureSheet: View {
     let key = Item.normalize(searchQuery)
     guard !key.isEmpty else { return [] }
     return allItems.filter { $0.normalizedName.contains(key) }
+  }
+}
+
+/// 확인 드래프트 화면(screen-09) push 라우트. `navigationDestination(item:)` 요건
+/// (`Hashable`)을 위해 안정 id 로 동등성을 정의한다(드래프트 자체는 참조 타입).
+private struct DraftReviewRoute: Identifiable, Hashable {
+  let id = UUID()
+  let drafts: [AddDraft]
+
+  static func == (lhs: DraftReviewRoute, rhs: DraftReviewRoute) -> Bool {
+    lhs.id == rhs.id
+  }
+
+  func hash(into hasher: inout Hasher) {
+    hasher.combine(id)
   }
 }
 
