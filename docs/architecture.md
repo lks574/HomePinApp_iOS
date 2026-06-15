@@ -2,7 +2,7 @@
 aliases: [architecture, 아키텍처]
 tags: [doc/code, architecture]
 created: 2026-06-12
-updated: 2026-06-12
+updated: 2026-06-15
 status: draft
 ---
 
@@ -53,6 +53,15 @@ status: draft
 > [!note] 이 결정은 구 프로젝트(HomePin_iOS)의 "모든 쓰기 service 경유 / D2 supersede
 > 가드(@Observable 가 @Model 보유 금지)" 규칙을 **대체**한다. 로컬 SwiftData 직결이라
 > 영속화 전용 service 계층은 두지 않는다.
+
+#### 에디터 적용 (도메인 로직 위치)
+
+- **도메인 판정·집계는 `@Model` 에 둔다**(계산 프로퍼티). View 에 비즈니스 로직을
+  남기지 않는다. 예: `Area.itemCount`, `Recipe.inStockCount`·`usesExpiringIngredient`,
+  `RecipeIngredient.stockStatus`. View 는 도메인값→UI 표현 매핑만 한다.
+- **에디터 화면**은 상태 복잡도로 가른다 — 단일 필드는 직결(`PlaceEditor`·`SpotEditor`),
+  다필드 draft + 다단계 쓰기 불변식은 얇은 `@Observable` 모델(`ItemEditorModel`). 상세:
+  [[2026-06-15-에디터-상태-소유-패턴]].
 
 ### 데이터 모델 / 마이그레이션
 

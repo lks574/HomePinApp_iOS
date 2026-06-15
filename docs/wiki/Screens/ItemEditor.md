@@ -32,17 +32,21 @@ screen-id: screen-02
 
 ## 상태 관리
 
-- 저장 전 draft 는 SwiftData 에 넣지 않고 `@State` 로 보관한다.
-- 저장 시에만 View ↔ SwiftData 직결로 insert 또는 모델 프로퍼티 갱신.
-- 별도 `@Observable` 모델은 두지 않는다. 현재 범위는 단일 화면 draft 로 충분하다.
+- 얇은 `@Observable` 모델 **`ItemEditorModel`** 이 draft(7필드)와 `save(into:)`(create/edit
+  분기·`normalizedName` 동기화·spot→area 불변식)를 소유한다. SwiftData 직결로
+  충분하지 않은 다필드 draft + 다단계 쓰기 케이스.
+- View 는 레이아웃과 순수 UI 상태(focus·picker 시트 표시)만 갖고 `@Bindable` 로
+  모델에 바인딩한다. 저장 시에만 모델이 SwiftData 에 반영.
+- 단일 필드 에디터([[PlaceEditor]]·[[SpotEditor]])는 직결을 유지한다(모델 없음).
 
 ## 관련 태스크 / 결정
 
 - `[screen-02]` (docs/screen-implementation-tasks.md)
-- 관련 결정: [[2026-06-12-위치-물건-데이터모델]]
+- 관련 결정: [[2026-06-12-위치-물건-데이터모델]] · [[2026-06-15-에디터-상태-소유-패턴]]
 
 ## 메모
 
-- 코드: `HomePinApp/Sources/Features/Items/ItemEditorView.swift`
+- 코드: `HomePinApp/Sources/Features/Items/ItemEditorView.swift` (레이아웃),
+  `ItemEditorModel.swift` (draft·저장)
 - 선택 시트: `HomePinApp/Sources/Features/Items/ItemLocationPickerSheets.swift`
 - 후속: 삭제, 카테고리, 태그, 사진, AI 파싱 결과 structured draft.
