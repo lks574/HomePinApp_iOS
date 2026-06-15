@@ -19,7 +19,8 @@ status: in-progress
 | `summary` | `String?` | |
 | `servings` | `Int?` | 인분 |
 | `totalMinutes` | `Int?` | 조리시간 |
-| `cuisine` | `String?` | 한식/양식… (초기 문자열) |
+| `cuisine` | `String?` | 요리권: 한식/일식/중식/양식/분식 (문자열). 목록 필터·에디터 칩 연동 |
+| `dishType` | `String?` | 요리 종류: 국·찌개/볶음/구이/조림/밥·면/반찬 (문자열). 목록 필터·에디터 칩 연동 |
 | `sourceURL` | `String?` | 출처 |
 | `steps` | `[RecipeStep]` | Codable 값(text+minutes?), 순서=배열 |
 | `createdAt`/`updatedAt` | `Date` | |
@@ -43,5 +44,5 @@ status: in-progress
 
 ## 메모
 
-- 결정: [[2026-06-12-레시피-모델]] · 제품 방향: [[제품-방향-재고-레시피-AI]]
+- 결정: [[2026-06-12-레시피-모델]] · [[2026-06-15-레시피-요리종류-dishType]] · 제품 방향: [[제품-방향-재고-레시피-AI]]
 - 코드: `HomePinApp/Sources/Models/Recipe.swift`

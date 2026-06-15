@@ -10,7 +10,10 @@ final class Recipe {
   var summary: String?
   var servings: Int?
   var totalMinutes: Int?
+  /// 요리권(한식/일식/중식/양식/분식 등). 목록 필터·에디터 칩과 연동.
   var cuisine: String?
+  /// 요리 종류(국·찌개/볶음/구이/조림/밥·면/반찬 등). 목록 필터·에디터 칩과 연동.
+  var dishType: String?
   var sourceURL: String?
   /// 조리 단계(값 배열, 순서=배열 순서).
   var steps: [RecipeStep]
@@ -30,6 +33,7 @@ final class Recipe {
     servings: Int? = nil,
     totalMinutes: Int? = nil,
     cuisine: String? = nil,
+    dishType: String? = nil,
     sourceURL: String? = nil,
     steps: [RecipeStep] = [],
     createdAt: Date = .now,
@@ -41,6 +45,7 @@ final class Recipe {
     self.servings = servings
     self.totalMinutes = totalMinutes
     self.cuisine = cuisine
+    self.dishType = dishType
     self.sourceURL = sourceURL
     self.steps = steps
     self.createdAt = createdAt
