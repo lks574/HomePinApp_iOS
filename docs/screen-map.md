@@ -23,7 +23,9 @@ flowchart TD
       Settings[설정]
     end
     Places --> PlaceDetail[장소 상세<br/>수납공간별 물건]
-    PlaceDetail --> ItemDetail[물건 상세]
+    PlaceDetail --> ItemEditor[물건 추가/편집]
+    Home --> ItemEditor
+    Capture --> ItemEditor
     Mic --> Capture[NL 추가 시트<br/>텍스트+음성 → 확인]
     Recipes --> RecipeDetail[레시피 상세]
 ```
@@ -33,12 +35,13 @@ flowchart TD
 | 화면 | 역할 | 상태 |
 | --- | --- | --- |
 | Splash | 진입 분기 | done |
-| Home | 대시보드(검색·임박·바로가기) | 예정 |
-| Places (장소 목록) | Area 그리드(개수·미리보기) | 개발 중 |
-| PlaceDetail (장소 상세) | Spot별 Item 목록 | 개발 중 |
+| Home | 대시보드(검색·임박·바로가기) | in-progress |
+| Places (장소 목록) | Area 그리드(개수·미리보기) | in-progress |
+| PlaceDetail (장소 상세) | Spot별 Item 목록·물건 추가/편집 진입 | in-progress |
 | Recipes (레시피) | 임박 카드 + 추천 목록 | 개발 중 |
-| Capture (NL 추가) | 텍스트+음성 → 구조화 확인 | 예정 |
+| Capture (NL 추가) | 텍스트+음성 → 에디터 확인 | in-progress |
 | Settings | 설정 | stub |
-| ItemDetail / RecipeDetail | 상세 | 예정 |
+| ItemEditor | 물건 추가/편집 공용 시트 | in-progress |
+| RecipeDetail | 상세 | 예정 |
 
 UI 우선 — seed 데이터로 화면을 먼저 만들고 AI/로직은 뒤에 채운다.

@@ -5,6 +5,7 @@ import SwiftUI
 struct HomeView: View {
   @Query(sort: \Area.sortOrder) private var areas: [Area]
   @Query(sort: \Item.createdAt, order: .reverse) private var items: [Item]
+  @State private var editorRoute: ItemEditorRoute?
 
   var body: some View {
     NavigationStack {
@@ -32,6 +33,9 @@ struct HomeView: View {
       }
       .background(AppColor.screenBackground)
       .toolbar(.hidden, for: .navigationBar)
+      .sheet(item: $editorRoute) { route in
+        ItemEditorView(mode: route.mode)
+      }
     }
   }
 
@@ -81,17 +85,25 @@ struct HomeView: View {
   private var recentList: some View {
     VStack(spacing: 0) {
       ForEach(recentItems) { item in
-        HStack(spacing: 12) {
-          VStack(alignment: .leading, spacing: 2) {
-            Text(item.name).font(.system(size: 16, weight: .semibold)).foregroundStyle(AppColor.textPrimary)
-            if !item.locationPath.isEmpty {
-              Text(item.locationPath).font(.system(size: 12.5)).foregroundStyle(AppColor.textMuted)
+        Button {
+          editorRoute = ItemEditorRoute(mode: .edit(item))
+        } label: {
+          HStack(spacing: 12) {
+            VStack(alignment: .leading, spacing: 2) {
+              Text(item.name).font(.system(size: 16, weight: .semibold)).foregroundStyle(AppColor.textPrimary)
+              if !item.locationPath.isEmpty {
+                Text(item.locationPath).font(.system(size: 12.5)).foregroundStyle(AppColor.textMuted)
+              }
             }
+            Spacer()
+            Image(systemName: "chevron.right")
+              .font(.system(size: 12, weight: .semibold))
+              .foregroundStyle(AppColor.textFaint)
           }
-          Spacer()
+          .padding(.horizontal, 16).padding(.vertical, 12)
+          .overlay(alignment: .top) { Divider().padding(.leading, 16) }
         }
-        .padding(.horizontal, 16).padding(.vertical, 12)
-        .overlay(alignment: .top) { Divider().padding(.leading, 16) }
+        .buttonStyle(.plain)
       }
     }
     .appCard()

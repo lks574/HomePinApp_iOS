@@ -1,13 +1,12 @@
-import SwiftData
 import SwiftUI
 
 /// NL 추가 입력 시트 — 텍스트 + 음성 진입(2-입력). UI 우선이라 STT/AI 파싱은 후속.
-/// 지금은 텍스트로 빠르게 이름만 담는다(위치/분류는 AI 단계에서 자동 채움 예정).
+/// 지금은 텍스트를 이름 draft 로 넘겨 사용자가 위치/수량을 확인한 뒤 저장한다.
 struct CaptureSheet: View {
   @Environment(\.dismiss) private var dismiss
-  @Environment(\.modelContext) private var modelContext
   @State private var text = ""
   @State private var showMicHint = false
+  @State private var editorRoute: ItemEditorRoute?
   @FocusState private var focused: Bool
 
   var body: some View {
@@ -61,6 +60,11 @@ struct CaptureSheet: View {
       .toolbar {
         ToolbarItem(placement: .topBarTrailing) { Button("닫기") { dismiss() } }
       }
+      .sheet(item: $editorRoute) { route in
+        ItemEditorView(mode: route.mode) {
+          dismiss()
+        }
+      }
       .onAppear { focused = true }
     }
   }
@@ -72,7 +76,6 @@ struct CaptureSheet: View {
   private func add() {
     let name = text.trimmingCharacters(in: .whitespacesAndNewlines)
     guard !name.isEmpty else { return }
-    modelContext.insert(Item(name: name))
-    dismiss()
+    editorRoute = ItemEditorRoute(mode: .create(initialName: name))
   }
 }

@@ -60,7 +60,7 @@ enum SeedData {
       context.insert(s)
       return s
     }
-    let freezer = spot("냉동실", fridge, 0)
+    _ = spot("냉동실", fridge, 0)
     let fresh = spot("신선칸", fridge, 1)
     let doorSide = spot("문쪽", fridge, 2)
     let upper = spot("상부장", kitchen, 0)
