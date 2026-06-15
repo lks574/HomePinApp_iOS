@@ -2,7 +2,7 @@
 aliases: [RecipeIngredient, 레시피 재료]
 tags: [model]
 created: 2026-06-12
-updated: 2026-06-12
+updated: 2026-06-15
 status: in-progress
 ---
 
@@ -22,6 +22,7 @@ status: in-progress
 | `note` | `String?` | "다진 것" 등 |
 | `sortOrder` | `Int` | |
 | `isInStock` | computed | 매칭 item 있고 수량>0 |
+| `stockStatus` | computed | 재고 상태 도메인 enum `missing`/`soon`/`have` (시각 매핑은 View) |
 
 ## 관계
 

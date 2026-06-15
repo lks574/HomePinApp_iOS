@@ -43,4 +43,16 @@ final class RecipeIngredient {
     guard let item else { return false }
     return item.quantity > 0
   }
+
+  /// 재료의 재고 상태 — 없음/임박/보유. 시각 표현(칩 색)은 View 가 매핑한다.
+  enum StockStatus {
+    case missing
+    case soon
+    case have
+  }
+
+  var stockStatus: StockStatus {
+    guard isInStock, let item else { return .missing }
+    return item.isExpiringSoon ? .soon : .have
+  }
 }

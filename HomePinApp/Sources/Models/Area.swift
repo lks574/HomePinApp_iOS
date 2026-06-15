@@ -40,4 +40,9 @@ final class Area {
     self.spots = []
     self.items = []
   }
+
+  /// 이 구역의 물건 수 = 직속 + 하위 세부위치(Spot)의 물건.
+  var itemCount: Int {
+    items.count + spots.reduce(0) { $0 + $1.items.count }
+  }
 }

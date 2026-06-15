@@ -2,7 +2,7 @@
 aliases: [Recipe, 레시피]
 tags: [model]
 created: 2026-06-12
-updated: 2026-06-12
+updated: 2026-06-15
 status: in-progress
 ---
 
@@ -24,6 +24,8 @@ status: in-progress
 | `steps` | `[RecipeStep]` | Codable 값(text+minutes?), 순서=배열 |
 | `createdAt`/`updatedAt` | `Date` | |
 | `missingIngredients`/`isReadyToCook` | computed | 없는 재료·지금 가능 여부 |
+| `inStockCount` | computed | 보유 재료 수 (← RecipesView `haveCount`) |
+| `usesExpiringIngredient` | computed | 임박 재료 사용 여부 (← `soonRecipes` 필터) |
 
 > 사진(photoData)은 v1 제외.
 
@@ -36,6 +38,8 @@ status: in-progress
 
 - 보유/부족: 각 [[RecipeIngredient]] 의 `isInStock` 집계 → "N개 부족 / 지금 가능".
 - 임박 추천: 임박 [[Item]] → `usedInIngredients` → 이 레시피.
+- 도메인 판정은 모델 계산 프로퍼티로 둔다(View 에 비즈니스 로직 금지). 결정:
+  [[2026-06-15-에디터-상태-소유-패턴]].
 
 ## 메모
 

@@ -19,6 +19,7 @@ status: in-progress
 | `icon` | `String?` | |
 | `sortOrder` | `Int` | |
 | `createdAt`/`updatedAt` | `Date` | |
+| `itemCount` | computed | 직속 + 하위 Spot 물건 수 (← 전역 `areaItemCount` 대체) |
 
 ## 관계
 

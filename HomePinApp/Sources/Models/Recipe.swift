@@ -58,4 +58,14 @@ final class Recipe {
   var isReadyToCook: Bool {
     missingIngredients.isEmpty
   }
+
+  /// 보유 중인 재료 수.
+  var inStockCount: Int {
+    ingredients.filter(\.isInStock).count
+  }
+
+  /// 임박(곧 만료) 재료를 하나라도 쓰는가.
+  var usesExpiringIngredient: Bool {
+    ingredients.contains { $0.item?.isExpiringSoon ?? false }
+  }
 }
