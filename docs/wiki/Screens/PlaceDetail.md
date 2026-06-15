@@ -22,19 +22,20 @@ screen-id: screen-01, screen-05, screen-06
 ## 연결된 화면
 
 - 들어옴 ←: [[Places]] — 장소 카드 탭
+- 들어옴 ←: [[Home]] — 장소 바로가기(탭 전환, `AppRouter.openPlace`)
 - 이동 →: [[ItemEditor]] — 물건 행 탭(편집), 추가 버튼(생성). `.sheet(item:)`
 - 이동 →: [[PlaceEditor]] — 헤더 메뉴 "장소 이름 수정"(편집)
 - 이동 →: [[SpotEditor]] — 헤더 메뉴 "세부위치 추가"(생성), 카드 메뉴 "이름 수정"(편집)
 
 ## 사용 모델
 
-- [[Area]] — 읽기(전달받은 `area`), 관계 경유로 `spots`·`items` 접근
-- [[Spot]] — 읽기(수납공간별 그룹)
-- [[Item]] — 읽기(목록), 편집은 [[ItemEditor]] 에 위임
+- [[Area]] — 읽기(전달받은 `area`: 이름·헤더). 진입은 [[Places]] navigationDestination 또는 [[Home]] 바로가기
+- [[Spot]] — 읽기 `@Query`(area id 필터, 추가 즉시 반영)
+- [[Item]] — 읽기 `@Query`(area id 필터), 편집은 [[ItemEditor]] 에 위임
 
 ## 상태 관리
 
-- 직결(View ↔ SwiftData). 전달받은 `Area` 의 관계를 직접 읽고, 장소 삭제는 `modelContext.delete` 후 `dismiss`, 세부위치 삭제는 `modelContext.delete`.
+- 직결(View ↔ SwiftData). `spots`·`items` 는 `@Query`(area id 필터)로 관찰해 추가/편집/삭제가 즉시 반영된다(관계 배열 직접 읽기는 insert 직후 미반영 이슈가 있어 전환). 장소/세부위치 삭제는 `modelContext.delete`.
 - 비영속 UI 상태: 물건 에디터 `editorRoute`, 장소 에디터 `placeEditorRoute`, 세부위치 에디터 `spotEditorRoute`, 장소 삭제 `showingDeleteConfirm`, 세부위치 삭제 대상 `pendingSpotDelete`.
 
 ## 관련 태스크 / 결정

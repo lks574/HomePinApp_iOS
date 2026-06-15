@@ -4,10 +4,16 @@ import SwiftUI
 /// 장소(=Area) 목록. 2열 그리드, 장소별 개수·미리보기. 탭하면 상세로.
 struct PlacesListView: View {
   @Environment(\.modelContext) private var modelContext
+  @Environment(AppRouter.self) private var router
   @Query(sort: \Area.sortOrder) private var areas: [Area]
 
   @State private var editorRoute: PlaceEditorRoute?
   @State private var pendingDelete: Area?
+
+  /// 장소 탭의 네비게이션 경로는 라우터가 소유한다(탭 전환·홈 바로가기에서 push).
+  private var placesPath: Binding<[Area]> {
+    Binding(get: { router.placesPath }, set: { router.placesPath = $0 })
+  }
 
   private let columns = [
     GridItem(.flexible(), spacing: 12),
@@ -15,7 +21,7 @@ struct PlacesListView: View {
   ]
 
   var body: some View {
-    NavigationStack {
+    NavigationStack(path: placesPath) {
       ScrollView {
         VStack(alignment: .leading, spacing: 0) {
           header

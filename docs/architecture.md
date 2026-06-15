@@ -87,7 +87,7 @@ Tuist 단일 앱 타깃(`Project.swift`). 번들 ID `com.sro.homepinappios`. 소
 Project.swift            # Tuist manifest (단일 소스; .xcodeproj/.xcworkspace 는 생성물, git 무시)
 mise.toml                # tuist 4.192.3 핀
 HomePinApp/
-  Sources/App/           # @main App, AppModel(앱 단계), AppRootView(셸)
+  Sources/App/           # @main App, AppModel(앱 단계), AppRouter(탭/탭간 네비), AppRootView·RootTabView(셸)
   Sources/Models/        # SwiftData @Model 6종
   Sources/Persistence/   # AppModelContainer (스키마·DEBUG 리셋)
   Sources/Features/      # 화면당 폴더 (Splash, Home, …) — feature-first
@@ -106,8 +106,14 @@ HomePinApp/
   스플래시는 분기지점(`AppModel.start()`).
 - **탭바 5-슬롯**: 홈 / 장소 / [중앙 🎤 NL 추가] / 레시피 / 설정. 중앙은 목적지가
   아니라 입력 시트(modal).
-- **화면 내부 push 는 각 탭의 `NavigationStack`** (장소→장소상세→물건상세 등). typed
-  `Route`/Router 전역화는 도입하지 않음(탭별 스택으로 충분).
+- **화면 내부 push 는 각 탭의 `NavigationStack`** (장소→장소상세→물건상세 등). 탭 내
+  라우팅은 여전히 각 스택이 소유한다.
+- **탭 선택 + 탭 간 진입은 얇은 셸 라우터 `AppRouter`**(`@Observable`, `RootTabView`
+  소유, `.environment` 주입). `selectedTab` 과 장소 탭 경로(`placesPath`)만 들고,
+  예: 홈의 장소 바로가기 → `openPlace(area)` 로 장소 탭 전환 + 그 장소 상세 push.
+  전면 typed Route 전역화는 아니다 — 탭 내부 push 는 NavigationStack, **탭 경계를
+  넘는 이동만** 라우터가 담당한다. (2026-06-12 결정의 "Router 전역화 미도입" 을
+  이 범위로 갱신: [[2026-06-12-네비게이션-UI구조]] §5.)
 - **위치 2레벨 UI ↔ 3레벨 모델**: `Space` 숨김(단일 기본), UI "장소"=`Area`,
   "수납공간"=`Spot`.
 

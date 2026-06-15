@@ -3,6 +3,7 @@ import SwiftUI
 
 /// 홈 대시보드 — 검색 + 임박 유통기한 + 장소 바로가기 + 최근 추가.
 struct HomeView: View {
+  @Environment(AppRouter.self) private var router
   @Query(sort: \Area.sortOrder) private var areas: [Area]
   @Query(sort: \Item.createdAt, order: .reverse) private var items: [Item]
   @State private var editorRoute: ItemEditorRoute?
@@ -51,10 +52,15 @@ struct HomeView: View {
     ScrollView(.horizontal, showsIndicators: false) {
       HStack(spacing: 10) {
         ForEach(areas) { area in
-          VStack(spacing: 6) {
-            AppInitialBadge(text: area.name, size: 50, radius: 14)
-            Text(area.name).font(.appCaptionStrong).foregroundStyle(AppColor.textSecondary)
+          Button {
+            router.openPlace(area)
+          } label: {
+            VStack(spacing: 6) {
+              AppInitialBadge(text: area.name, size: 50, radius: 14)
+              Text(area.name).font(.appCaptionStrong).foregroundStyle(AppColor.textSecondary)
+            }
           }
+          .buttonStyle(.plain)
         }
       }
     }

@@ -28,6 +28,7 @@ flowchart TD
     PlaceDetail --> SpotEditor[세부위치 추가/편집]
     PlaceDetail --> ItemEditor[물건 추가/편집]
     Home --> ItemEditor
+    Home -. 장소 바로가기(탭 전환) .-> PlaceDetail
     Capture --> ItemEditor
     Mic --> Capture[NL 추가 시트<br/>텍스트+음성 → 확인]
     Recipes --> RecipeDetail[레시피 상세]
