@@ -41,6 +41,10 @@ UI 우선 1차(시안 C 화면 골격)에서 의도적으로 뒤로 미룬 것�
   (`AssetInventory.assetInstallationRequest` 진행률 노출).
 - [ ] **음성 입력 기기 게이팅** — `SpeechTranscriber.isAvailable`·로케일 지원으로
   마이크 진입 자체를 사전 차단/안내하는 게이팅은 미구현(현재는 시작 시점 판단).
+- [ ] **음성 받아쓰기 실기기 검증** — actor 경계 분리 리팩터(`SpeechDictationViewModel`
+  + `SpeechDictationEngine` ↔ `DictationEvent`) 후 빌드 green·시뮬레이터 불가용 폴백
+  경로(텍스트 입력)까지 확인. 실제 권한 프롬프트·한국어 모델 다운로드·온디바이스 인식
+  정확도·녹음 중 재토글/모드전환 시 자원 정리는 시뮬레이터로 검증 불가 → 실기기 확인 필요.
 - [ ] **검색 동작 미구현** — 홈/장소/레시피의 검색바는 정적 placeholder. 실제 필터·
   자연어 검색(`#Predicate`) 연결 필요.
 - [ ] **물건 고급 편집·레시피 상세 화면 없음** — 물건 기본 추가/편집은 `ItemEditor`

@@ -19,10 +19,13 @@ UI 우선 1차(시안 C 화면 골격: 5탭·장소·레시피·홈·추가 시�
 2. **검색 동작** — 중앙 버튼 시트 [추가 | 검색] 모드 토글로 1차 완료(`screen-04`):
    `Item.normalizedName` 부분 일치 → 결과에 위치 경로, 결과 탭 시 `ItemEditor` 편집.
    잔여: 홈/장소/레시피 검색바 실연동, 자연어 검색 확장.
-3. **음성 입력(STT)** — 입력기 완료(`SpeechDictation`: iOS 26 `SpeechAnalyzer` +
-   `SpeechTranscriber` 온디바이스 받아쓰기 → 활성 모드 필드, 마이크 버튼 실연동,
-   권한·불가용·거부 폴백). 잔여: 1번 AI 파서 경로 재사용(받아쓰기 텍스트 → 구조화),
-   기기/모델 게이팅·한국어 모델 다운로드 UX(현재는 불가용 시 텍스트 폴백).
+3. **음성 입력(STT)** — 입력기 완료 + actor 경계 분리 리팩터 완료
+   (`SpeechDictationViewModel`(UI 상태/단일 세션 Task) + `SpeechDictationEngine`
+   (비-MainActor 권한/오디오/모델) ↔ `DictationEvent` 스트림 경계. iOS 26
+   `SpeechAnalyzer` + `SpeechTranscriber` 온디바이스 받아쓰기 → 활성 모드 필드,
+   권한·불가용·거부 폴백, tap 버퍼 복사·고아 자원 누수 버그 해소). 잔여: 1번 AI 파서
+   경로 재사용(받아쓰기 텍스트 → 구조화), 기기/모델 게이팅·한국어 모델 다운로드 UX,
+   실기기 인식 정확도 검증(시뮬레이터 불가).
 4. **물건/레시피 고급 편집** — 물건 추가/편집/삭제는 `ItemEditor` 로 연결됨.
    레시피 상세(`screen-03`)·CRUD(`screen-07`)·시드 10개 완료 — 카드 → `RecipeDetail`,
    "레시피 추가" → `RecipeEditor`, 재료/단계 동적 편집 + 재료 이름→보유 물건 매칭.

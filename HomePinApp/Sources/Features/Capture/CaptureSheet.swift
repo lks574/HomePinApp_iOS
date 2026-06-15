@@ -5,7 +5,7 @@ import SwiftUI
 /// - 추가: 텍스트를 이름 draft 로 넘겨 사용자가 위치/수량을 확인한 뒤 저장한다.
 /// - 검색: `Item.normalizedName` 기반 이름 검색 → 결과에 위치 경로. 결과를 누르면
 ///   해당 물건 편집 시트로 진입한다. (자연어 검색은 후속)
-/// - 음성(🎤): 모드 토글 아래 공용. 받아쓰기(`SpeechDictation`) 결과는 활성 모드의 입력
+/// - 음성(🎤): 모드 토글 아래 공용. 받아쓰기(`SpeechDictationViewModel`) 결과는 활성 모드의 입력
 ///   필드(추가=`text`, 검색=`searchText`)로 들어간다. STT 는 텍스트를 채우는 입력기일 뿐
 ///   텍스트 입력 경로는 항상 살아 있어 불가용·거부 시 폴백된다. (AI 파서는 후속)
 struct CaptureSheet: View {
@@ -13,7 +13,7 @@ struct CaptureSheet: View {
   @State private var mode: CaptureMode = .add
   @State private var text = ""
   @State private var searchText = ""
-  @State private var dictation = SpeechDictation()
+  @State private var dictation = SpeechDictationViewModel()
   @State private var editorRoute: ItemEditorRoute?
   @FocusState private var focusedField: CaptureField?
 
@@ -213,7 +213,7 @@ struct CaptureSheet: View {
     switch dictation.state {
     case .denied:
       "마이크·음성 인식 권한이 꺼져 있어요. 설정에서 허용하거나 텍스트로 입력해 주세요."
-    case .unavailable(let reason):
+    case let .unavailable(reason):
       "\(reason) 텍스트로 입력해 주세요."
     case .idle, .preparing, .recording:
       nil

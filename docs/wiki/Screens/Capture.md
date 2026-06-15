@@ -31,9 +31,14 @@ screen-id: screen-01
 
 - 직결 읽기(`@Query allItems`) + 저장 위임. 비영속 UI 상태는 `@State` 로 보관 —
   모드 `mode`, 입력 `text`/`searchText`, 에디터 라우팅 `editorRoute`.
-- 음성 입력은 얇은 `@Observable` 컨트롤러 `SpeechDictation` 을 `@State` 로 보유한다
-  (비영속 UI 상태 + 다단계 비동기 권한/오디오 플로우). `dictation.transcript` 변화를
+- 음성 입력은 얇은 `@Observable` 컨트롤러 `SpeechDictationViewModel` 을 `@State` 로
+  보유한다(비영속 UI 상태 + 단일 세션 Task 소유). `dictation.transcript` 변화를
   `.onChange` 으로 받아 활성 모드 필드에 주입하고, 모드 전환·시트 종료 시 `reset()`.
+  호출부 시그니처(`transcript`/`state`/`toggle()`/`reset()`)는 이전과 동일하다.
+- 권한/오디오/모델 처리는 비-MainActor `SpeechDictationEngine` 으로 분리돼
+  `DictationEvent` 스트림을 경계로 ViewModel 과 통신한다(actor 경계 분리). 시스템
+  콜백을 MainActor 밖에서 만들어 격리 트랩을 피하고, 엔진 자원은 세션 Task cancel→
+  스트림 종료 teardown 으로 정리한다.
 
 ## 권한 / 받아쓰기 플로우
 
@@ -53,6 +58,9 @@ screen-id: screen-01
 ## 메모
 
 - 코드: `HomePinApp/Sources/Features/Capture/CaptureSheet.swift`
-- 음성 입력기: `HomePinApp/Sources/Shared/Speech/SpeechDictation.swift`
+- 음성 입력기(actor 경계 분리, `HomePinApp/Sources/Shared/Speech/`):
+  - UI 상태/세션 소유: `SpeechDictationViewModel.swift`
+  - 권한/오디오/모델/변환: `SpeechDictationEngine.swift`
+  - 이벤트 경계: `DictationEvent.swift`
 - 받아쓰기 텍스트를 AI 파서에 흘려 위치/수량/유통기한까지 structured draft 로
   채우는 것(텍스트·음성 공용 파서)이 후속.
