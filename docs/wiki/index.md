@@ -2,7 +2,7 @@
 aliases: [wiki, MOC, 위키 허브]
 tags: [moc]
 created: 2026-06-12
-updated: 2026-06-12
+updated: 2026-06-15
 status: stable
 ---
 
@@ -28,7 +28,9 @@ SORT created ASC
 <!-- Dataview 플러그인이 없으면 위 블록은 무시된다. 수동 목록은 아래에 둔다. -->
 
 - [[Splash]] → [[Home]] (루트 흐름)
-- [[ItemEditor]] — 물건 추가/편집 공용 에디터
+- 탭: [[Home]] · [[Places]] · [[Capture]] (🎤) · [[Recipes]] · [[Settings]]
+- [[Places]] → [[PlaceDetail]] → [[ItemEditor]]
+- [[Home]] · [[Capture]] → [[ItemEditor]] — 물건 추가/편집 공용 에디터
 
 ## 모델 `#model`
 

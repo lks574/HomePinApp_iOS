@@ -2,7 +2,7 @@
 aliases: [ItemEditor, 물건 추가, 물건 편집]
 tags: [screen, screen/item]
 created: 2026-06-14
-updated: 2026-06-14
+updated: 2026-06-15
 status: in-progress
 screen-id: screen-02
 ---
@@ -21,8 +21,8 @@ screen-id: screen-02
 ## 연결된 화면
 
 - 들어옴 ←: [[Home]] — 최근 추가 물건 행 탭
-- 들어옴 ←: PlaceDetail — 물건 행 탭, 장소/수납공간 추가 버튼
-- 들어옴 ←: Capture — 텍스트 입력 후 확인 단계
+- 들어옴 ←: [[PlaceDetail]] — 물건 행 탭, 장소/수납공간 추가 버튼
+- 들어옴 ←: [[Capture]] — 텍스트 입력 후 확인 단계
 
 ## 사용 모델
 
