@@ -18,12 +18,19 @@ UI 를 작은 컴포넌트로 **과도하게 쪼개지 않는다.** 분리는 �
 
 **기준 — 사용 횟수로 판단한다.**
 
-- **1회만 쓰는 뷰는 별도 `struct` 로 추출하지 않는다.** 호출 지점에 인라인하거나,
-  부모 `View` 의 `private` 계산 프로퍼티/함수(예: `private var fooCard: some View`,
-  `private func fooRow(_:) -> some View`)로 둔다. 후자는 별도 타입·파라미터 전달 없이
-  부모의 상태·헬퍼를 그대로 쓸 수 있어 더 단순하다.
-- **2회 이상 재사용**되거나, **여러 파일에서 공용**으로 쓰면 `struct` 컴포넌트로
-  분리한다. (공용 컴포넌트는 `Shared/DesignSystem/AppComponents.swift` 의 `App*`.)
+- **1회만 쓰는 뷰는 별도 `struct` 로 추출하지 않는다.** `struct` 추출은 비용이
+  크다(별도 타입, `@Binding`·focus 등 파라미터 전달, 정의로 점프, 부모 상태 직접
+  접근 불가). 호출 지점에 인라인하거나, 부모 `View` 의 `private` 멤버로 둔다.
+- **같은 `View` 안의 `private` 계산 프로퍼티/함수로 `body` 를 이름 붙여 분해하는
+  것은 1회용이어도 허용**한다(가독성 도구, 비용 작음). 단 **단위는 "섹션"**으로
+  맞춘다 — `body` 가 직접 조합하는 카드/영역(예: `basicInfoCard`, `headerRow`).
+- **한 섹션 안에서만 쓰는 1회용 "잎(leaf) 행" 은 별도 멤버로 빼지 말고 그 섹션에
+  인라인**한다(예: `basicInfoCard` 안의 수량 행). `body` 분해 ≠ 모든 작은 행을
+  멤버로 만들기.
+- **2회 이상 재사용**되거나(예: `AppEditorSelectionRow` 2회), **여러 파일에서
+  공용**(`Shared/DesignSystem/AppComponents.swift` 의 `App*`)이거나, **리스트
+  아이템 뷰**(`ForEach` 행, 예: `placeCard`·`recipeSoonCard`)면 `private func`·
+  `struct` 로 둔다.
 - **의미상 독립적인 화면**(예: `.sheet` 로 띄우는 picker, 자체 `NavigationStack`·
   `dismiss` 보유)은 1회만 써도 별도 타입으로 둔다.
 

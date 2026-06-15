@@ -103,46 +103,42 @@ struct ItemEditorView: View {
       }
       .padding(16)
       Divider().padding(.leading, 16)
-      quantityRow
+      HStack {
+        Text("수량")
+          .font(.system(size: 15, weight: .semibold))
+          .foregroundStyle(AppColor.textPrimary)
+        Spacer()
+        Button {
+          quantity = max(1, quantity - 1)
+        } label: {
+          Image(systemName: "minus")
+            .font(.system(size: 13, weight: .bold))
+            .frame(width: 34, height: 34)
+        }
+        .buttonStyle(.plain)
+        .foregroundStyle(quantity > 1 ? AppColor.accent : AppColor.textFaint)
+        .disabled(quantity <= 1)
+
+        Text("\(quantity)")
+          .font(.system(size: 17, weight: .bold))
+          .foregroundStyle(AppColor.textPrimary)
+          .monospacedDigit()
+          .frame(minWidth: 34)
+
+        Button {
+          quantity += 1
+        } label: {
+          Image(systemName: "plus")
+            .font(.system(size: 13, weight: .bold))
+            .frame(width: 34, height: 34)
+        }
+        .buttonStyle(.plain)
+        .foregroundStyle(AppColor.accent)
+      }
+      .padding(.horizontal, 16)
+      .frame(height: 58)
     }
     .appEditorCard()
-  }
-
-  private var quantityRow: some View {
-    HStack {
-      Text("수량")
-        .font(.system(size: 15, weight: .semibold))
-        .foregroundStyle(AppColor.textPrimary)
-      Spacer()
-      Button {
-        quantity = max(1, quantity - 1)
-      } label: {
-        Image(systemName: "minus")
-          .font(.system(size: 13, weight: .bold))
-          .frame(width: 34, height: 34)
-      }
-      .buttonStyle(.plain)
-      .foregroundStyle(quantity > 1 ? AppColor.accent : AppColor.textFaint)
-      .disabled(quantity <= 1)
-
-      Text("\(quantity)")
-        .font(.system(size: 17, weight: .bold))
-        .foregroundStyle(AppColor.textPrimary)
-        .monospacedDigit()
-        .frame(minWidth: 34)
-
-      Button {
-        quantity += 1
-      } label: {
-        Image(systemName: "plus")
-          .font(.system(size: 13, weight: .bold))
-          .frame(width: 34, height: 34)
-      }
-      .buttonStyle(.plain)
-      .foregroundStyle(AppColor.accent)
-    }
-    .padding(.horizontal, 16)
-    .frame(height: 58)
   }
 
   private var locationCard: some View {
