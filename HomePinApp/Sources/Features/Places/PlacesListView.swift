@@ -80,7 +80,7 @@ struct PlacesListView: View {
   }
 
   private var totalItemCount: Int {
-    areas.reduce(0) { $0 + areaItemCount($1) }
+    areas.reduce(0) { $0 + $1.itemCount }
   }
 
   private var deleteConfirmationBinding: Binding<Bool> {
@@ -101,7 +101,7 @@ struct PlacesListView: View {
       HStack {
         AppInitialBadge(text: area.name)
         Spacer()
-        Text("\(areaItemCount(area))")
+        Text("\(area.itemCount)")
           .font(.system(size: 13, weight: .bold))
           .foregroundStyle(AppColor.textFaint)
       }
@@ -121,9 +121,4 @@ struct PlacesListView: View {
     .frame(maxWidth: .infinity, alignment: .leading)
     .appCard()
   }
-}
-
-/// 한 장소(Area)의 물건 수 = 직속 + 하위 수납공간(Spot)의 물건.
-func areaItemCount(_ area: Area) -> Int {
-  area.items.count + area.spots.reduce(0) { $0 + $1.items.count }
 }

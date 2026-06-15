@@ -8,6 +8,8 @@ enum AppColor {
   // 강조
   static let accent = Color(hex: 0xC0603C)
   static let accentDark = Color(hex: 0xA24E2F)
+  /// accent 그라데이션 위 옅은 라벨(임박 배너 부제 등).
+  static let onAccentSubtle = Color(hex: 0xF6DDD0)
   // 텍스트
   static let textPrimary = Color(hex: 0x2C2722)
   static let textSecondary = Color(hex: 0x6F665C)

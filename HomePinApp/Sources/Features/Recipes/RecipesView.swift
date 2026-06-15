@@ -25,7 +25,11 @@ struct RecipesView: View {
           dishChips
 
           if !soonItems.isEmpty {
-            soonCard.padding(.bottom, 26)
+            AppExpiringItemsBanner(
+              items: soonItems,
+              headline: "\(soonItems.prefix(3).map(\.name).joined(separator: " · ")), 오늘 다 써볼까요?"
+            )
+            .padding(.bottom, 26)
           }
 
           if !soonRecipes.isEmpty {
@@ -54,12 +58,10 @@ struct RecipesView: View {
     cuisine == "전체" ? recipes : recipes.filter { $0.cuisine == cuisine }
   }
 
-  private var soonItems: [Item] {
-    items.filter(isSoon).sorted { ($0.expiresAt ?? .distantFuture) < ($1.expiresAt ?? .distantFuture) }
-  }
+  private var soonItems: [Item] { items.expiringSoonByExpiry }
 
   private var soonRecipes: [Recipe] {
-    filteredRecipes.filter { r in r.ingredients.contains { ing in ing.item.map { isSoon($0) } ?? false } }
+    filteredRecipes.filter(\.usesExpiringIngredient)
   }
 
   private var otherRecipes: [Recipe] {
@@ -67,17 +69,13 @@ struct RecipesView: View {
     return filteredRecipes.filter { !soonIDs.contains($0.id) }
   }
 
-  private func isSoon(_ item: Item) -> Bool { item.isExpiringSoon }
-
-  private func dDay(_ item: Item) -> Int { item.daysUntilExpiry ?? .max }
-
-  private func status(_ ing: RecipeIngredient) -> AppIngredientChipState {
-    guard ing.isInStock, let item = ing.item else { return .missing }
-    return isSoon(item) ? .soon : .have
-  }
-
-  private func haveCount(_ recipe: Recipe) -> Int {
-    recipe.ingredients.filter(\.isInStock).count
+  /// 도메인 재고 상태 → 칩 시각 상태 매핑(UI 책임).
+  private func chipState(_ ing: RecipeIngredient) -> AppIngredientChipState {
+    switch ing.stockStatus {
+    case .missing: .missing
+    case .soon: .soon
+    case .have: .have
+    }
   }
 
   // MARK: 조각
@@ -104,37 +102,13 @@ struct RecipesView: View {
     .padding(.bottom, 22)
   }
 
-  private var soonCard: some View {
-    VStack(alignment: .leading, spacing: 0) {
-      Text("유통기한 임박 \(soonItems.count)가지")
-        .font(.system(size: 13, weight: .semibold)).foregroundStyle(Color(hex: 0xF6DDD0))
-        .padding(.bottom, 5)
-      Text("\(soonItems.prefix(3).map(\.name).joined(separator: " · ")), 오늘 다 써볼까요?")
-        .font(.system(size: 18, weight: .heavy)).foregroundStyle(.white)
-      HStack(spacing: 6) {
-        ForEach(soonItems.prefix(3)) { item in
-          Text("\(item.name) D-\(max(dDay(item), 0))")
-            .font(.system(size: 12, weight: .semibold)).foregroundStyle(.white)
-            .padding(.horizontal, 10).padding(.vertical, 4)
-            .background(.white.opacity(0.22), in: Capsule())
-        }
-      }
-      .padding(.top, 12)
-    }
-    .padding(18)
-    .frame(maxWidth: .infinity, alignment: .leading)
-    .background(
-      LinearGradient(colors: [AppColor.accent, AppColor.accentDark], startPoint: .topLeading, endPoint: .bottomTrailing),
-      in: RoundedRectangle(cornerRadius: 20, style: .continuous)
-    )
-  }
 
   // MARK: 레시피 카드
 
   /// 임박 재료가 있는 레시피 카드 — 진행률 + 재료 칩.
   private func recipeSoonCard(_ recipe: Recipe) -> some View {
     let ingredients = recipe.ingredients.sorted { $0.sortOrder < $1.sortOrder }
-    let soon = ingredients.filter { status($0) == .soon }
+    let soon = ingredients.filter { $0.stockStatus == .soon }
     let badge = soon.isEmpty ? nil : (soon.count == 1 ? "임박 \(soon[0].name)" : "임박 \(soon.count)개")
     let have = ingredients.filter(\.isInStock).count
     let total = ingredients.count
@@ -153,7 +127,7 @@ struct RecipesView: View {
       }
       FlowLayout(spacing: 6) {
         ForEach(ingredients) { ing in
-          AppIngredientChip(name: ing.name, state: status(ing))
+          AppIngredientChip(name: ing.name, state: chipState(ing))
         }
       }
       .padding(.top, 13)
@@ -177,7 +151,7 @@ struct RecipesView: View {
 
   /// 보유 재료로 만들 수 있는 레시피 한 줄.
   private func recipeCompactRow(_ recipe: Recipe) -> some View {
-    let have = haveCount(recipe)
+    let have = recipe.inStockCount
     let total = recipe.ingredients.count
     let ready = total > 0 && have == total
 

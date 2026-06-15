@@ -14,7 +14,7 @@ struct AreaPickerSheet: View {
           ForEach(areas) { area in
             PickerRow(
               title: area.name,
-              subtitle: "\(areaItemCount(area))개 · 세부위치 \(area.spots.count)곳",
+              subtitle: "\(area.itemCount)개 · 세부위치 \(area.spots.count)곳",
               isSelected: selectedArea?.id == area.id
             ) {
               select(area)

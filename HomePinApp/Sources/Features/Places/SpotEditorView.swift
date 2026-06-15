@@ -10,7 +10,6 @@ struct SpotEditorView: View {
   private let mode: Mode
 
   @State private var name: String
-  @FocusState private var nameFocused: Bool
 
   enum Mode {
     case create(area: Area)
@@ -31,7 +30,7 @@ struct SpotEditorView: View {
     NavigationStack {
       ScrollView {
         VStack(spacing: 18) {
-          nameCard
+          AppEditorNameCard(placeholder: "예: 냉동실, 두번째 서랍, 우측 하단", text: $name, onSubmit: save)
         }
         .padding(20)
       }
@@ -50,24 +49,7 @@ struct SpotEditorView: View {
           Button("닫기") { dismiss() }
         }
       }
-      .onAppear { nameFocused = true }
     }
-  }
-
-  private var nameCard: some View {
-    VStack(alignment: .leading, spacing: 8) {
-      Text("이름")
-        .font(.system(size: 15, weight: .semibold))
-        .foregroundStyle(AppColor.textPrimary)
-      TextField("예: 냉동실, 두번째 서랍, 우측 하단", text: $name)
-        .font(.system(size: 17))
-        .foregroundStyle(AppColor.textPrimary)
-        .focused($nameFocused)
-        .submitLabel(.done)
-        .onSubmit(save)
-    }
-    .padding(16)
-    .appCard(radius: 18)
   }
 
   private var title: String {

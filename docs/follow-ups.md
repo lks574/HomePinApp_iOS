@@ -2,7 +2,7 @@
 aliases: [follow-ups, 후속 항목]
 tags: [doc/code, followups]
 created: 2026-06-12
-updated: 2026-06-12
+updated: 2026-06-15
 status: draft
 ---
 
@@ -44,3 +44,6 @@ UI 우선 1차(시안 C 화면 골격)에서 의도적으로 뒤로 미룬 것�
   Space 스위처 노출.
 - [ ] **레시피 dish 필터 정적** — cuisine 필터만 동작, dish(국·찌개/볶음…) 필터는
   장식. 모델에 dish 분류 추가 여부 포함 검토.
+- [ ] **홈 "장소 바로가기" 탭 동작 없음** — `HomeView.placeShortcuts` 가 단순
+  `VStack`(배지+이름)이라 탭해도 [[PlaceDetail]] 로 이동하지 않는 죽은 상호작용.
+  탭 시 해당 장소 상세로 진입 연결 필요(장소 탭 `NavigationStack` 경유 방법 검토).

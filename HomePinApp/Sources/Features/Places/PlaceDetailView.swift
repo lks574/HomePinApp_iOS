@@ -91,7 +91,7 @@ struct PlaceDetailView: View {
         Text(area.name)
           .font(.system(size: 30, weight: .heavy))
           .foregroundStyle(AppColor.textPrimary)
-        Text("\(areaItemCount(area))개 · 수납공간 \(area.spots.count)곳")
+        Text("\(area.itemCount)개 · 수납공간 \(area.spots.count)곳")
           .font(.system(size: 13))
           .foregroundStyle(AppColor.textTertiary)
       }
