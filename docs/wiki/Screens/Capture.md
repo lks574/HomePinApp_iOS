@@ -14,7 +14,7 @@ screen-id: screen-01
 ## 역할
 
 - 단일 입력 필드(타이핑·음성 받아쓰기 공용)를 제공한다. 음성은 같은 입력 필드를 채우는 입력기일 뿐, 텍스트 경로는 항상 살아 있어 음성 불가용 시 폴백된다.
-- 검색(항상): 물건은 이름·위치 경로·장소·세부위치·분류·태그·메모·수량을, 레시피는 제목·요약·cuisine/dishType 라벨·태그·재료명/단위/메모를 정규화 부분 일치로 필터해 입력 즉시 결과를 **물건/레시피 섹션**으로 구분 표시. 물건 결과 탭 시 [[ItemEditor]] `edit` 모드로 진입하고, 레시피 결과 탭 시 시트를 닫고 레시피 탭 상세([[RecipeDetail]])로 push(`AppRouter.openRecipe`).
+- 검색(항상): 물건은 이름·위치 경로·장소·세부위치·분류·태그·메모·수량을, 레시피는 제목·요약·cuisine/dishType 라벨·태그·재료명/단위/메모를 정규화 부분 일치로 필터해 입력 즉시 결과를 **물건/레시피 섹션**으로 구분 표시. 자연어 문장은 로컬 규칙(`CaptureSearchQuery`)으로 조사·불용어를 제거한 토큰 전체 일치 + 속성 플래그(임박/만료/위치 없음/지금 만들 수 있음/부족 재료)로 보강한다. 물건 결과 탭 시 [[ItemEditor]] `edit` 모드로 진입하고, 레시피 결과 탭 시 시트를 닫고 레시피 탭 상세([[RecipeDetail]])로 push(`AppRouter.openRecipe`).
 - 추가(명시적): 결과 목록 아래 항상 노출되는 `+ "{입력어}" 추가하기` 행을 눌러야만 추가가 일어난다. 입력 텍스트(타이핑·받아쓰기 공용)를 가용 시 AI 파서(`NLParseViewModel`)로 구조화 드래프트로 바꿔 [[DraftReview]] 로 push, 미가용·실패·취소·빈 결과면 이름 draft 로 [[ItemEditor]] `create` 단건 스텁 폴백. 텍스트·음성 공용 단일 파서 경로. 파서 추론 중에는 추가 행이 진행 표시로 바뀐다.
 
 ## 연결된 화면
@@ -27,8 +27,8 @@ screen-id: screen-01
 
 ## 사용 모델
 
-- 읽기: [[Item]] (`@Query` 로 검색 대상 전체를 받아 이름·위치·분류·태그·메모 등 정규화 키로 in-memory 필터).
-- 읽기: [[Recipe]] (`@Query(sort: \Recipe.title)`, 제목·요약·분류·태그·재료 세부 텍스트 정규화 키로 in-memory 필터).
+- 읽기: [[Item]] (`@Query` 로 검색 대상 전체를 받아 이름·위치·분류·태그·메모 등 정규화 키 + `CaptureSearchQuery` 자연어 토큰/속성으로 in-memory 필터).
+- 읽기: [[Recipe]] (`@Query(sort: \Recipe.title)`, 제목·요약·분류·태그·재료 세부 텍스트 정규화 키 + `CaptureSearchQuery` 자연어 토큰/속성으로 in-memory 필터).
 - AI 파서 grounding: `AddDraftResolver` 가 [[Space]]/[[Area]]/[[Spot]]/[[ItemCategory]]/[[Tag]] 이름을 모아 프롬프트에 주입(엔진은 SwiftData 무지).
 - 쓰기 직접 없음. AI 추가 저장은 [[DraftReview]] 가 `AddDraftResolver` 로 [[Item]] + 신규 위치/분류/태그 일괄 insert, 폴백 저장은 [[ItemEditor]] 가 수행.
 
@@ -94,4 +94,4 @@ screen-id: screen-01
   - UI 상태/세션 소유: `SpeechDictationViewModel.swift`
   - 권한/오디오/모델/변환: `SpeechDictationEngine.swift`
   - 이벤트 경계: `DictationEvent.swift`
-- 잔여: 실기기 추론·한국어 품질 검증, 모델 다운로드 유도 UX, 자연어 검색. (find/add 의도 자동판별은 검색-우선 통합 UX 로 대체·불필요.)
+- 잔여: 실기기 추론·한국어 품질 검증, 모델 다운로드 유도 UX. (find/add 의도 자동판별은 검색-우선 통합 UX 로 대체·불필요.)

@@ -333,26 +333,40 @@ struct CaptureSheet: View {
 
   /// 정규화 키로 부분 일치한 물건(이름순, `@Query` 정렬 유지).
   private var itemResults: [Item] {
-    let key = Item.normalize(trimmedQuery)
-    guard !key.isEmpty else { return [] }
-    return allItems.filter { itemMatches($0, key: key) }
+    let search = CaptureSearchQuery(trimmedQuery)
+    guard search.hasSearchText else { return [] }
+    return allItems.filter { itemMatches($0, search: search) }
   }
 
   /// 제목·요약·분류·태그·재료명이 부분 일치한 레시피(제목순, `@Query` 정렬 유지).
   private var recipeResults: [Recipe] {
-    let key = Item.normalize(trimmedQuery)
-    guard !key.isEmpty else { return [] }
-    return allRecipes.filter { recipeMatches($0, key: key) }
+    let search = CaptureSearchQuery(trimmedQuery)
+    guard search.hasSearchText else { return [] }
+    return allRecipes.filter { recipeMatches($0, search: search) }
   }
 
   /// 물건 검색은 이름 외에 위치·분류·태그·메모·수량 단위까지 같은 부분 일치로 본다.
-  private func itemMatches(_ item: Item, key: String) -> Bool {
-    searchableItemFields(item).contains { Item.normalize($0).contains(key) }
+  private func itemMatches(_ item: Item, search: CaptureSearchQuery) -> Bool {
+    let fields = searchableItemFields(item)
+    if fields.contains(where: { Item.normalize($0).contains(search.fullKey) }) {
+      return true
+    }
+    guard itemMatchesSemanticFilters(item, search: search) else { return false }
+    return search.tokens.allSatisfy { token in
+      fields.contains { Item.normalize($0).contains(token) }
+    }
   }
 
   /// 레시피 검색은 제목 외에 요약·분류·태그·재료 세부 텍스트까지 같은 부분 일치로 본다.
-  private func recipeMatches(_ recipe: Recipe, key: String) -> Bool {
-    searchableRecipeFields(recipe).contains { Item.normalize($0).contains(key) }
+  private func recipeMatches(_ recipe: Recipe, search: CaptureSearchQuery) -> Bool {
+    let fields = searchableRecipeFields(recipe)
+    if fields.contains(where: { Item.normalize($0).contains(search.fullKey) }) {
+      return true
+    }
+    guard recipeMatchesSemanticFilters(recipe, search: search) else { return false }
+    return search.tokens.allSatisfy { token in
+      fields.contains { Item.normalize($0).contains(token) }
+    }
   }
 
   private func searchableItemFields(_ item: Item) -> [String] {
@@ -397,6 +411,100 @@ struct CaptureSheet: View {
       ingredient.isOptional ? String(localized: "Optional ingredients") : nil,
     ].compactMap { $0 }.filter { !$0.isEmpty }
   }
+
+  private func itemMatchesSemanticFilters(_ item: Item, search: CaptureSearchQuery) -> Bool {
+    if search.wantsExpiringSoon, !item.isExpiringSoon { return false }
+    if search.wantsExpired, !(item.expiresAt.map { $0 < .now } ?? false) { return false }
+    if search.wantsNoLocation, item.area != nil || item.spot != nil { return false }
+    return true
+  }
+
+  private func recipeMatchesSemanticFilters(_ recipe: Recipe, search: CaptureSearchQuery) -> Bool {
+    if search.wantsExpiringSoon, !recipe.usesExpiringIngredient { return false }
+    if search.wantsReadyRecipe, !recipe.isReadyToCook { return false }
+    if search.wantsMissingRecipe, recipe.missingIngredients.isEmpty { return false }
+    return true
+  }
+}
+
+/// 중앙 검색 자연어 질의. Foundation Models 의도 추측 없이 조사·불용어를 걷어낸
+/// 토큰 전체 일치 + 작은 속성 플래그만 적용한다.
+private struct CaptureSearchQuery {
+  let fullKey: String
+  let tokens: [String]
+  let wantsExpiringSoon: Bool
+  let wantsExpired: Bool
+  let wantsNoLocation: Bool
+  let wantsReadyRecipe: Bool
+  let wantsMissingRecipe: Bool
+
+  var hasSearchText: Bool {
+    !fullKey.isEmpty
+  }
+
+  init(_ raw: String) {
+    let normalized = Item.normalize(raw)
+    let compact = normalized.replacingOccurrences(of: " ", with: "")
+    fullKey = normalized
+    wantsExpiringSoon = Self.containsAny(compact, ["임박", "곧만료", "유통기한임박", "expiringsoon", "soon"])
+    wantsExpired = Self.containsAny(compact, ["만료됨", "기한지남", "유통기한지남", "expired"])
+    wantsNoLocation = Self.containsAny(compact, ["위치없음", "위치없는", "위치미정", "위치미지정", "장소없음", "noloca"])
+    wantsReadyRecipe = Self.containsAny(compact, ["지금가능", "만들수있는", "바로가능", "ready", "cookable"])
+    wantsMissingRecipe = Self.containsAny(compact, ["부족", "없는재료", "missing"])
+    tokens = Self.tokens(from: raw)
+  }
+
+  private static func tokens(from raw: String) -> [String] {
+    let separators = CharacterSet.whitespacesAndNewlines
+      .union(.punctuationCharacters)
+      .union(.symbols)
+    let rawTokens = raw.lowercased()
+      .components(separatedBy: separators)
+      .map(Item.normalize)
+    let normalizedTokens = rawTokens
+      .map(stripKoreanSuffixes)
+      .filter { !$0.isEmpty }
+      .filter { !stopwords.contains($0) }
+      .filter { !semanticWords.contains($0) }
+    var seen = Set<String>()
+    return normalizedTokens.filter { seen.insert($0).inserted }
+  }
+
+  private static func stripKoreanSuffixes(_ raw: String) -> String {
+    var token = raw
+    var didStrip = true
+    while didStrip {
+      didStrip = false
+      for suffix in koreanSuffixes where token.hasSuffix(suffix) && token.count > suffix.count + 1 {
+        token.removeLast(suffix.count)
+        didStrip = true
+        break
+      }
+    }
+    return token
+  }
+
+  private static func containsAny(_ text: String, _ candidates: [String]) -> Bool {
+    candidates.contains { text.contains($0) }
+  }
+
+  private static let koreanSuffixes = [
+    "에서는", "에게는", "으로는", "로는", "에는", "에서", "에게", "으로", "하고", "처럼",
+    "보다", "까지", "부터", "마다", "밖에", "만큼", "라는", "이나", "나", "로", "에",
+    "은", "는", "이", "가", "을", "를", "의", "도", "만", "와", "과", "랑",
+  ]
+
+  private static let stopwords: Set<String> = [
+    "있는", "있어", "있나", "있나요", "찾아", "찾아줘", "보여줘", "검색", "어디", "어디에",
+    "물건", "항목", "재고", "레시피", "요리", "재료", "만들", "만드는", "만들기", "가능한",
+    "가능", "없는", "수", "것", "거", "좀", "내", "우리", "집", "homepin",
+  ]
+
+  private static let semanticWords: Set<String> = [
+    "임박", "곧만료", "유통기한", "만료", "만료됨", "기한지남", "expired", "soon",
+    "위치없음", "위치없는", "위치미정", "위치미지정", "장소없음", "ready", "cookable", "missing",
+    "부족", "없는재료", "지금가능", "바로가능",
+  ]
 }
 
 /// 확인 드래프트 화면(screen-09) push 라우트. `navigationDestination(item:)` 요건
