@@ -1,6 +1,7 @@
 import Foundation
 import Observation
 import SwiftData
+import SwiftUI
 
 /// 레시피 추가/편집 에디터의 화면 로컬 모델.
 /// 저장 전 draft(기본정보·재료 행·단계 행)와 다단계 쓰기 불변식
@@ -79,17 +80,17 @@ final class RecipeEditorModel {
     }
   }
 
-  var navigationTitle: String {
+  var navigationTitle: LocalizedStringKey {
     switch mode {
-    case .create: "레시피 추가"
-    case .edit: "레시피 편집"
+    case .create: "Add Recipe"
+    case .edit: "Edit Recipe"
     }
   }
 
-  var saveTitle: String {
+  var saveTitle: LocalizedStringKey {
     switch mode {
-    case .create: "추가"
-    case .edit: "저장"
+    case .create: "Add"
+    case .edit: "Save"
     }
   }
 

@@ -2,7 +2,7 @@ import SwiftUI
 
 /// 검색 바(카드형/필드형). 현재는 placeholder 표시 전용(실제 검색은 후속 screen-04).
 struct AppSearchBar: View {
-  let placeholder: String
+  let placeholder: LocalizedStringKey
   var style: Style = .card
 
   enum Style {

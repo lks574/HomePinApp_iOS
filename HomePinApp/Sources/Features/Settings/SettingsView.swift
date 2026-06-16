@@ -5,6 +5,7 @@ import SwiftUI
 struct SettingsView: View {
   @Environment(\.modelContext) private var modelContext
   @AppStorage(AppThemePreference.storageKey) private var themeRaw = AppThemePreference.system.rawValue
+  @AppStorage(AppLanguagePreference.storageKey) private var languageRaw = AppLanguagePreference.system.rawValue
 
   @Query private var items: [Item]
   @Query private var areas: [Area]
@@ -19,16 +20,16 @@ struct SettingsView: View {
         dataSection
         infoSection
       }
-      .navigationTitle("설정")
+      .navigationTitle("Settings")
       .confirmationDialog(
-        "전체 데이터를 정리할까요?",
+        "Clear all data?",
         isPresented: $showingClearConfirm,
         titleVisibility: .visible
       ) {
-        Button("전체 삭제", role: .destructive) { clearAllData() }
-        Button("취소", role: .cancel) {}
+        Button("Delete All", role: .destructive) { clearAllData() }
+        Button("Cancel", role: .cancel) {}
       } message: {
-        Text("물건·장소·수납공간·레시피·분류·태그가 모두 삭제됩니다. 이 작업은 되돌릴 수 없습니다.")
+        Text("All items, places, storage spots, recipes, categories, and tags will be deleted. This cannot be undone.")
       }
     }
   }
@@ -36,10 +37,15 @@ struct SettingsView: View {
   // MARK: - 표시
 
   private var displaySection: some View {
-    Section("표시") {
-      Picker("테마", selection: $themeRaw) {
+    Section("Display") {
+      Picker("Theme", selection: $themeRaw) {
         ForEach(AppThemePreference.allCases) { theme in
           Text(theme.title).tag(theme.rawValue)
+        }
+      }
+      Picker("Language", selection: $languageRaw) {
+        ForEach(AppLanguagePreference.allCases) { language in
+          Text(language.title).tag(language.rawValue)
         }
       }
     }
@@ -48,14 +54,14 @@ struct SettingsView: View {
   // MARK: - 데이터
 
   private var dataSection: some View {
-    Section("데이터") {
-      LabeledContent("물건", value: "\(items.count)개")
-      LabeledContent("장소", value: "\(areas.count)곳")
-      LabeledContent("레시피", value: "\(recipes.count)개")
+    Section("Data") {
+      LabeledContent("Items") { Text("count.items.\(items.count)") }
+      LabeledContent("Places") { Text("count.places.\(areas.count)") }
+      LabeledContent("Recipes") { Text("count.recipes.\(recipes.count)") }
       Button(role: .destructive) {
         showingClearConfirm = true
       } label: {
-        Text("전체 데이터 정리")
+        Text("Clear All Data")
       }
     }
   }
@@ -63,10 +69,10 @@ struct SettingsView: View {
   // MARK: - 정보
 
   private var infoSection: some View {
-    Section("정보") {
-      LabeledContent("버전", value: appVersion)
-      LabeledContent("저장", value: "이 기기 (SwiftData)")
-      Text("HomePin — 집 안 물건을 위치에 핀하고, 말로 넣고 찾는 로컬 앱.\n모든 데이터는 이 기기에만 저장되며 외부로 전송되지 않습니다.")
+    Section("About") {
+      LabeledContent("Version") { Text(verbatim: appVersion) }
+      LabeledContent("Storage") { Text("This device (SwiftData)") }
+      Text("HomePin — a local app to pin your home's items to places, and add and find them by voice.\nAll data is stored only on this device and is never sent anywhere.")
         .font(.footnote)
         .foregroundStyle(.secondary)
     }
@@ -90,7 +96,8 @@ struct SettingsView: View {
       assertionFailure("전체 데이터 정리 실패: \(error)")
     }
     // 장소 추가(PlaceEditor 가 첫 Space 사용)가 유효하도록 기본 공간을 복구한다.
-    modelContext.insert(Space(name: "우리집"))
+    // 시드와 동일하게 시스템 언어 기준 기본 공간명을 쓴다(생성 시점 1회 고정 데이터).
+    modelContext.insert(Space(name: SeedText.current.space))
     try? modelContext.save()
   }
 

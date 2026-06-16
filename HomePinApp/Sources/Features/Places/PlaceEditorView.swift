@@ -32,7 +32,7 @@ struct PlaceEditorView: View {
     NavigationStack {
       ScrollView {
         VStack(spacing: 18) {
-          AppEditorNameCard(placeholder: "예: 주방, 안방, 베란다", text: $name, onSubmit: save)
+          AppEditorNameCard(placeholder: "e.g. Kitchen, Bedroom, Balcony", text: $name, onSubmit: save)
         }
         .padding(20)
       }
@@ -42,23 +42,23 @@ struct PlaceEditorView: View {
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {
-          Button("닫기") { dismiss() }
+          Button("Close") { dismiss() }
         }
       }
     }
   }
 
-  private var title: String {
+  private var title: LocalizedStringKey {
     switch mode {
-    case .create: "장소 추가"
-    case .edit: "장소 편집"
+    case .create: "Add Place"
+    case .edit: "Edit Place"
     }
   }
 
-  private var saveTitle: String {
+  private var saveTitle: LocalizedStringKey {
     switch mode {
-    case .create: "추가"
-    case .edit: "저장"
+    case .create: "Add"
+    case .edit: "Save"
     }
   }
 

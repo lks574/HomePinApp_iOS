@@ -2,7 +2,7 @@ import SwiftUI
 
 /// 캡슐형 강조 버튼(아이콘 옵션). 헤더 액션 등 작은 액션용.
 struct AppPrimaryButton: View {
-  let title: String
+  let title: LocalizedStringKey
   var systemImage: String?
   var isEnabled = true
   let action: () -> Void
@@ -29,7 +29,7 @@ struct AppPrimaryButton: View {
 
 /// 전체폭 기본 버튼. 시트 하단 저장 등 주요 액션용. (하단 고정은 `appEditorSaveBar`.)
 struct AppFullWidthPrimaryButton: View {
-  let title: String
+  let title: LocalizedStringKey
   var isEnabled = true
   let action: () -> Void
 

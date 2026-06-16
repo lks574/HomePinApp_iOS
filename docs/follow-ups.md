@@ -76,3 +76,17 @@ UI 우선 1차(시안 C 화면 골격)에서 의도적으로 뒤로 미룬 것�
 - [ ] **홈 "장소 바로가기" 탭 동작 없음** — `HomeView.placeShortcuts` 가 단순
   `VStack`(배지+이름)이라 탭해도 [[PlaceDetail]] 로 이동하지 않는 죽은 상호작용.
   탭 시 해당 장소 상세로 진입 연결 필요(장소 탭 `NavigationStack` 경유 방법 검토).
+
+## 다국어(i18n) 후속
+
+i18n 1차(screen-10, en/ko 시스템 추종) 완료 후 남은 항목. 결정:
+`docs/wiki/Decision/2026-06-16-i18n-다국어화-방침.md`.
+
+- [ ] **STT 인식 locale 시스템 추종 검토** — `SpeechDictationEngine` 의 인식 locale 이
+  `Locale("ko-KR")` 로 한국어 고정. 영어 사용자도 한국어 인식기로 받아쓰기된다.
+  시스템 언어(en/ko)에 맞춰 인식 locale 을 고르고, 미지원 시 폴백 안내를 다듬어야 한다.
+  (현재 i18n 범위 밖으로 분리. STT 권한·불가용·오류 표시 문구는 이미 현지화됨.)
+- [ ] **영어 NL 추출 품질 검증** — `NLItemParser` 프롬프트·`@Guide` 가 한국어 문장
+  추출 기준이라 영어 입력의 다건 분리·수량·위치 grounding 정확도가 미검증. 영어 입력
+  품질 확인 후 필요 시 프롬프트를 언어별로 다루는 방안 검토(시뮬레이터 추론 불가 →
+  Apple Intelligence 가용 실기기 필요).

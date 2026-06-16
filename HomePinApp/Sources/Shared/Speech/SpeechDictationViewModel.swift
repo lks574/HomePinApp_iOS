@@ -95,7 +95,7 @@ final class SpeechDictationViewModel {
       cancelInactivityTimer()
       logger.error("받아쓰기 이벤트 소비 실패: \(error.localizedDescription, privacy: .public)")
       if state == .recording || state == .preparing {
-        state = .unavailable(reason: "받아쓰기를 사용할 수 없어요.")
+        state = .unavailable(reason: String(localized: "dictation.reason.deviceUnavailable"))
       }
       return
     }

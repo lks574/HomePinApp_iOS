@@ -35,13 +35,13 @@ struct PlaceDetailView: View {
       VStack(alignment: .leading, spacing: 0) {
         backButton
         headerRow
-        AppSearchBar(placeholder: "\(area.name)에서 찾기", style: .field)
+        AppSearchBar(placeholder: "place.search.\(area.name)", style: .field)
           .padding(.vertical, 20)
         ForEach(spots) { spot in
           spotCard(title: spot.name, items: items(in: spot), spot: spot)
         }
         if !unassignedItems.isEmpty {
-          spotCard(title: "수납공간 미지정", items: unassignedItems, spot: nil)
+          spotCard(title: String(localized: "No Spot"), items: unassignedItems, spot: nil)
         }
       }
       .padding(20)
@@ -58,23 +58,23 @@ struct PlaceDetailView: View {
       SpotEditorView(mode: route.mode)
     }
     .confirmationDialog(
-      "‘\(area.name)’ 장소를 삭제할까요?",
+      Text("place.delete.title.\(area.name)"),
       isPresented: $showingDeleteConfirm
     ) {
-      Button("삭제", role: .destructive) { deletePlace() }
-      Button("취소", role: .cancel) {}
+      Button("Delete", role: .destructive) { deletePlace() }
+      Button("Cancel", role: .cancel) {}
     } message: {
-      Text("수납공간 \(spots.count)곳도 함께 삭제됩니다. 보관 중인 물건은 삭제되지 않고 위치만 해제됩니다.")
+      Text("place.delete.message.\(spots.count)")
     }
     .confirmationDialog(
-      "‘\(pendingSpotDelete?.name ?? "")’ 세부위치를 삭제할까요?",
+      Text("spot.delete.title.\(pendingSpotDelete?.name ?? "")"),
       isPresented: spotDeleteConfirmationBinding,
       presenting: pendingSpotDelete
     ) { spot in
-      Button("삭제", role: .destructive) { deleteSpot(spot) }
-      Button("취소", role: .cancel) {}
+      Button("Delete", role: .destructive) { deleteSpot(spot) }
+      Button("Cancel", role: .cancel) {}
     } message: { spot in
-      Text("보관 중인 물건 \(items(in: spot).count)개는 삭제되지 않고 ‘수납공간 미지정’ 으로 이동합니다.")
+      Text("spot.delete.message.\(items(in: spot).count)")
     }
   }
 
@@ -94,7 +94,7 @@ struct PlaceDetailView: View {
     Button(action: { dismiss() }) {
       HStack(spacing: 4) {
         Image(systemName: "chevron.left").font(.appRowLabel)
-        Text("장소").font(.system(size: 16, weight: .semibold))
+        Text("Places").font(.system(size: 16, weight: .semibold))
       }
       .foregroundStyle(AppColor.accent)
     }
@@ -106,10 +106,10 @@ struct PlaceDetailView: View {
     HStack(spacing: 14) {
       AppInitialBadge(text: area.name, size: 54, fontSize: 22, radius: 16)
       VStack(alignment: .leading, spacing: 2) {
-        Text(area.name)
+        Text(verbatim: area.name)
           .font(.system(size: 30, weight: .heavy))
           .foregroundStyle(AppColor.textPrimary)
-        Text("\(items.count)개 · 수납공간 \(spots.count)곳")
+        Text("place.detail.summary.\(items.count).\(spots.count)")
           .font(.appFootnote)
           .foregroundStyle(AppColor.textTertiary)
       }
@@ -119,17 +119,17 @@ struct PlaceDetailView: View {
           Button {
             spotEditorRoute = SpotEditorRoute(mode: .create(area: area))
           } label: {
-            Label("세부위치 추가", systemImage: "plus.square.on.square")
+            Label("Add Spot", systemImage: "plus.square.on.square")
           }
           Button {
             placeEditorRoute = PlaceEditorRoute(mode: .edit(area))
           } label: {
-            Label("장소 이름 수정", systemImage: "pencil")
+            Label("Rename Place", systemImage: "pencil")
           }
           Button(role: .destructive) {
             showingDeleteConfirm = true
           } label: {
-            Label("장소 삭제", systemImage: "trash")
+            Label("Delete Place", systemImage: "trash")
           }
         } label: {
           Image(systemName: "ellipsis")
@@ -138,7 +138,7 @@ struct PlaceDetailView: View {
             .frame(width: 36, height: 36)
             .background(AppColor.card, in: Circle())
         }
-        AppPrimaryButton(title: "물건 추가", systemImage: "plus") {
+        AppPrimaryButton(title: "Add Item", systemImage: "plus") {
           editorRoute = ItemEditorRoute(mode: .create(area: area))
         }
       }
@@ -161,20 +161,20 @@ struct PlaceDetailView: View {
   private func spotCard(title: String, items: [Item], spot: Spot?) -> some View {
     VStack(spacing: 0) {
       HStack {
-        Text(title).font(.system(size: 15, weight: .bold)).foregroundStyle(AppColor.textPrimary)
+        Text(verbatim: title).font(.system(size: 15, weight: .bold)).foregroundStyle(AppColor.textPrimary)
         Spacer()
-        Text("\(items.count)개").font(.appCaptionStrong).foregroundStyle(AppColor.textFaint)
+        Text("count.items.\(items.count)").font(.appCaptionStrong).foregroundStyle(AppColor.textFaint)
         if let spot {
           Menu {
             Button {
               spotEditorRoute = SpotEditorRoute(mode: .edit(spot))
             } label: {
-              Label("이름 수정", systemImage: "pencil")
+              Label("Rename", systemImage: "pencil")
             }
             Button(role: .destructive) {
               pendingSpotDelete = spot
             } label: {
-              Label("삭제", systemImage: "trash")
+              Label("Delete", systemImage: "trash")
             }
           } label: {
             Image(systemName: "ellipsis")
@@ -203,10 +203,10 @@ struct PlaceDetailView: View {
         } label: {
           HStack(spacing: 10) {
             Circle().fill(AppColor.itemDot).frame(width: 6, height: 6)
-            Text(item.name).font(.appItemBody).foregroundStyle(AppColor.textPrimary)
+            Text(verbatim: item.name).font(.appItemBody).foregroundStyle(AppColor.textPrimary)
             Spacer()
             if item.quantity > 1 {
-              Text("\(item.quantity)개")
+              Text("count.items.\(item.quantity)")
                 .font(.appCaptionStrong)
                 .foregroundStyle(AppColor.textMuted)
             }

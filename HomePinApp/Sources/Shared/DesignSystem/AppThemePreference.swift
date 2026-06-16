@@ -1,5 +1,7 @@
 import SwiftUI
 
+// SwiftUI 의 `Text`/`Picker` 가 자동 현지화하도록 `title` 은 LocalizedStringKey 다.
+
 /// 앱 테마 환경설정. `@AppStorage` 로 저장하고 루트(`AppRootView`)에서
 /// `preferredColorScheme` 으로 적용한다.
 ///
@@ -15,11 +17,11 @@ enum AppThemePreference: String, CaseIterable, Identifiable {
   /// `@AppStorage` 저장 키.
   static let storageKey = "appThemePreference"
 
-  var title: String {
+  var title: LocalizedStringKey {
     switch self {
-    case .system: "시스템 설정"
-    case .light: "라이트"
-    case .dark: "다크"
+    case .system: "Use System Setting"
+    case .light: "Light"
+    case .dark: "Dark"
     }
   }
 

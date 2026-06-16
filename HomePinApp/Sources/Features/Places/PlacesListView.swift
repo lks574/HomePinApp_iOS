@@ -25,7 +25,7 @@ struct PlacesListView: View {
       ScrollView {
         VStack(alignment: .leading, spacing: 0) {
           header
-          Text("\(areas.count)곳 · \(totalItemCount)개 보관 중")
+          Text("places.summary.\(areas.count).\(totalItemCount)")
             .font(.system(size: 14))
             .foregroundStyle(AppColor.textTertiary)
             .padding(.bottom, 22)
@@ -40,12 +40,12 @@ struct PlacesListView: View {
                 Button {
                   editorRoute = PlaceEditorRoute(mode: .edit(area))
                 } label: {
-                  Label("이름 수정", systemImage: "pencil")
+                  Label("Rename", systemImage: "pencil")
                 }
                 Button(role: .destructive) {
                   pendingDelete = area
                 } label: {
-                  Label("삭제", systemImage: "trash")
+                  Label("Delete", systemImage: "trash")
                 }
               }
             }
@@ -60,25 +60,25 @@ struct PlacesListView: View {
         PlaceEditorView(mode: route.mode)
       }
       .confirmationDialog(
-        "‘\(pendingDelete?.name ?? "")’ 장소를 삭제할까요?",
+        Text("place.delete.title.\(pendingDelete?.name ?? "")"),
         isPresented: deleteConfirmationBinding,
         presenting: pendingDelete
       ) { area in
-        Button("삭제", role: .destructive) { delete(area) }
-        Button("취소", role: .cancel) {}
+        Button("Delete", role: .destructive) { delete(area) }
+        Button("Cancel", role: .cancel) {}
       } message: { area in
-        Text("수납공간 \(area.spots.count)곳도 함께 삭제됩니다. 보관 중인 물건은 삭제되지 않고 위치만 해제됩니다.")
+        Text("place.delete.message.\(area.spots.count)")
       }
     }
   }
 
   private var header: some View {
     HStack(alignment: .bottom) {
-      Text("장소")
+      Text("Places")
         .font(.appScreenTitle)
         .foregroundStyle(AppColor.textPrimary)
       Spacer()
-      AppPrimaryButton(title: "장소 추가", systemImage: "plus") {
+      AppPrimaryButton(title: "Add Place", systemImage: "plus") {
         editorRoute = PlaceEditorRoute(mode: .create)
       }
     }
@@ -113,10 +113,10 @@ struct PlacesListView: View {
       }
       .padding(.bottom, 22)
 
-      Text(area.name)
+      Text(verbatim: area.name)
         .font(.system(size: 16, weight: .bold))
         .foregroundStyle(AppColor.textPrimary)
-      Text(preview)
+      Text(verbatim: preview)
         .font(.appCaption)
         .foregroundStyle(AppColor.textMuted)
         .lineLimit(2)

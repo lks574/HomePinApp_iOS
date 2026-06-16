@@ -25,7 +25,7 @@ let project = Project(
       codeCoverageEnabled: false,
       testingOptions: [],
     ),
-    developmentRegion: "ko",
+    developmentRegion: "en",
   ),
   settings: .settings(base: baseSettings),
   targets: [
@@ -40,8 +40,11 @@ let project = Project(
         "UIApplicationSceneManifest": [
           "UIApplicationSupportsMultipleScenes": false,
         ],
-        "NSMicrophoneUsageDescription": "물건을 말로 빠르게 추가·검색하기 위해 마이크를 사용해요.",
-        "NSSpeechRecognitionUsageDescription": "말한 내용을 텍스트로 받아쓰기 위해 음성 인식을 사용해요.",
+        "CFBundleDevelopmentRegion": "en",
+        "CFBundleLocalizations": ["en", "ko"],
+        // 권한 설명은 InfoPlist.xcstrings(en/ko) 로 현지화한다. 여기에는 영문 source 만 둔다.
+        "NSMicrophoneUsageDescription": "Used to quickly add and search items by voice.",
+        "NSSpeechRecognitionUsageDescription": "Used to transcribe what you say into text.",
       ]),
       sources: ["HomePinApp/Sources/**"],
       resources: ["HomePinApp/Resources/**"],

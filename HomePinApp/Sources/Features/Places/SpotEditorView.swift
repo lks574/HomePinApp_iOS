@@ -30,7 +30,7 @@ struct SpotEditorView: View {
     NavigationStack {
       ScrollView {
         VStack(spacing: 18) {
-          AppEditorNameCard(placeholder: "예: 냉동실, 두번째 서랍, 우측 하단", text: $name, onSubmit: save)
+          AppEditorNameCard(placeholder: "e.g. Freezer, Second drawer, Bottom right", text: $name, onSubmit: save)
         }
         .padding(20)
       }
@@ -40,23 +40,23 @@ struct SpotEditorView: View {
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {
-          Button("닫기") { dismiss() }
+          Button("Close") { dismiss() }
         }
       }
     }
   }
 
-  private var title: String {
+  private var title: LocalizedStringKey {
     switch mode {
-    case .create: "세부위치 추가"
-    case .edit: "세부위치 편집"
+    case .create: "Add Spot"
+    case .edit: "Edit Spot"
     }
   }
 
-  private var saveTitle: String {
+  private var saveTitle: LocalizedStringKey {
     switch mode {
-    case .create: "추가"
-    case .edit: "저장"
+    case .create: "Add"
+    case .edit: "Save"
     }
   }
 

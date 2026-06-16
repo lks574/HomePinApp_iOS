@@ -8,7 +8,7 @@ struct AppFilterChip: View {
 
   var body: some View {
     Button(action: action) {
-      Text(title)
+      Text(verbatim: title)
         .font(.system(size: 14, weight: .semibold))
         .foregroundStyle(isSelected ? .white : AppColor.textSecondary)
         .padding(.horizontal, 15)
@@ -24,7 +24,7 @@ struct AppOutlinedChip: View {
   let title: String
 
   var body: some View {
-    Text(title)
+    Text(verbatim: title)
       .font(.system(size: 14, weight: .semibold))
       .foregroundStyle(Color(lightHex: 0x6F4A38, darkHex: 0xC8A48E))
       .padding(.horizontal, 15)
@@ -45,7 +45,7 @@ struct AppIngredientChip: View {
   let state: AppIngredientChipState
 
   var body: some View {
-    Text(state == .missing ? "\(name) 부족" : name)
+    label
       .font(.appSectionLabel)
       .foregroundStyle(textColor)
       .padding(.horizontal, 11)
@@ -56,6 +56,16 @@ struct AppIngredientChip: View {
           Capsule().strokeBorder(AppColor.chipMissingBorder, style: StrokeStyle(lineWidth: 1, dash: [3]))
         }
       }
+  }
+
+  /// 부족 상태는 "<재료> 부족"(=user data + 현지화 접미)으로 합성한다. 이름 자체는
+  /// 사용자 입력이라 현지화 비대상이므로 verbatim 으로 끼워 넣는다.
+  private var label: Text {
+    if state == .missing {
+      Text("ingredient.missing.\(name)")
+    } else {
+      Text(verbatim: name)
+    }
   }
 
   private var textColor: Color {
@@ -87,7 +97,7 @@ struct AppStatusPill: View {
   }
 
   var body: some View {
-    Text(title)
+    Text(verbatim: title)
       .font(.appBadge)
       .foregroundStyle(foreground)
       .padding(.horizontal, 11)

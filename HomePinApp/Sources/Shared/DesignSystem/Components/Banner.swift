@@ -8,15 +8,15 @@ struct AppExpiringItemsBanner: View {
 
   var body: some View {
     VStack(alignment: .leading, spacing: 10) {
-      Text("유통기한 임박 \(items.count)가지")
+      Text("expiring.count.\(items.count)")
         .font(.appSectionLabel)
         .foregroundStyle(AppColor.onAccentSubtle)
-      Text(headline)
+      Text(verbatim: headline)
         .font(.system(size: 18, weight: .heavy))
         .foregroundStyle(.white)
       HStack(spacing: 6) {
         ForEach(items.prefix(3)) { item in
-          Text("\(item.name) \(item.dDayLabel)")
+          Text(verbatim: "\(item.name) \(item.dDayLabel)")
             .font(.appTag)
             .foregroundStyle(.white)
             .padding(.horizontal, 10)

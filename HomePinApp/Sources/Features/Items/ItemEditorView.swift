@@ -40,7 +40,7 @@ struct ItemEditorView: View {
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {
-          Button("닫기") { dismiss() }
+          Button("Close") { dismiss() }
         }
       }
       .sheet(isPresented: $showingAreaPicker) {
@@ -55,12 +55,12 @@ struct ItemEditorView: View {
         }
       }
       .confirmationDialog(
-        "이 물건을 삭제할까요?",
+        "Delete this item?",
         isPresented: $showingDeleteConfirm,
         titleVisibility: .visible
       ) {
-        Button("삭제", role: .destructive) { deleteItem() }
-        Button("취소", role: .cancel) {}
+        Button("Delete", role: .destructive) { deleteItem() }
+        Button("Cancel", role: .cancel) {}
       }
     }
   }
@@ -69,7 +69,7 @@ struct ItemEditorView: View {
     Button(role: .destructive) {
       showingDeleteConfirm = true
     } label: {
-      Text("물건 삭제")
+      Text("Delete Item")
         .font(.appRowLabel)
         .foregroundStyle(.red)
         .frame(maxWidth: .infinity)
@@ -82,10 +82,10 @@ struct ItemEditorView: View {
   private var basicInfoCard: some View {
     VStack(spacing: 0) {
       VStack(alignment: .leading, spacing: 8) {
-        Text("이름")
+        Text("Name")
           .font(.appRowLabel)
           .foregroundStyle(AppColor.textPrimary)
-        TextField("예: AA 건전지", text: $model.name)
+        TextField("e.g. AA batteries", text: $model.name)
           .font(.appFieldText)
           .foregroundStyle(AppColor.textPrimary)
           .focused($focusedField, equals: .name)
@@ -93,7 +93,7 @@ struct ItemEditorView: View {
       .padding(16)
       Divider().padding(.leading, 16)
       HStack {
-        Text("수량")
+        Text("Quantity")
           .font(.appRowLabel)
           .foregroundStyle(AppColor.textPrimary)
         Spacer()
@@ -133,15 +133,15 @@ struct ItemEditorView: View {
   private var locationCard: some View {
     VStack(spacing: 0) {
       AppEditorSelectionRow(
-        title: "장소",
-        value: model.selectedArea?.name ?? "장소 선택",
+        title: "Place",
+        value: model.selectedArea?.name ?? String(localized: "Select place"),
         isPlaceholder: model.selectedArea == nil,
         action: { showingAreaPicker = true }
       )
       Divider().padding(.leading, 16)
       AppEditorSelectionRow(
-        title: "세부위치",
-        value: model.selectedSpot?.name ?? "선택 안 함",
+        title: "Spot",
+        value: model.selectedSpot?.name ?? String(localized: "None"),
         isPlaceholder: model.selectedSpot == nil,
         action: { showingSpotPicker = true }
       )
@@ -152,7 +152,7 @@ struct ItemEditorView: View {
   private var optionCard: some View {
     VStack(spacing: 0) {
       Toggle(isOn: $model.hasExpiration) {
-        Text("유통기한")
+        Text("Expiration")
           .font(.appRowLabel)
           .foregroundStyle(AppColor.textPrimary)
       }
@@ -162,7 +162,7 @@ struct ItemEditorView: View {
 
       if model.hasExpiration {
         Divider().padding(.leading, 16)
-        DatePicker("날짜", selection: $model.expiresAt, displayedComponents: .date)
+        DatePicker("Date", selection: $model.expiresAt, displayedComponents: .date)
           .font(.appRowLabel)
           .foregroundStyle(AppColor.textPrimary)
           .padding(.horizontal, 16)
@@ -171,10 +171,10 @@ struct ItemEditorView: View {
 
       Divider().padding(.leading, 16)
       VStack(alignment: .leading, spacing: 8) {
-        Text("메모")
+        Text("Memo")
           .font(.appRowLabel)
           .foregroundStyle(AppColor.textPrimary)
-        TextField("선택 입력", text: $model.memo, axis: .vertical)
+        TextField("Optional", text: $model.memo, axis: .vertical)
           .font(.appItemBody)
           .foregroundStyle(AppColor.textPrimary)
           .lineLimit(2...5)
@@ -210,7 +210,7 @@ private enum ItemEditorField: Hashable {
 }
 
 private struct AppEditorSelectionRow: View {
-  let title: String
+  let title: LocalizedStringKey
   let value: String
   var isPlaceholder = false
   let action: () -> Void
@@ -222,7 +222,7 @@ private struct AppEditorSelectionRow: View {
           .font(.appRowLabel)
           .foregroundStyle(AppColor.textPrimary)
         Spacer()
-        Text(value)
+        Text(verbatim: value)
           .font(.appRowLabel)
           .foregroundStyle(isPlaceholder ? AppColor.textMuted : AppColor.textSecondary)
         Image(systemName: "chevron.right")

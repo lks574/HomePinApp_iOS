@@ -5,29 +5,33 @@ import SwiftUI
 struct RecipesView: View {
   @Query(sort: \Recipe.title) private var recipes: [Recipe]
   @Query private var items: [Item]
-  @State private var cuisine = "전체"
-  @State private var dish = "전체"
+  /// 필터 선택값은 저장값(raw 한국어 키) 또는 `allKey`(전체) 다. 표시 라벨만 현지화한다.
+  @State private var cuisine = Self.allKey
+  @State private var dish = Self.allKey
   @State private var editorRoute: RecipeEditorRoute?
 
-  private let cuisines = ["전체", "한식", "일식", "중식", "양식", "분식"]
-  private let dishes = ["전체", "국·찌개", "볶음", "구이", "조림", "밥·면", "반찬"]
+  /// "전체"(필터 해제) 센티넬. raw 키와 충돌하지 않게 빈 문자열로 둔다.
+  private static let allKey = ""
+
+  private let cuisines = [allKey] + RecipeClassification.cuisineKeys
+  private let dishes = [allKey] + RecipeClassification.dishTypeKeys
 
   var body: some View {
     NavigationStack {
       ScrollView {
         VStack(alignment: .leading, spacing: 0) {
           HStack(alignment: .firstTextBaseline) {
-            Text("레시피").font(.appScreenTitle).foregroundStyle(AppColor.textPrimary)
+            Text("Recipes").font(.appScreenTitle).foregroundStyle(AppColor.textPrimary)
             Spacer()
-            AppPrimaryButton(title: "레시피 추가", systemImage: "plus") {
+            AppPrimaryButton(title: "Add Recipe", systemImage: "plus") {
               editorRoute = RecipeEditorRoute(mode: .create)
             }
           }
-          Text("냉장고 재료로 만들 수 있는 요리")
+          Text("Dishes you can make with what's in your fridge")
             .font(.system(size: 14)).foregroundStyle(AppColor.textTertiary)
             .padding(.bottom, 16)
 
-          AppSearchBar(placeholder: "레시피 · 재료 검색")
+          AppSearchBar(placeholder: "Search recipes and ingredients")
             .padding(.bottom, 14)
           cuisineChips
           dishChips
@@ -35,13 +39,13 @@ struct RecipesView: View {
           if !soonItems.isEmpty {
             AppExpiringItemsBanner(
               items: soonItems,
-              headline: "\(soonItems.prefix(3).map(\.name).joined(separator: " · ")), 오늘 다 써볼까요?"
+              headline: expiringHeadline
             )
             .padding(.bottom, 26)
           }
 
           if !soonRecipes.isEmpty {
-            AppSectionTitle(title: "임박 재료로 만들기", uppercase: true)
+            AppSectionTitle(title: "Make with Expiring Ingredients", uppercase: true)
             VStack(spacing: 13) {
               ForEach(soonRecipes) { recipe in
                 NavigationLink(value: recipe) { recipeSoonCard(recipe) }
@@ -51,7 +55,7 @@ struct RecipesView: View {
             .padding(.bottom, 26)
           }
 
-          AppSectionTitle(title: "내 재료로 만들 수 있어요", uppercase: true)
+          AppSectionTitle(title: "You Can Make Now", uppercase: true)
           VStack(spacing: 13) {
             ForEach(otherRecipes) { recipe in
               NavigationLink(value: recipe) { recipeCompactRow(recipe) }
@@ -74,9 +78,15 @@ struct RecipesView: View {
 
   private var filteredRecipes: [Recipe] {
     recipes.filter { recipe in
-      (cuisine == "전체" || recipe.cuisine == cuisine)
-        && (dish == "전체" || recipe.dishType == dish)
+      (cuisine == Self.allKey || recipe.cuisine == cuisine)
+        && (dish == Self.allKey || recipe.dishType == dish)
     }
+  }
+
+  /// 임박 재료 배너 헤드라인: 임박 물건 이름(사용자 데이터) + 현지화 권유 문구.
+  private var expiringHeadline: String {
+    let names = soonItems.prefix(3).map(\.name).joined(separator: " · ")
+    return String(localized: "recipes.expiringHeadline.\(names)")
   }
 
   private var soonItems: [Item] { items.expiringSoonByExpiry }
@@ -105,7 +115,7 @@ struct RecipesView: View {
     ScrollView(.horizontal, showsIndicators: false) {
       HStack(spacing: 8) {
         ForEach(cuisines, id: \.self) { c in
-          AppFilterChip(title: c, isSelected: cuisine == c) { cuisine = c }
+          AppFilterChip(title: cuisineFilterLabel(c), isSelected: cuisine == c) { cuisine = c }
         }
       }
     }
@@ -116,11 +126,20 @@ struct RecipesView: View {
     ScrollView(.horizontal, showsIndicators: false) {
       HStack(spacing: 8) {
         ForEach(dishes, id: \.self) { d in
-          AppFilterChip(title: d, isSelected: dish == d) { dish = d }
+          AppFilterChip(title: dishFilterLabel(d), isSelected: dish == d) { dish = d }
         }
       }
     }
     .padding(.bottom, 22)
+  }
+
+  /// 필터 칩 표시 라벨: allKey 는 "전체"(현지화), 그 외 raw 키는 분류 표시 라벨.
+  private func cuisineFilterLabel(_ raw: String) -> String {
+    raw == Self.allKey ? String(localized: "All") : RecipeClassification.cuisineLabel(raw)
+  }
+
+  private func dishFilterLabel(_ raw: String) -> String {
+    raw == Self.allKey ? String(localized: "All") : RecipeClassification.dishTypeLabel(raw)
   }
 
 
@@ -130,7 +149,11 @@ struct RecipesView: View {
   private func recipeSoonCard(_ recipe: Recipe) -> some View {
     let ingredients = recipe.ingredients.sorted { $0.sortOrder < $1.sortOrder }
     let soon = ingredients.filter { $0.stockStatus == .soon }
-    let badge = soon.isEmpty ? nil : (soon.count == 1 ? "임박 \(soon[0].name)" : "임박 \(soon.count)개")
+    let badge: String? = soon.isEmpty
+      ? nil
+      : (soon.count == 1
+        ? String(localized: "recipe.expiringBadge.one.\(soon[0].name)")
+        : String(localized: "recipe.expiringBadge.count.\(soon.count)"))
     let have = ingredients.filter(\.isInStock).count
     let total = ingredients.count
     let pct = total == 0 ? 0 : Double(have) / Double(total)
@@ -138,8 +161,8 @@ struct RecipesView: View {
     return VStack(alignment: .leading, spacing: 0) {
       HStack(alignment: .top) {
         VStack(alignment: .leading, spacing: 2) {
-          Text(recipe.title).font(.system(size: 18, weight: .bold)).foregroundStyle(AppColor.textPrimary)
-          Text("\(recipe.totalMinutes ?? 0)분").font(.appFootnote).foregroundStyle(AppColor.textMuted)
+          Text(verbatim: recipe.title).font(.system(size: 18, weight: .bold)).foregroundStyle(AppColor.textPrimary)
+          Text("recipe.minutes.\(recipe.totalMinutes ?? 0)").font(.appFootnote).foregroundStyle(AppColor.textMuted)
         }
         Spacer()
         if let badge {
@@ -160,7 +183,7 @@ struct RecipesView: View {
           }
         }
         .frame(height: 6)
-        Text("재료 \(have)/\(total)")
+        Text("recipe.ingredientCount.\(have).\(total)")
           .font(.appSectionLabel).foregroundStyle(AppColor.textSecondary)
           .fixedSize()
       }
@@ -178,11 +201,16 @@ struct RecipesView: View {
 
     return HStack(spacing: 14) {
       VStack(alignment: .leading, spacing: 2) {
-        Text(recipe.title).font(.appValueStrong).foregroundStyle(AppColor.textPrimary)
-        Text("\(recipe.totalMinutes ?? 0)분").font(.appFootnote).foregroundStyle(AppColor.textMuted)
+        Text(verbatim: recipe.title).font(.appValueStrong).foregroundStyle(AppColor.textPrimary)
+        Text("recipe.minutes.\(recipe.totalMinutes ?? 0)").font(.appFootnote).foregroundStyle(AppColor.textMuted)
       }
       Spacer()
-      AppStatusPill(title: ready ? "재료 완비" : "재료 \(have)/\(total)", style: ready ? .ready : .neutral)
+      AppStatusPill(
+        title: ready
+          ? String(localized: "recipe.ready")
+          : String(localized: "recipe.ingredientCount.\(have).\(total)"),
+        style: ready ? .ready : .neutral
+      )
     }
     .padding(EdgeInsets(top: 15, leading: 17, bottom: 15, trailing: 17))
     .appCard(radius: 18)

@@ -36,13 +36,13 @@ struct RecipeDetailView: View {
       RecipeEditorView(mode: route.mode)
     }
     .confirmationDialog(
-      "‘\(recipe.title)’ 레시피를 삭제할까요?",
+      Text("recipe.delete.title.\(recipe.title)"),
       isPresented: $showingDeleteConfirm
     ) {
-      Button("삭제", role: .destructive) { deleteRecipe() }
-      Button("취소", role: .cancel) {}
+      Button("Delete", role: .destructive) { deleteRecipe() }
+      Button("Cancel", role: .cancel) {}
     } message: {
-      Text("재료 \(recipe.ingredients.count)개도 함께 삭제됩니다. 보관 중인 재고는 삭제되지 않습니다.")
+      Text("recipe.delete.message.\(recipe.ingredients.count)")
     }
   }
 
@@ -59,10 +59,10 @@ struct RecipeDetailView: View {
   /// 헤더 메타 한 줄(cuisine · 종류 · 인분 · 분) — nil 값은 생략.
   private var metaText: String? {
     var parts: [String] = []
-    if let cuisine = recipe.cuisine, !cuisine.isEmpty { parts.append(cuisine) }
-    if let dishType = recipe.dishType, !dishType.isEmpty { parts.append(dishType) }
-    if let servings = recipe.servings { parts.append("\(servings)인분") }
-    if let minutes = recipe.totalMinutes { parts.append("\(minutes)분") }
+    if let cuisine = recipe.cuisine, !cuisine.isEmpty { parts.append(RecipeClassification.cuisineLabel(cuisine)) }
+    if let dishType = recipe.dishType, !dishType.isEmpty { parts.append(RecipeClassification.dishTypeLabel(dishType)) }
+    if let servings = recipe.servings { parts.append(String(localized: "recipe.servings.\(servings)")) }
+    if let minutes = recipe.totalMinutes { parts.append(String(localized: "recipe.minutes.\(minutes)")) }
     return parts.isEmpty ? nil : parts.joined(separator: " · ")
   }
 
@@ -81,7 +81,7 @@ struct RecipeDetailView: View {
     Button(action: { dismiss() }) {
       HStack(spacing: 4) {
         Image(systemName: "chevron.left").font(.appRowLabel)
-        Text("레시피").font(.system(size: 16, weight: .semibold))
+        Text("Recipes").font(.system(size: 16, weight: .semibold))
       }
       .foregroundStyle(AppColor.accent)
     }
@@ -92,7 +92,7 @@ struct RecipeDetailView: View {
   private var headerRow: some View {
     VStack(alignment: .leading, spacing: 10) {
       HStack(alignment: .top, spacing: 12) {
-        Text(recipe.title)
+        Text(verbatim: recipe.title)
           .font(.system(size: 30, weight: .heavy))
           .foregroundStyle(AppColor.textPrimary)
         Spacer(minLength: 8)
@@ -100,12 +100,12 @@ struct RecipeDetailView: View {
           Button {
             editorRoute = RecipeEditorRoute(mode: .edit(recipe))
           } label: {
-            Label("편집", systemImage: "pencil")
+            Label("Edit", systemImage: "pencil")
           }
           Button(role: .destructive) {
             showingDeleteConfirm = true
           } label: {
-            Label("삭제", systemImage: "trash")
+            Label("Delete", systemImage: "trash")
           }
         } label: {
           Image(systemName: "ellipsis")
@@ -116,12 +116,12 @@ struct RecipeDetailView: View {
         }
       }
       if let metaText {
-        Text(metaText)
+        Text(verbatim: metaText)
           .font(.appFootnote)
           .foregroundStyle(AppColor.textTertiary)
       }
       if let summary = recipe.summary, !summary.isEmpty {
-        Text(summary)
+        Text(verbatim: summary)
           .font(.appItemBody)
           .foregroundStyle(AppColor.textSecondary)
           .fixedSize(horizontal: false, vertical: true)
@@ -139,22 +139,24 @@ struct RecipeDetailView: View {
     return VStack(alignment: .leading, spacing: 12) {
       HStack(alignment: .top) {
         VStack(alignment: .leading, spacing: 2) {
-          Text("내 재료 \(have)/\(total)")
+          Text("recipe.myIngredients.\(have).\(total)")
             .font(.appValueStrong)
             .foregroundStyle(AppColor.textPrimary)
           if recipe.isReadyToCook, total > 0 {
-            Text("지금 만들 수 있어요")
+            Text("recipe.canMakeNow")
               .font(.appSectionLabel)
               .foregroundStyle(AppColor.chipReadyText)
           } else if !missing.isEmpty {
-            Text("부족한 재료 \(missing.count)개")
+            Text("recipe.missingCount.\(missing.count)")
               .font(.appSectionLabel)
               .foregroundStyle(AppColor.textSecondary)
           }
         }
         Spacer()
         AppStatusPill(
-          title: recipe.isReadyToCook && total > 0 ? "재료 완비" : "재료 \(have)/\(total)",
+          title: recipe.isReadyToCook && total > 0
+            ? String(localized: "recipe.ready")
+            : String(localized: "recipe.ingredientCount.\(have).\(total)"),
           style: recipe.isReadyToCook && total > 0 ? .ready : .neutral
         )
       }
@@ -181,9 +183,9 @@ struct RecipeDetailView: View {
   private var ingredientsCard: some View {
     VStack(spacing: 0) {
       HStack {
-        Text("재료").font(.system(size: 15, weight: .bold)).foregroundStyle(AppColor.textPrimary)
+        Text("Ingredients").font(.system(size: 15, weight: .bold)).foregroundStyle(AppColor.textPrimary)
         Spacer()
-        Text("\(recipe.ingredients.count)개").font(.appCaptionStrong).foregroundStyle(AppColor.textFaint)
+        Text("count.ingredients.\(recipe.ingredients.count)").font(.appCaptionStrong).foregroundStyle(AppColor.textFaint)
       }
       .padding(.horizontal, 16)
       .padding(.top, 14)
@@ -199,10 +201,10 @@ struct RecipeDetailView: View {
   private func ingredientRow(_ ingredient: RecipeIngredient) -> some View {
     HStack(spacing: 10) {
       Circle().fill(AppColor.itemDot).frame(width: 6, height: 6)
-      Text(ingredient.name).font(.appItemBody).foregroundStyle(AppColor.textPrimary)
+      Text(verbatim: ingredient.name).font(.appItemBody).foregroundStyle(AppColor.textPrimary)
       Spacer()
       if let amount = amountText(ingredient) {
-        Text(amount)
+        Text(verbatim: amount)
           .font(.appCaptionStrong)
           .foregroundStyle(AppColor.textMuted)
       }
@@ -229,9 +231,9 @@ struct RecipeDetailView: View {
 
   private func stockLabel(_ status: RecipeIngredient.StockStatus) -> String {
     switch status {
-    case .have: "보유"
-    case .soon: "임박"
-    case .missing: "없음"
+    case .have: String(localized: "stock.have")
+    case .soon: String(localized: "stock.soon")
+    case .missing: String(localized: "stock.missing")
     }
   }
 
@@ -239,9 +241,9 @@ struct RecipeDetailView: View {
   private var stepsCard: some View {
     VStack(spacing: 0) {
       HStack {
-        Text("조리 단계").font(.system(size: 15, weight: .bold)).foregroundStyle(AppColor.textPrimary)
+        Text("Steps").font(.system(size: 15, weight: .bold)).foregroundStyle(AppColor.textPrimary)
         Spacer()
-        Text("\(sortedSteps.count)단계").font(.appCaptionStrong).foregroundStyle(AppColor.textFaint)
+        Text("recipe.stepCount.\(sortedSteps.count)").font(.appCaptionStrong).foregroundStyle(AppColor.textFaint)
       }
       .padding(.horizontal, 16)
       .padding(.top, 14)
@@ -262,12 +264,12 @@ struct RecipeDetailView: View {
         .frame(width: 24, height: 24)
         .background(AppColor.badgeBackground, in: Circle())
       VStack(alignment: .leading, spacing: 4) {
-        Text(step.text)
+        Text(verbatim: step.text)
           .font(.appItemBody)
           .foregroundStyle(AppColor.textPrimary)
           .fixedSize(horizontal: false, vertical: true)
         if let minutes = step.minutes {
-          Text("\(minutes)분")
+          Text("recipe.minutes.\(minutes)")
             .font(.appCaptionStrong)
             .foregroundStyle(AppColor.textMuted)
         }

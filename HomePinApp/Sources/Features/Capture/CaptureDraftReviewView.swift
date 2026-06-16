@@ -33,7 +33,7 @@ struct CaptureDraftReviewView: View {
     }
     .appEditorSaveBar(title: saveTitle, isEnabled: canSaveAll, action: saveAll)
     .background(AppColor.screenBackground)
-    .navigationTitle("확인하고 추가")
+    .navigationTitle("Confirm and Add")
     .navigationBarTitleDisplayMode(.inline)
     .sheet(item: $pickerTarget) { target in
       pickerSheet(for: target)
@@ -43,7 +43,7 @@ struct CaptureDraftReviewView: View {
   // MARK: - 헤더
 
   private var header: some View {
-    Text("AI가 정리한 내용이에요. 맞는지 확인하고 고친 뒤 추가하세요. ‘신규’는 이번에 새로 만들어져요.")
+    Text("This is what AI sorted out. Check it, edit if needed, and add. \"New\" items will be created this time.")
       .font(.appFootnote)
       .foregroundStyle(AppColor.textMuted)
       .frame(maxWidth: .infinity, alignment: .leading)
@@ -70,7 +70,7 @@ struct CaptureDraftReviewView: View {
 
   private func nameRow(_ draft: AddDraft) -> some View {
     HStack(spacing: 10) {
-      TextField("물건 이름", text: bindingName(draft))
+      TextField("Item name", text: bindingName(draft))
         .font(.appFieldText)
         .foregroundStyle(AppColor.textPrimary)
       Spacer(minLength: 8)
@@ -90,7 +90,7 @@ struct CaptureDraftReviewView: View {
 
   private func quantityRow(_ draft: AddDraft) -> some View {
     HStack {
-      Text("수량").font(.appRowLabel).foregroundStyle(AppColor.textPrimary)
+      Text("Quantity").font(.appRowLabel).foregroundStyle(AppColor.textPrimary)
       Spacer()
       Button {
         draft.quantity = max(1, draft.quantity - 1)
@@ -119,9 +119,9 @@ struct CaptureDraftReviewView: View {
 
   private func areaRow(_ draft: AddDraft) -> some View {
     matchRow(
-      title: "장소",
+      title: "Place",
       match: draft.areaMatch,
-      placeholder: "장소 선택",
+      placeholder: "Select place",
       isRequiredEmpty: !draft.areaMatch.hasValue,
     ) {
       pickerTarget = .area(draft)
@@ -130,9 +130,9 @@ struct CaptureDraftReviewView: View {
 
   private func spotRow(_ draft: AddDraft) -> some View {
     matchRow(
-      title: "세부위치",
+      title: "Spot",
       match: draft.spotMatch,
-      placeholder: "선택 안 함",
+      placeholder: "None",
       isRequiredEmpty: false,
     ) {
       pickerTarget = .spot(draft)
@@ -143,13 +143,13 @@ struct CaptureDraftReviewView: View {
     VStack(alignment: .leading, spacing: 8) {
       if let category = draft.categoryMatch {
         HStack(spacing: 6) {
-          Text("분류").font(.appCaptionStrong).foregroundStyle(AppColor.textTertiary)
+          Text("Category").font(.appCaptionStrong).foregroundStyle(AppColor.textTertiary)
           matchChip(name: matchName(category, fallback: ""), isNew: category.isNew)
         }
       }
       if !draft.tagMatches.isEmpty {
         HStack(alignment: .top, spacing: 6) {
-          Text("태그").font(.appCaptionStrong).foregroundStyle(AppColor.textTertiary)
+          Text("Tags").font(.appCaptionStrong).foregroundStyle(AppColor.textTertiary)
             .padding(.top, 3)
           FlowLayout(spacing: 6) {
             ForEach(draft.tagMatches) { tag in
@@ -166,9 +166,9 @@ struct CaptureDraftReviewView: View {
   // MARK: - 매칭 행/칩 공용
 
   private func matchRow<Model>(
-    title: String,
+    title: LocalizedStringKey,
     match: NameMatch<Model>?,
-    placeholder: String,
+    placeholder: LocalizedStringKey,
     isRequiredEmpty: Bool,
     action: @escaping () -> Void,
   ) -> some View {
@@ -194,9 +194,9 @@ struct CaptureDraftReviewView: View {
   private func matchChip(name: String, isNew: Bool) -> some View {
     HStack(spacing: 4) {
       if isNew {
-        Text("신규").font(.appTag).foregroundStyle(AppColor.chipSoonText)
+        Text("New").font(.appTag).foregroundStyle(AppColor.chipSoonText)
       }
-      Text(name).font(.appTag).foregroundStyle(isNew ? AppColor.chipSoonText : AppColor.chipHaveText)
+      Text(verbatim: name).font(.appTag).foregroundStyle(isNew ? AppColor.chipSoonText : AppColor.chipHaveText)
     }
     .padding(.horizontal, 10)
     .frame(height: 26)
@@ -287,8 +287,8 @@ struct CaptureDraftReviewView: View {
 
   // MARK: - 저장/삭제
 
-  private var saveTitle: String {
-    drafts.count > 1 ? "\(drafts.count)개 추가" : "추가"
+  private var saveTitle: LocalizedStringKey {
+    drafts.count > 1 ? "draft.addCount.\(drafts.count)" : "Add"
   }
 
   private var canSaveAll: Bool {

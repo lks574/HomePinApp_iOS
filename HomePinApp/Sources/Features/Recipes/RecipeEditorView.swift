@@ -15,9 +15,9 @@ struct RecipeEditorView: View {
   @State private var showingDeleteConfirm = false
   @FocusState private var focusedField: RecipeEditorField?
 
-  /// 분류 빠른 선택 칩(RecipesView 필터와 동일). 재탭하면 해제.
-  private let cuisinePresets = ["한식", "일식", "중식", "양식", "분식"]
-  private let dishPresets = ["국·찌개", "볶음", "구이", "조림", "밥·면", "반찬"]
+  /// 분류 빠른 선택 칩(RecipesView 필터와 동일 raw 키). 저장/비교는 raw, 표시만 현지화.
+  private let cuisinePresets = RecipeClassification.cuisineKeys
+  private let dishPresets = RecipeClassification.dishTypeKeys
 
   init(mode: RecipeEditorModel.Mode, onSaved: (() -> Void)? = nil) {
     _model = State(initialValue: RecipeEditorModel(mode: mode))
@@ -44,7 +44,7 @@ struct RecipeEditorView: View {
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {
-          Button("닫기") { dismiss() }
+          Button("Close") { dismiss() }
         }
       }
       .onAppear {
@@ -53,12 +53,12 @@ struct RecipeEditorView: View {
         }
       }
       .confirmationDialog(
-        "이 레시피를 삭제할까요?",
+        "Delete this recipe?",
         isPresented: $showingDeleteConfirm,
         titleVisibility: .visible
       ) {
-        Button("삭제", role: .destructive) { deleteRecipe() }
-        Button("취소", role: .cancel) {}
+        Button("Delete", role: .destructive) { deleteRecipe() }
+        Button("Cancel", role: .cancel) {}
       }
     }
   }
@@ -68,10 +68,10 @@ struct RecipeEditorView: View {
   private var basicInfoCard: some View {
     VStack(spacing: 0) {
       VStack(alignment: .leading, spacing: 8) {
-        Text("제목")
+        Text("Title")
           .font(.appRowLabel)
           .foregroundStyle(AppColor.textPrimary)
-        TextField("예: 두부조림", text: $model.title)
+        TextField("e.g. Braised Tofu", text: $model.title)
           .font(.appFieldText)
           .foregroundStyle(AppColor.textPrimary)
           .focused($focusedField, equals: .title)
@@ -80,18 +80,18 @@ struct RecipeEditorView: View {
 
       Divider().padding(.leading, 16)
       HStack(spacing: 12) {
-        numberField(title: "인분", placeholder: "2", text: $model.servings, field: .servings)
+        numberField(title: "Servings", placeholder: "2", text: $model.servings, field: .servings)
         Divider().frame(height: 32)
-        numberField(title: "소요(분)", placeholder: "20", text: $model.totalMinutes, field: .totalMinutes)
+        numberField(title: "Time (min)", placeholder: "20", text: $model.totalMinutes, field: .totalMinutes)
       }
       .padding(16)
 
       Divider().padding(.leading, 16)
       VStack(alignment: .leading, spacing: 8) {
-        Text("설명")
+        Text("Description")
           .font(.appRowLabel)
           .foregroundStyle(AppColor.textPrimary)
-        TextField("선택 입력", text: $model.summary, axis: .vertical)
+        TextField("Optional", text: $model.summary, axis: .vertical)
           .font(.appItemBody)
           .foregroundStyle(AppColor.textPrimary)
           .lineLimit(2...5)
@@ -103,8 +103,8 @@ struct RecipeEditorView: View {
   }
 
   private func numberField(
-    title: String,
-    placeholder: String,
+    title: LocalizedStringKey,
+    placeholder: LocalizedStringKey,
     text: Binding<String>,
     field: RecipeEditorField
   ) -> some View {
@@ -125,17 +125,29 @@ struct RecipeEditorView: View {
 
   private var classificationCard: some View {
     VStack(alignment: .leading, spacing: 16) {
-      chipPickerRow(label: "요리권", presets: cuisinePresets, selection: $model.cuisine)
-      chipPickerRow(label: "종류", presets: dishPresets, selection: $model.dishType)
+      chipPickerRow(
+        label: "Cuisine",
+        presets: cuisinePresets,
+        labelFor: RecipeClassification.cuisineLabel,
+        selection: $model.cuisine
+      )
+      chipPickerRow(
+        label: "Type",
+        presets: dishPresets,
+        labelFor: RecipeClassification.dishTypeLabel,
+        selection: $model.dishType
+      )
     }
     .padding(16)
     .appEditorCard()
   }
 
-  /// 프리셋 칩 단일 선택(재탭 해제). 빈 문자열 = 미선택.
+  /// 프리셋 칩 단일 선택(재탭 해제). 빈 문자열 = 미선택. 저장/비교는 raw 키(`preset`),
+  /// 칩 표시는 `labelFor` 로 현지화한다.
   private func chipPickerRow(
-    label: String,
+    label: LocalizedStringKey,
     presets: [String],
+    labelFor: @escaping (String) -> String,
     selection: Binding<String>
   ) -> some View {
     VStack(alignment: .leading, spacing: 10) {
@@ -145,7 +157,7 @@ struct RecipeEditorView: View {
       ScrollView(.horizontal, showsIndicators: false) {
         HStack(spacing: 8) {
           ForEach(presets, id: \.self) { preset in
-            AppFilterChip(title: preset, isSelected: selection.wrappedValue == preset) {
+            AppFilterChip(title: labelFor(preset), isSelected: selection.wrappedValue == preset) {
               selection.wrappedValue = (selection.wrappedValue == preset) ? "" : preset
             }
           }
@@ -158,7 +170,7 @@ struct RecipeEditorView: View {
 
   private var ingredientsCard: some View {
     VStack(alignment: .leading, spacing: 0) {
-      sectionHeader(title: "재료", action: model.addIngredient)
+      sectionHeader(title: "Ingredients", action: model.addIngredient)
 
       ForEach($model.ingredients) { $ingredient in
         Divider().padding(.leading, 16)
@@ -170,19 +182,19 @@ struct RecipeEditorView: View {
 
   private func ingredientRow(_ ingredient: Binding<RecipeEditorModel.IngredientDraft>) -> some View {
     HStack(spacing: 10) {
-      TextField("재료명", text: ingredient.name)
+      TextField("Ingredient", text: ingredient.name)
         .font(.appFieldText)
         .foregroundStyle(AppColor.textPrimary)
         .frame(maxWidth: .infinity, alignment: .leading)
 
-      TextField("양", text: ingredient.quantity)
+      TextField("Qty", text: ingredient.quantity)
         .font(.appFieldText)
         .foregroundStyle(AppColor.textPrimary)
         .keyboardType(.decimalPad)
         .multilineTextAlignment(.trailing)
         .frame(width: 44)
 
-      TextField("단위", text: ingredient.unit)
+      TextField("Unit", text: ingredient.unit)
         .font(.appFieldText)
         .foregroundStyle(AppColor.textPrimary)
         .frame(width: 48)
@@ -199,7 +211,7 @@ struct RecipeEditorView: View {
 
   private var stepsCard: some View {
     VStack(alignment: .leading, spacing: 0) {
-      sectionHeader(title: "조리 단계", action: model.addStep)
+      sectionHeader(title: "Steps", action: model.addStep)
 
       ForEach(Array(model.steps.enumerated()), id: \.element.id) { index, _ in
         Divider().padding(.leading, 16)
@@ -219,16 +231,16 @@ struct RecipeEditorView: View {
         .padding(.top, 2)
 
       VStack(alignment: .leading, spacing: 8) {
-        TextField("단계 설명", text: step.text, axis: .vertical)
+        TextField("Step description", text: step.text, axis: .vertical)
           .font(.appFieldText)
           .foregroundStyle(AppColor.textPrimary)
           .lineLimit(1...4)
 
         HStack(spacing: 6) {
-          Text("타이머(분)")
+          Text("Timer (min)")
             .font(.appCaption)
             .foregroundStyle(AppColor.textTertiary)
-          TextField("선택", text: step.minutes)
+          TextField("Optional", text: step.minutes)
             .font(.appFootnote)
             .foregroundStyle(AppColor.textPrimary)
             .keyboardType(.numberPad)
@@ -246,14 +258,14 @@ struct RecipeEditorView: View {
 
   // MARK: - 공통 조각
 
-  private func sectionHeader(title: String, action: @escaping () -> Void) -> some View {
+  private func sectionHeader(title: LocalizedStringKey, action: @escaping () -> Void) -> some View {
     HStack {
       Text(title)
         .font(.appRowLabel)
         .foregroundStyle(AppColor.textPrimary)
       Spacer()
       Button(action: action) {
-        Label("추가", systemImage: "plus")
+        Label("Add", systemImage: "plus")
           .font(.appTag)
           .foregroundStyle(AppColor.accent)
       }
@@ -276,7 +288,7 @@ struct RecipeEditorView: View {
     Button(role: .destructive) {
       showingDeleteConfirm = true
     } label: {
-      Text("레시피 삭제")
+      Text("Delete Recipe")
         .font(.appRowLabel)
         .foregroundStyle(.red)
         .frame(maxWidth: .infinity)

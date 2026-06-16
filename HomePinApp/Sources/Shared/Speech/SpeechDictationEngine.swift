@@ -66,18 +66,18 @@ final class SpeechDictationEngine: @unchecked Sendable {
     }
 
     if isRunningOnSimulator {
-      continuation.yield(.unavailable(reason: "시뮬레이터에서는 받아쓰기를 사용할 수 없어요."))
+      continuation.yield(.unavailable(reason: String(localized: "dictation.reason.simulator")))
       continuation.finish()
       return
     }
 
     guard SpeechTranscriber.isAvailable else {
-      continuation.yield(.unavailable(reason: "이 기기에서는 받아쓰기를 사용할 수 없어요."))
+      continuation.yield(.unavailable(reason: String(localized: "dictation.reason.deviceUnavailable")))
       continuation.finish()
       return
     }
     guard let supportedLocale = await SpeechTranscriber.supportedLocale(equivalentTo: locale) else {
-      continuation.yield(.unavailable(reason: "한국어 받아쓰기를 아직 지원하지 않아요."))
+      continuation.yield(.unavailable(reason: String(localized: "dictation.reason.localeUnsupported")))
       continuation.finish()
       return
     }
@@ -93,7 +93,7 @@ final class SpeechDictationEngine: @unchecked Sendable {
       }
     } catch {
       logger.error("모델 준비 실패: \(error.localizedDescription, privacy: .public)")
-      continuation.yield(.unavailable(reason: "받아쓰기 언어 모델을 준비할 수 없어요."))
+      continuation.yield(.unavailable(reason: String(localized: "dictation.reason.modelUnavailable")))
       continuation.finish()
       return
     }
@@ -119,7 +119,7 @@ final class SpeechDictationEngine: @unchecked Sendable {
       try await analyzer.start(inputSequence: stream)
     } catch {
       logger.error("받아쓰기 시작 실패: \(error.localizedDescription, privacy: .public)")
-      continuation.yield(.unavailable(reason: "받아쓰기를 시작할 수 없어요."))
+      continuation.yield(.unavailable(reason: String(localized: "dictation.reason.startFailed")))
       continuation.finish()
       return
     }
@@ -171,17 +171,17 @@ final class SpeechDictationEngine: @unchecked Sendable {
     case .installed:
       return true
     case .unsupported:
-      continuation.yield(.unavailable(reason: "한국어 받아쓰기를 아직 지원하지 않아요."))
+      continuation.yield(.unavailable(reason: String(localized: "dictation.reason.localeUnsupported")))
       return false
     case .supported, .downloading:
       guard let request = try await AssetInventory.assetInstallationRequest(supporting: [transcriber]) else {
-        continuation.yield(.unavailable(reason: "받아쓰기 언어 모델을 준비할 수 없어요."))
+        continuation.yield(.unavailable(reason: String(localized: "dictation.reason.modelUnavailable")))
         return false
       }
       try await request.downloadAndInstall()
       return true
     @unknown default:
-      continuation.yield(.unavailable(reason: "받아쓰기 언어 모델을 준비할 수 없어요."))
+      continuation.yield(.unavailable(reason: String(localized: "dictation.reason.modelUnavailable")))
       return false
     }
   }

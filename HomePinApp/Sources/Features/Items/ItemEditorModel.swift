@@ -1,5 +1,6 @@
 import Foundation
 import SwiftData
+import SwiftUI
 
 /// 물건 추가/편집 에디터의 화면 로컬 모델.
 /// 저장 전 draft 와 다단계 쓰기 불변식(create/edit 분기·normalizedName 동기화·
@@ -44,17 +45,17 @@ final class ItemEditorModel {
     }
   }
 
-  var title: String {
+  var title: LocalizedStringKey {
     switch mode {
-    case .create: "물건 추가"
-    case .edit: "물건 편집"
+    case .create: "Add Item"
+    case .edit: "Edit Item"
     }
   }
 
-  var saveTitle: String {
+  var saveTitle: LocalizedStringKey {
     switch mode {
-    case .create: "추가"
-    case .edit: "저장"
+    case .create: "Add"
+    case .edit: "Save"
     }
   }
 

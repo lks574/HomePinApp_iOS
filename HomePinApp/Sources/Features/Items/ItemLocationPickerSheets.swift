@@ -14,7 +14,7 @@ struct AreaPickerSheet: View {
           ForEach(areas) { area in
             PickerRow(
               title: area.name,
-              subtitle: "\(area.itemCount)개 · 세부위치 \(area.spots.count)곳",
+              subtitle: areaSubtitle(area),
               isSelected: selectedArea?.id == area.id
             ) {
               select(area)
@@ -24,14 +24,21 @@ struct AreaPickerSheet: View {
         .padding(20)
       }
       .background(AppColor.screenBackground)
-      .navigationTitle("장소 선택")
+      .navigationTitle("Select Place")
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {
-          Button("닫기") { dismiss() }
+          Button("Close") { dismiss() }
         }
       }
     }
+  }
+
+  /// "<n> items · <m> spots" — 수량은 현지화 plural, 이름은 없음(전부 UI 라벨).
+  private func areaSubtitle(_ area: Area) -> String {
+    let items = String(localized: "picker.itemCount.\(area.itemCount)")
+    let spots = String(localized: "picker.spotCount.\(area.spots.count)")
+    return "\(items) · \(spots)"
   }
 
   private func select(_ area: Area) {
@@ -55,8 +62,8 @@ struct SpotPickerSheet: View {
       ScrollView {
         VStack(spacing: 12) {
           PickerRow(
-            title: "선택 안 함",
-            subtitle: area == nil ? "장소만 지정" : "\(area?.name ?? "")에 직접 보관",
+            title: String(localized: "None"),
+            subtitle: noneSubtitle,
             isSelected: selectedSpot == nil
           ) {
             selectedSpot = nil
@@ -66,7 +73,7 @@ struct SpotPickerSheet: View {
           ForEach(sortedSpots) { spot in
             PickerRow(
               title: spot.name,
-              subtitle: spot.area?.name ?? "장소 없음",
+              subtitle: spot.area?.name ?? String(localized: "No place"),
               isSelected: selectedSpot?.id == spot.id
             ) {
               selectedSpot = spot
@@ -78,11 +85,11 @@ struct SpotPickerSheet: View {
         .padding(20)
       }
       .background(AppColor.screenBackground)
-      .navigationTitle("세부위치 선택")
+      .navigationTitle("Select Spot")
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {
-          Button("닫기") { dismiss() }
+          Button("Close") { dismiss() }
         }
       }
     }
@@ -90,6 +97,14 @@ struct SpotPickerSheet: View {
 
   private var sortedSpots: [Spot] {
     (area?.spots ?? []).sorted { $0.sortOrder < $1.sortOrder }
+  }
+
+  /// "선택 안 함" 행 부제: 장소 미지정이면 안내, 장소가 있으면 "<장소>에 직접 보관".
+  private var noneSubtitle: String {
+    guard let name = area?.name else {
+      return String(localized: "Place only")
+    }
+    return String(localized: "spot.storeDirectly.\(name)")
   }
 }
 
@@ -103,10 +118,10 @@ private struct PickerRow: View {
     Button(action: action) {
       HStack(spacing: 12) {
         VStack(alignment: .leading, spacing: 3) {
-          Text(title)
+          Text(verbatim: title)
             .font(.system(size: 16, weight: .bold))
             .foregroundStyle(AppColor.textPrimary)
-          Text(subtitle)
+          Text(verbatim: subtitle)
             .font(.appFootnote)
             .foregroundStyle(AppColor.textMuted)
         }

@@ -2,7 +2,7 @@
 aliases: [next-task, 다음 할 일]
 tags: [doc/code, tasks]
 created: 2026-06-12
-updated: 2026-06-15
+updated: 2026-06-16
 status: draft
 ---
 
@@ -10,6 +10,17 @@ status: draft
 
 UI 우선 1차(시안 C 화면 골격: 5탭·장소·레시피·홈·추가 시트) 완료 후의 다음 후보.
 보류 상세는 `docs/follow-ups.md`.
+
+> 최근 완료: **설정 언어 선택(screen-08/10)** — 시스템 추종 기본 + 설정 > 표시 > 언어에서
+> 시스템/English/한국어 수동 오버라이드. `AppLanguagePreference`(`@AppStorage`, 테마
+> 선례) + 루트 `AppRootView` `.environment(\.locale)` 즉시 전환(재시작 불필요, ko-KR
+> 시스템에서 English 강제·그 반대 모두 런타임 확인). ADR(언어 선택 UI 없음 → 수동
+> 오버라이드 허용)·screen tasks·Settings 노트 갱신.
+> 이전: **다국어(i18n, screen-10)** — 영어/한국어 + 시스템 언어 추종(기본 en).
+> UI 텍스트 String Catalog, 권한 문구 InfoPlist 카탈로그, cuisine/dishType 저장값 유지·
+> 표시만 매핑, 시드 언어 분기(`SeedText`). 잔여는 `docs/follow-ups.md` "다국어(i18n) 후속"
+> (STT 인식 locale 시스템 추종, 영어 NL 추출 품질). 결정:
+> `docs/wiki/Decision/2026-06-16-i18n-다국어화-방침.md`.
 
 ## 다음 후보 (우선순위순 제안)
 

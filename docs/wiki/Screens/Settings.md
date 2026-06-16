@@ -2,7 +2,7 @@
 aliases: [Settings, 설정]
 tags: [screen, screen/settings]
 created: 2026-06-12
-updated: 2026-06-15
+updated: 2026-06-16
 status: in-progress
 screen-id: screen-08
 ---
@@ -14,7 +14,9 @@ screen-id: screen-08
 ## 역할
 
 - **표시**: 테마(시스템/라이트/다크) 선택. `@AppStorage` 로 저장, 루트에서
-  `preferredColorScheme` 적용 → 앱 전체 반영.
+  `preferredColorScheme` 적용 → 앱 전체 반영. **언어**(시스템 따름/English/한국어)
+  선택. `AppLanguagePreference` `@AppStorage` 로 저장, 루트에서 `.environment(\.locale)`
+  적용 → 앱 재시작 없이 즉시 전환(시스템 따름이면 환경 locale 강제 안 함).
 - **데이터**: 저장 현황(물건·장소·레시피 개수) 표시 + **전체 데이터 정리**(확인
   다이얼로그 후 전 모델 일괄 삭제, 앱 동작 위해 기본 [[Space]] "우리집" 복구).
 - **정보**: 버전(번들)·저장 위치·앱 소개 + 로컬 저장 안내.
@@ -32,16 +34,18 @@ screen-id: screen-08
 
 ## 상태 관리
 
-- 직결(View ↔ SwiftData) + 테마는 `@AppStorage`.
+- 직결(View ↔ SwiftData) + 테마·언어는 `@AppStorage`.
 - 비영속 UI 상태: 전체 정리 확인 `showingClearConfirm`.
 
 ## 관련 태스크 / 결정
 
 - `[screen-08]` (docs/screen-implementation-tasks.md)
 - 테마/다크: [[2026-06-12-네비게이션-UI구조]] §3(디자인 토큰).
+- 언어 선택: [[2026-06-16-i18n-다국어화-방침]] (시스템 추종 기본 + 설정 수동 오버라이드).
 
 ## 메모
 
 - 코드: `HomePinApp/Sources/Features/Settings/SettingsView.swift`,
-  `App/AppRootView.swift`(테마 적용), `Shared/DesignSystem/AppThemePreference.swift`
+  `App/AppRootView.swift`(테마·언어 적용), `Shared/DesignSystem/AppThemePreference.swift`,
+  `Shared/DesignSystem/AppLanguagePreference.swift`
 - 후속: 데이터 내보내기/가져오기, 유통기한 알림, AI/입력 토글.

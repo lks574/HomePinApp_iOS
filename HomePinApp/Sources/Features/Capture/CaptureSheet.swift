@@ -32,7 +32,7 @@ struct CaptureSheet: View {
         modePicker
         micRow
         if let micHint {
-          Text(micHint)
+          micHint
             .font(.appFootnote).foregroundStyle(AppColor.textMuted)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
@@ -43,10 +43,10 @@ struct CaptureSheet: View {
       }
       .padding(20)
       .background(AppColor.screenBackground)
-      .navigationTitle(mode == .add ? "추가" : "검색")
+      .navigationTitle(mode == .add ? Text("Add") : Text("Search"))
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {
-        ToolbarItem(placement: .topBarTrailing) { Button("닫기") { dismiss() } }
+        ToolbarItem(placement: .topBarTrailing) { Button("Close") { dismiss() } }
       }
       .navigationDestination(item: $reviewRoute) { route in
         CaptureDraftReviewView(drafts: route.drafts) { dismiss() }
@@ -78,7 +78,7 @@ struct CaptureSheet: View {
   // MARK: - 모드 토글
 
   private var modePicker: some View {
-    Picker("모드", selection: $mode) {
+    Picker("Mode", selection: $mode) {
       ForEach(CaptureMode.allCases) { mode in
         Text(mode.title).tag(mode)
       }
@@ -100,9 +100,9 @@ struct CaptureSheet: View {
           .background(isRecording ? AppColor.accentDark : AppColor.accent, in: Circle())
       }
       .buttonStyle(.plain)
-      .accessibilityLabel(isRecording ? "받아쓰기 멈추기" : (mode == .add ? "말해서 추가" : "말해서 검색"))
+      .accessibilityLabel(micAccessibilityLabel)
       VStack(alignment: .leading, spacing: 2) {
-        Text(isRecording ? "듣는 중…" : "말하기")
+        Text(isRecording ? "Listening…" : "Speak")
           .font(.appRowLabel).foregroundStyle(AppColor.textSecondary)
         Text(micSubtitle)
           .font(.appCaption).foregroundStyle(AppColor.textMuted)
@@ -113,21 +113,26 @@ struct CaptureSheet: View {
     .appCard(radius: 16)
   }
 
-  private var micSubtitle: String {
-    if dictation.state == .recording { return "다시 누르면 멈춰요" }
-    return mode == .add ? "말하면 추가돼요" : "말하면 검색해요"
+  private var micAccessibilityLabel: LocalizedStringKey {
+    if dictation.state == .recording { return "Stop dictation" }
+    return mode == .add ? "Speak to add" : "Speak to search"
+  }
+
+  private var micSubtitle: LocalizedStringKey {
+    if dictation.state == .recording { return "Tap again to stop" }
+    return mode == .add ? "Speak to add it" : "Speak to search"
   }
 
   // MARK: - 추가
 
   private var addContent: some View {
     VStack(spacing: 18) {
-      Text("말하거나 입력해서 추가")
+      Text("Add by speaking or typing")
         .font(.appRowLabel)
         .foregroundStyle(AppColor.textTertiary)
         .frame(maxWidth: .infinity, alignment: .leading)
 
-      TextField("예: 냉동실에 소고기 두 팩 넣었어", text: $text, axis: .vertical)
+      TextField("e.g. Put two packs of beef in the freezer", text: $text, axis: .vertical)
         .font(.appFieldText)
         .lineLimit(2...5)
         .focused($focusedField, equals: .add)
@@ -144,25 +149,25 @@ struct CaptureSheet: View {
       if parser.isParsing {
         parsingIndicator
       } else {
-        AppFullWidthPrimaryButton(title: "추가", isEnabled: canAdd, action: add)
+        AppFullWidthPrimaryButton(title: "Add", isEnabled: canAdd, action: add)
       }
     }
   }
 
   /// 파서 가용 여부에 따른 안내. 미가용이면 단건(이름만) 폴백을 알린다.
-  private var addHint: String {
+  private var addHint: LocalizedStringKey {
     parser.isAvailable
-      ? "말하거나 적으면 AI가 물건·장소·수량·분류를 정리해 확인 화면을 보여줘요. 여러 개도 한 번에 돼요."
-      : "이 기기에서는 AI 정리를 쓸 수 없어 이름만 빠르게 담겨요. 위치·수량은 다음 화면에서 채우세요."
+      ? "Speak or type and AI sorts out the item, place, quantity, and category for you to confirm. Multiple items at once, too."
+      : "AI sorting isn't available on this device, so only the name is captured quickly. Fill in the place and quantity on the next screen."
   }
 
   /// 추론 중 진행 표시 + 취소. 추론이 끝나면 확인 화면으로 넘어가거나 폴백한다.
   private var parsingIndicator: some View {
     HStack(spacing: 12) {
       ProgressView()
-      Text("정리하는 중…").font(.appRowLabel).foregroundStyle(AppColor.textSecondary)
+      Text("Sorting…").font(.appRowLabel).foregroundStyle(AppColor.textSecondary)
       Spacer()
-      Button("취소") { parser.cancel() }
+      Button("Cancel") { parser.cancel() }
         .font(.appRowLabel)
         .foregroundStyle(AppColor.accent)
     }
@@ -178,7 +183,7 @@ struct CaptureSheet: View {
     VStack(spacing: 14) {
       HStack(spacing: 10) {
         Image(systemName: "magnifyingglass").foregroundStyle(AppColor.textTertiary)
-        TextField("물건 이름으로 찾기", text: $searchText)
+        TextField("Find by item name", text: $searchText)
           .font(.appFieldText)
           .focused($focusedField, equals: .search)
           .submitLabel(.search)
@@ -203,12 +208,12 @@ struct CaptureSheet: View {
   private var searchResults: some View {
     if searchQuery.isEmpty {
       Spacer()
-      Text("물건 이름을 입력하면 위치를 찾아드려요.")
+      Text("Type an item name and we'll find where it is.")
         .font(.appFootnote).foregroundStyle(AppColor.textMuted)
       Spacer()
     } else if results.isEmpty {
       Spacer()
-      Text("‘\(searchQuery)’ 와 일치하는 물건이 없어요.")
+      Text("search.noResults.\(searchQuery)")
         .font(.appFootnote).foregroundStyle(AppColor.textMuted)
       Spacer()
     } else {
@@ -229,16 +234,16 @@ struct CaptureSheet: View {
     } label: {
       HStack(spacing: 10) {
         VStack(alignment: .leading, spacing: 3) {
-          Text(item.name).font(.appItemBody).foregroundStyle(AppColor.textPrimary)
+          Text(verbatim: item.name).font(.appItemBody).foregroundStyle(AppColor.textPrimary)
           if !item.locationPath.isEmpty {
-            Text(item.locationPath).font(.appCaption).foregroundStyle(AppColor.textMuted)
+            Text(verbatim: item.locationPath).font(.appCaption).foregroundStyle(AppColor.textMuted)
           } else {
-            Text("위치 미지정").font(.appCaption).foregroundStyle(AppColor.textFaint)
+            Text("No location").font(.appCaption).foregroundStyle(AppColor.textFaint)
           }
         }
         Spacer()
         if item.quantity > 1 {
-          Text("\(item.quantity)개").font(.appCaptionStrong).foregroundStyle(AppColor.textMuted)
+          Text("count.items.\(item.quantity)").font(.appCaptionStrong).foregroundStyle(AppColor.textMuted)
         }
         Image(systemName: "chevron.right").font(.appTag).foregroundStyle(AppColor.textFaint)
       }
@@ -252,12 +257,13 @@ struct CaptureSheet: View {
   // MARK: - 음성 입력
 
   /// 받아쓰기 상태별 안내. 정상 대기 상태에서는 힌트를 숨긴다(텍스트 필드는 항상 노출).
-  private var micHint: String? {
+  /// `reason` 은 엔진이 이미 현지화한 문구라 그대로 끼워 넣는다.
+  private var micHint: Text? {
     switch dictation.state {
     case .denied:
-      "마이크·음성 인식 권한이 꺼져 있어요. 설정에서 허용하거나 텍스트로 입력해 주세요."
+      Text("Microphone or speech recognition permission is off. Allow it in Settings or type instead.")
     case let .unavailable(reason):
-      "\(reason) 텍스트로 입력해 주세요."
+      Text("dictation.unavailableHint.\(reason)")
     case .idle, .preparing, .recording:
       nil
     }
@@ -347,10 +353,10 @@ private enum CaptureMode: String, CaseIterable, Identifiable {
 
   var id: String { rawValue }
 
-  var title: String {
+  var title: LocalizedStringKey {
     switch self {
-    case .add: "추가"
-    case .search: "검색"
+    case .add: "Add"
+    case .search: "Search"
     }
   }
 }

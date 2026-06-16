@@ -15,16 +15,16 @@ struct RootTabView: View {
     TabView(selection: $router.selectedTab) {
       HomeView()
         .tag(AppTab.home)
-        .tabItem { Label("홈", systemImage: "house") }
+        .tabItem { Label("Home", systemImage: "house") }
       PlacesListView()
         .tag(AppTab.places)
-        .tabItem { Label("장소", systemImage: "square.grid.2x2") }
+        .tabItem { Label("Places", systemImage: "square.grid.2x2") }
       RecipesView()
         .tag(AppTab.recipes)
-        .tabItem { Label("레시피", systemImage: "book.closed") }
+        .tabItem { Label("Recipes", systemImage: "book.closed") }
       SettingsView()
         .tag(AppTab.settings)
-        .tabItem { Label("설정", systemImage: "gearshape") }
+        .tabItem { Label("Settings", systemImage: "gearshape") }
     }
     .tint(AppColor.accent)
     .environment(router)
@@ -46,6 +46,6 @@ struct RootTabView: View {
     }
     .buttonStyle(.plain)
     .padding(.bottom, 30)
-    .accessibilityLabel("추가하거나 검색")
+    .accessibilityLabel("Add or search")
   }
 }

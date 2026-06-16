@@ -17,7 +17,7 @@ struct HomeView: View {
             .foregroundStyle(AppColor.textPrimary)
             .padding(.bottom, 14)
 
-          AppSearchBar(placeholder: "무엇을 찾으세요?")
+          AppSearchBar(placeholder: "What are you looking for?")
             .padding(.bottom, 22)
 
           if !expiringItems.isEmpty {
@@ -28,10 +28,10 @@ struct HomeView: View {
             .padding(.bottom, 26)
           }
 
-          AppSectionTitle(title: "장소 바로가기")
+          AppSectionTitle(title: "Quick Places")
           placeShortcuts.padding(.bottom, 26)
 
-          AppSectionTitle(title: "최근 추가")
+          AppSectionTitle(title: "Recently Added")
           recentList
         }
         .padding(20)
@@ -57,7 +57,7 @@ struct HomeView: View {
           } label: {
             VStack(spacing: 6) {
               AppInitialBadge(text: area.name, size: 50, radius: 14)
-              Text(area.name).font(.appCaptionStrong).foregroundStyle(AppColor.textSecondary)
+              Text(verbatim: area.name).font(.appCaptionStrong).foregroundStyle(AppColor.textSecondary)
             }
           }
           .buttonStyle(.plain)
@@ -74,9 +74,9 @@ struct HomeView: View {
         } label: {
           HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 2) {
-              Text(item.name).font(.system(size: 16, weight: .semibold)).foregroundStyle(AppColor.textPrimary)
+              Text(verbatim: item.name).font(.system(size: 16, weight: .semibold)).foregroundStyle(AppColor.textPrimary)
               if !item.locationPath.isEmpty {
-                Text(item.locationPath).font(.appCaption).foregroundStyle(AppColor.textMuted)
+                Text(verbatim: item.locationPath).font(.appCaption).foregroundStyle(AppColor.textMuted)
               }
             }
             Spacer()
