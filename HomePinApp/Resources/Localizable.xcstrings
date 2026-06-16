@@ -596,6 +596,16 @@
         }
       }
     },
+    "Mark Used Up" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "다 썼어요"
+          }
+        }
+      }
+    },
     "Delete Place" : {
       "extractionState" : "stale",
       "localizations" : {

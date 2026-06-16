@@ -16,6 +16,7 @@ screen-id: screen-01, screen-05, screen-06
 - 선택한 [[Area]] 의 [[Spot]] 별 [[Item]] 목록을 카드로 보여준다.
 - `Spot` 에 속하지 않은 직속 물건은 "수납공간 미지정" 카드로 묶는다.
 - 물건 행/추가 버튼을 탭하면 [[ItemEditor]] 시트를 연다(`editorRoute` 로 라우팅).
+- 물건 행 context menu 의 "다 썼어요"로 해당 [[Item]] 을 삭제해 빠르게 정리한다.
 - 헤더 ⋯ 메뉴로 장소 이름 수정([[PlaceEditor]] 편집) / 장소 삭제(확인 후 `dismiss`)를 한다.
 - 헤더 ⋯ 메뉴 "세부위치 추가" 와 세부위치 카드 ⋯ 메뉴(이름 수정/삭제)로 [[Spot]] 을 관리한다([[SpotEditor]]).
 
@@ -31,7 +32,8 @@ screen-id: screen-01, screen-05, screen-06
 
 - [[Area]] — 읽기(전달받은 `area`: 이름·헤더). 진입은 [[Places]] navigationDestination 또는 [[Home]] 바로가기
 - [[Spot]] — 읽기 `@Query`(area id 필터, 추가 즉시 반영)
-- [[Item]] — 읽기 `@Query`(area id 필터), 편집은 [[ItemEditor]] 에 위임
+- [[Item]] — 읽기 `@Query`(area id 필터), 편집은 [[ItemEditor]] 에 위임, 빠른 정리는
+  `modelContext.delete`
 
 ## 상태 관리
 

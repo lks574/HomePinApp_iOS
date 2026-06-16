@@ -68,6 +68,10 @@ final class ItemEditorModel {
     return false
   }
 
+  var canDeleteAtMinimumQuantity: Bool {
+    isEditing && quantity <= 1
+  }
+
   private var trimmedName: String {
     name.trimmingCharacters(in: .whitespacesAndNewlines)
   }

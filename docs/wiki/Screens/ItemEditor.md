@@ -2,7 +2,7 @@
 aliases: [ItemEditor, 물건 추가, 물건 편집]
 tags: [screen, screen/item]
 created: 2026-06-14
-updated: 2026-06-15
+updated: 2026-06-17
 status: in-progress
 screen-id: screen-02
 ---
@@ -17,6 +17,8 @@ screen-id: screen-02
 - 추가 시 새 [[Item]] 을 `modelContext.insert` 로 저장한다.
 - 편집 시 기존 [[Item]] 을 직접 갱신하고, `name` 변경 시 `normalizedName` 도 함께 갱신한다.
 - `Spot` 을 선택하면 `Area` 를 `spot.area` 로 맞춰 위치 불변식을 유지한다.
+- 편집 모드에서 삭제를 지원한다. 수량이 1일 때 `-` 를 누르면 삭제 확인으로 이어져
+  "다 쓴 물건"을 빠르게 정리할 수 있다.
 
 ## 연결된 화면
 
@@ -49,4 +51,4 @@ screen-id: screen-02
 - 코드: `HomePinApp/Sources/Features/Items/ItemEditorView.swift` (레이아웃),
   `ItemEditorModel.swift` (draft·저장)
 - 선택 시트: `HomePinApp/Sources/Features/Items/ItemLocationPickerSheets.swift`
-- 후속: 삭제, 카테고리, 태그, 사진, AI 파싱 결과 structured draft.
+- 후속: 카테고리, 태그, 사진, AI 파싱 결과 structured draft.

@@ -10,6 +10,7 @@ struct PlaceDetailView: View {
   @State private var spotEditorRoute: SpotEditorRoute?
   @State private var showingDeleteConfirm = false
   @State private var pendingSpotDelete: Spot?
+  @State private var pendingItemDelete: Item?
   let area: Area
 
   /// 이 장소의 물건·세부위치를 `@Query` 로 직접 관찰한다(관계 배열 직접 읽기는
@@ -75,6 +76,15 @@ struct PlaceDetailView: View {
     } message: { spot in
       Text("spot.delete.message.\(items(in: spot).count)")
     }
+    .confirmationDialog(
+      "Delete this item?",
+      isPresented: itemDeleteConfirmationBinding,
+      titleVisibility: .visible,
+      presenting: pendingItemDelete
+    ) { item in
+      Button("Delete", role: .destructive) { deleteItem(item) }
+      Button("Cancel", role: .cancel) {}
+    }
   }
 
   private var spotDeleteConfirmationBinding: Binding<Bool> {
@@ -84,9 +94,21 @@ struct PlaceDetailView: View {
     )
   }
 
+  private var itemDeleteConfirmationBinding: Binding<Bool> {
+    Binding(
+      get: { pendingItemDelete != nil },
+      set: { if !$0 { pendingItemDelete = nil } }
+    )
+  }
+
   private func deleteSpot(_ spot: Spot) {
     modelContext.delete(spot)
     pendingSpotDelete = nil
+  }
+
+  private func deleteItem(_ item: Item) {
+    modelContext.delete(item)
+    pendingItemDelete = nil
   }
 
   private var backButton: some View {
@@ -216,6 +238,13 @@ struct PlaceDetailView: View {
           .overlay(alignment: .top) { Divider().padding(.leading, 16) }
         }
         .buttonStyle(.plain)
+        .contextMenu {
+          Button(role: .destructive) {
+            pendingItemDelete = item
+          } label: {
+            Label("Mark Used Up", systemImage: "checkmark.circle")
+          }
+        }
       }
     }
     .appCard()

@@ -15,7 +15,7 @@ status: draft
 | ID | 화면 | 상태 | 메모 |
 | --- | --- | --- | --- |
 | screen-01 | 시안 C 5탭 셸·홈·장소·레시피·추가 시트 | done | UI 우선 1차. 검색/AI/STT는 후속. |
-| screen-02 | ItemEditor | in-progress | 물건 추가/편집 공용 에디터. 이름·수량·장소·세부위치·유통기한·메모 지원. |
+| screen-02 | ItemEditor | in-progress | 물건 추가/편집 공용 에디터. 이름·수량·장소·세부위치·유통기한·메모 지원. 편집 모드 삭제 지원, 수량 1에서 `-` 탭 시 삭제 확인으로 이어짐. 장소 상세 물건 행 context menu 에 "다 썼어요" 빠른 정리 추가. 잔여: 카테고리·태그·사진. |
 | screen-05 | PlaceEditor (장소 CRUD) | in-progress | 장소(Area) 추가/편집 공용 에디터 + 목록·상세에서 삭제(확인). 삭제 시 Spot cascade, 물건은 nullify 보존. |
 | screen-06 | SpotEditor (세부위치 CRUD) | in-progress | 세부위치(Spot) 추가/편집 공용 에디터 + 상세에서 삭제(확인). 추가·편집은 상세 ⋯/카드 메뉴, 삭제 시 물건은 nullify 로 ‘수납공간 미지정’ 이동. |
 | screen-03 | RecipeDetail (레시피 상세) | in-progress | 레시피 카드 → 상세 push. 헤더(메타·요약)·재고 요약·재료 목록(보유/임박/없음 칩)·조리 단계. 상단 ⋯ 로 편집/삭제(확인). |

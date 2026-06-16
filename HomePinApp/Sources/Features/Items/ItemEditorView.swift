@@ -99,16 +99,14 @@ struct ItemEditorView: View {
           .font(.appRowLabel)
           .foregroundStyle(AppColor.textPrimary)
         Spacer()
-        Button {
-          model.quantity = max(1, model.quantity - 1)
-        } label: {
+        Button(action: decrementQuantity) {
           Image(systemName: "minus")
             .font(.appBadge)
             .frame(width: 34, height: 34)
         }
         .buttonStyle(.plain)
-        .foregroundStyle(model.quantity > 1 ? AppColor.accent : AppColor.textFaint)
-        .disabled(model.quantity <= 1)
+        .foregroundStyle(model.canDeleteAtMinimumQuantity ? .red : AppColor.accent)
+        .disabled(model.quantity <= 1 && !model.canDeleteAtMinimumQuantity)
 
         Text("\(model.quantity)")
           .font(.appValueStrong)
@@ -201,6 +199,14 @@ struct ItemEditorView: View {
     model.delete(from: modelContext)
     onSaved?()
     dismiss()
+  }
+
+  private func decrementQuantity() {
+    if model.quantity > 1 {
+      model.quantity -= 1
+    } else if model.canDeleteAtMinimumQuantity {
+      showingDeleteConfirm = true
+    }
   }
 }
 
