@@ -16,6 +16,7 @@ screen-id: screen-03
 
 - [[Recipe]] 의 제목·요약·메타(종류 · 인분 · 소요 시간)를 헤더로 보여준다.
 - 재고 요약: 보유 **주재료** 수/전체·진행바·"지금 만들 수 있어요"/부족 재료 칩. 분모는 주재료(`mainIngredientCount`) 기준(부재료는 판정에서 빠진다).
+- 부족 주재료가 있으면 장보기 추가 버튼을 보여주고, 누르면 [[ShoppingItem]] 을 생성한다(`sourceIngredient` 연결). 같은 원본 재료나 같은 이름의 미완료 장보기 항목이 있으면 중복 생성하지 않고, 완료된 원본 항목은 미완료로 되돌린다.
 - 재료 목록([[RecipeIngredient]], `sortOrder` 순): 주재료 섹션 + (있으면) 부재료 섹션("선택" 라벨). 이름·수량+단위·보유 상태 칩(보유/임박/없음). 부재료도 보유 표시는 동일.
 - 조리 단계([[RecipeStep]]): 번호 매긴 목록 + 단계별 소요 분.
 - 상단 ⋯ 메뉴: 편집([[RecipeEditor]] 편집) / 삭제(확인 후 `modelContext.delete` → `dismiss`).
@@ -29,6 +30,7 @@ screen-id: screen-03
 
 - [[Recipe]] — 읽기(전달받은 `recipe`), 삭제는 `modelContext.delete`
 - [[RecipeIngredient]] — 읽기(관계 경유 `recipe.ingredients`), 재고 상태 칩
+- [[ShoppingItem]] — 읽기 `@Query` 로 중복 확인, 부족 주재료 추가 시 `modelContext.insert`
 - [[RecipeStep]] — 읽기(`recipe.steps` 값 배열)
 - [[Item]] — 간접(재료의 `item` 링크로 보유/임박 판정)
 
@@ -39,6 +41,8 @@ screen-id: screen-03
 - 편집 시 [[RecipeEditor]] 가 `recipe.ingredients` 를 직접 재설정하므로 dismiss 후
   상세가 반영된다.
 - 비영속 UI 상태: 에디터 `editorRoute`, 삭제 확인 `showingDeleteConfirm`.
+- 장보기 추가는 `Recipe.missingIngredients`(주재료만)와 `ShoppingItem` 쿼리를 조합한다. 같은
+  `sourceIngredient` 또는 같은 `normalizedName` 의 미완료 항목이 있으면 새 항목을 만들지 않는다.
 
 ## 관련 태스크 / 결정
 

@@ -6,6 +6,7 @@ import SwiftUI
 struct RecipeDetailView: View {
   @Environment(\.dismiss) private var dismiss
   @Environment(\.modelContext) private var modelContext
+  @Query(sort: \ShoppingItem.createdAt, order: .reverse) private var shoppingItems: [ShoppingItem]
   @State private var editorRoute: RecipeEditorRoute?
   @State private var showingDeleteConfirm = false
   let recipe: Recipe
@@ -64,6 +65,12 @@ struct RecipeDetailView: View {
 
   private var sortedSteps: [RecipeStep] {
     recipe.steps
+  }
+
+  private var missingIngredientsForShopping: [RecipeIngredient] {
+    recipe.missingIngredients.filter { ingredient in
+      !hasPendingShoppingItem(for: ingredient) && linkedShoppingItem(for: ingredient)?.isChecked != false
+    }
   }
 
   /// 헤더 메타 한 줄(cuisine · 종류 · 인분 · 분) — nil 값은 생략.
@@ -183,6 +190,14 @@ struct RecipeDetailView: View {
           ForEach(missing) { ingredient in
             AppIngredientChip(name: ingredient.name, state: .missing)
           }
+        }
+        if !missingIngredientsForShopping.isEmpty {
+          AppPrimaryButton(
+            title: "recipe.addMissingToShopping.\(missingIngredientsForShopping.count)",
+            systemImage: "cart.badge.plus",
+            action: addMissingIngredientsToShopping
+          )
+          .padding(.top, 2)
         }
       }
     }
@@ -318,5 +333,28 @@ struct RecipeDetailView: View {
   private func deleteRecipe() {
     modelContext.delete(recipe)
     dismiss()
+  }
+
+  private func linkedShoppingItem(for ingredient: RecipeIngredient) -> ShoppingItem? {
+    shoppingItems.first { item in
+      item.sourceIngredient?.id == ingredient.id
+    }
+  }
+
+  private func hasPendingShoppingItem(for ingredient: RecipeIngredient) -> Bool {
+    let normalizedName = Item.normalize(ingredient.name)
+    return shoppingItems.contains { item in
+      !item.isChecked && item.normalizedName == normalizedName
+    }
+  }
+
+  private func addMissingIngredientsToShopping() {
+    for ingredient in missingIngredientsForShopping {
+      if let item = linkedShoppingItem(for: ingredient) {
+        item.isChecked = false
+      } else {
+        modelContext.insert(ShoppingItem(name: ingredient.name, sourceIngredient: ingredient))
+      }
+    }
   }
 }

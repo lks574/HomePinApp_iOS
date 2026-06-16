@@ -66,7 +66,7 @@ iOS 26.5 / Swift 6.2. 출력 스키마·확인 방식·진입점은 되돌리기
   `RecipeStep`/`Item` 으로 저장).
 - 신규 파일: `Shared/AI/NLRecipeParser.swift`, `Features/Recipes/NLRecipeParseViewModel.swift`,
   `Features/Recipes/RecipeDraftResolver.swift`, `Features/Recipes/RecipeCaptureView.swift`.
-- 후속(미결): 부족분→장보기 자동생성, 사진/스크린샷 OCR(#3·#4), 실기기 한국어 추출 품질.
+- 후속(미결): 장보기 완료→재고 반영, 사진/스크린샷 OCR(#3·#4), 실기기 한국어 추출 품질.
 
 ## 관련
 

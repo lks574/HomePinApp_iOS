@@ -21,9 +21,11 @@ UI 우선 1차(시안 C 화면 골격: 5탭·장소·레시피·홈·추가 시�
 > `optionalIngredients` 두 draft 배열·섹션별 add/remove·연속 sortOrder. `RecipeDetailView`
 > 주/부 섹션 구분·요약 분모 주재료 기준. AI 파서 `ParsedIngredient.isOptional`+instructions
 > 주/부 안내(자연어·OCR 공용)·확인 화면 교정 친화. 신규 UI 문자열 en/ko. `@Model` 스키마는
-> 가산 필드만(기존 데이터/시드 주재료로 자연 동작). 결정:
+> 가산 필드만(기존 데이터/시드 주재료로 자연 동작). 이어서 `RecipeDetail` 재고 요약에서
+> 부족 주재료만 장보기에 추가하는 흐름을 완료했다(`ShoppingItem.sourceIngredient` 연동,
+> 중복 방지, 완료된 원본 항목 미완료 복구). 결정:
 > `docs/wiki/Decision/2026-06-16-레시피-NL파서-ParsedRecipe.md`(ParsedIngredient 갱신). 잔여:
-> 부족분→장보기 자동생성(주재료만 대상), 실기기 AI 주/부 추출 품질.
+> 장보기 완료→재고 반영, 실기기 AI 주/부 추출 품질.
 > 이전: **레시피 자연어 추가 단계 2 — 사진/스크린샷 OCR(screen-13)** —
 > `RecipeCaptureView` 에 OCR 입력 소스 추가. 온디바이스 Apple Vision
 > (`VNRecognizeTextRequest`, `.accurate`, `usesLanguageCorrection`, 한국어+영어)으로
@@ -36,7 +38,7 @@ UI 우선 1차(시안 C 화면 골격: 5탭·장소·레시피·홈·추가 시�
 > (`Project.swift` infoPlist + `InfoPlist.xcstrings` en/ko), `tuist generate` 재실행. 권한
 > 거부·OCR 실패·빈 결과 모두 현지화 안내 + 텍스트 입력 폴백. `@Model` 스키마 변경 없음.
 > 결정: `docs/wiki/Decision/2026-06-16-레시피-OCR-VisionKit.md`. 잔여: 실기기 카메라·한국어/
-> 손글씨 OCR 품질(시뮬레이터 미지원), 부족분→장보기 자동생성.
+> 손글씨 OCR 품질(시뮬레이터 미지원), 장보기 완료→재고 반영.
 > 이전: **레시피 자연어 추가 단계 1(screen-12)** — 중앙 ✨ 시트(`CaptureSheet`)에
 > 명시적 "Add a recipe" 행 추가(검색-우선 통합 UX 유지, 의도 자동추측 없음) →
 > 레시피 전용 입력 화면 `RecipeCaptureView`(여러 줄 텍스트·붙여넣기·음성, 단일 경로).
@@ -47,7 +49,7 @@ UI 우선 1차(시안 C 화면 골격: 5탭·장소·레시피·홈·추가 시�
 > 수동 create 와 동일(재료 이름→보유 `Item` 정규화 매칭). 미가용·실패·취소·빈 결과면 수동
 > 에디터 폴백. `@Model` 스키마 변경 없음. 결정:
 > `docs/wiki/Decision/2026-06-16-레시피-NL파서-ParsedRecipe.md`. 잔여: 단계 2(사진/스크린샷
-> OCR), 부족분→장보기 자동생성, 실기기 한국어 추출 품질.
+> OCR), 장보기 완료→재고 반영, 실기기 한국어 추출 품질.
 > 이전: **캡처 시트 검색-우선 통합(screen-04)** — [추가|검색] 모드 토글 제거,
 > 단일 입력 필드 하나로 통합. 입력 즉시 실시간 검색(물건+레시피 섹션), 결과 아래 항상
 > `+ "{입력어}" 추가하기` 행으로 **명시적 추가만**(AI 가 추가/검색 의도 자동추측 안 함 →
@@ -61,7 +63,7 @@ UI 우선 1차(시안 C 화면 골격: 5탭·장소·레시피·홈·추가 시�
 > `placesPath` 동형). 신규 `ShoppingItem` @Model + 홈 장보기 요약 섹션(미완료 N개 +
 > 상위 3개 → push) + `ShoppingListView` CRUD(추가·체크·삭제, View↔SwiftData 직결).
 > 결정: `docs/wiki/Decision/2026-06-16-장보기-데이터모델.md`, 네비 ADR §1·§3·§5 갱신.
-> 1차 컷(후속): 자연어 검색·find/add 의도판별·레시피 NL 추가·부족분→장보기 자동생성.
+> 1차 컷(후속): 자연어 검색·find/add 의도판별·레시피 NL 추가·장보기 완료→재고 반영.
 > 이전: **설정 언어 선택(screen-08/10)** — 시스템 추종 기본 + 설정 > 표시 > 언어에서
 > 시스템/English/한국어 수동 오버라이드. `AppLanguagePreference`(`@AppStorage`, 테마
 > 선례) + 루트 `AppRootView` `.environment(\.locale)` 즉시 전환. ADR·screen tasks·Settings 노트 갱신.
@@ -99,7 +101,8 @@ UI 우선 1차(시안 C 화면 골격: 5탭·장소·레시피·홈·추가 시�
    레시피 상세(`screen-03`)·CRUD(`screen-07`)·시드 10개 완료 — 카드 → `RecipeDetail`,
    "레시피 추가" → `RecipeEditor`, 재료/단계 동적 편집 + 재료 이름→보유 물건 매칭.
    **레시피 자연어 추가(screen-12/13) 단계 1·2 완료** — 중앙 ✨ → "Add a recipe" → NL 입력
-   (텍스트·음성·사진/카메라 OCR) → AI 파싱 → `RecipeEditor` prefill 확인. 잔여: 부족분→장보기.
+   (텍스트·음성·사진/카메라 OCR) → AI 파싱 → `RecipeEditor` prefill 확인. 부족분→장보기
+   자동 생성은 완료. 잔여: 장보기 완료→재고 반영.
    남은 범위는 물건 카테고리·태그·사진, 레시피 cuisine 분류/dish 칩 실제 필터.
    (장소 CRUD `screen-05`·세부위치 CRUD `screen-06` 완료 — 추가/편집은 `PlaceEditor`/`SpotEditor`, 삭제는 확인 다이얼로그.)
    장소/세부위치 에디터 확장(아이콘·Space 선택), 정렬 변경(drag) 이 후속.

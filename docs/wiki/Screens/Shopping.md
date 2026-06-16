@@ -9,12 +9,13 @@ screen-id: screen-11
 
 # Shopping (장보기 목록)
 
-사야 할 물건 체크리스트. 수동 추가 + 체크(완료 토글) + 삭제 CRUD. [[Home]] 의 장보기
-요약 섹션에서 push 로 진입한다.
+사야 할 물건 체크리스트. 수동 추가 + 레시피 부족분 추가 + 체크(완료 토글) + 삭제 CRUD.
+[[Home]] 의 장보기 요약 섹션에서 push 로 진입한다.
 
 ## 역할
 
 - 살 것을 수동으로 추가한다(상단 입력행 + "추가").
+- [[RecipeDetail]] 의 부족 주재료 추가 액션으로 `ShoppingItem(sourceIngredient:)` 이 생성될 수 있다.
 - 행 좌측 동그라미를 탭해 완료/미완료 토글한다(완료는 취소선 + 아래 "완료" 섹션으로).
 - 행 우측 휴지통으로 삭제한다.
 - 미완료("살 것")를 위에, 완료("완료")를 아래에 둔다.
@@ -22,6 +23,7 @@ screen-id: screen-11
 ## 연결된 화면
 
 - 들어옴 ←: [[Home]] — 장보기 요약 섹션 탭(`navigationDestination(for: ShoppingDestination.self)`)
+- 데이터 유입 ←: [[RecipeDetail]] — 부족 주재료를 장보기 항목으로 생성
 
 ## 사용 모델
 
@@ -41,4 +43,4 @@ screen-id: screen-11
 ## 메모
 
 - 코드: `HomePinApp/Sources/Features/Shopping/ShoppingListView.swift`
-- 후속: 레시피 부족분 → 장보기 자동 생성, 완료 → 재고 반영.
+- 후속: 완료 → 재고 반영.

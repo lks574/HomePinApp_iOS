@@ -9,8 +9,8 @@ status: in-progress
 # ShoppingItem (장보기 항목)
 
 사야 할 물건 한 줄. 재고([[Item]])와 독립된 가벼운 체크리스트 엔티티. 수동 추가/체크
-(완료)/삭제만 다룬다(홈 장보기 섹션 + [[Shopping]] 목록 화면). 부족분 자동 생성·재고
-반영은 후속.
+(완료)/삭제와 레시피 부족분 추가를 다룬다(홈 장보기 섹션 + [[Shopping]] 목록 화면).
+재고 반영은 후속.
 
 ## 보유 데이터
 
@@ -25,12 +25,13 @@ status: in-progress
 
 ## 관계
 
-- → [[RecipeIngredient]] : `sourceIngredient` (`.nullify`, 후속 부족분 연동 훅 — 1차엔 nil)
+- → [[RecipeIngredient]] : `sourceIngredient` (`.nullify`, 레시피 부족분에서 생성된 항목의 원본 재료)
 
 ## 사용 화면
 
 - [[Home]] : 장보기 요약 섹션(미완료 개수 + 상위 3개 미리보기 + 진입점)
 - [[Shopping]] : 전체 목록 CRUD(추가/체크/삭제)
+- [[RecipeDetail]] : 부족 주재료를 `ShoppingItem(sourceIngredient:)` 으로 생성
 
 ## 메모
 

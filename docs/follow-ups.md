@@ -97,7 +97,7 @@ i18n·검색·장보기 1차(중앙 AI 버튼·레시피 검색·장보기 CRUD)
   `RecipeEditorModel(prefill:)` 로 재사용. 미가용·실패 시 수동 에디터 폴백. 재료 Item
   grounding 은 기존 저장 매칭(`Item.normalize`) 재사용. 결정:
   `docs/wiki/Decision/2026-06-16-레시피-NL파서-ParsedRecipe.md`. 잔여: 단계 2(사진/스크린샷
-  OCR), 부족분→장보기 자동생성, 실기기 한국어 추출 품질(아래).
+  OCR), 장보기 완료→재고 반영, 실기기 한국어 추출 품질(아래).
 - [x] **레시피 NL 추가 — 사진/스크린샷 OCR(단계 2) 완료(screen-13)** — 온디바이스 Apple
   Vision(`VNRecognizeTextRequest`, `.accurate`, `usesLanguageCorrection`, 한국어+영어)로
   이미지→텍스트 추출 후 기존 입력 필드에 채워 같은 코어(`NLRecipeParser` "Sort with AI")에
@@ -121,10 +121,13 @@ i18n·검색·장보기 1차(중앙 AI 버튼·레시피 검색·장보기 CRUD)
   온디바이스 추론·한국어 레시피 추출 품질(재료 분리·수량 문자열·단계 순서·분류 raw 매칭)
   ·`@Generable` 스키마 준수는 Apple Intelligence 가용 실기기 필수(시뮬레이터 `availability`
   미가용).
-- [ ] **레시피 부족분 → 장보기 자동 생성** — `Recipe.missingIngredients` →
-  `ShoppingItem` 자동 생성(`sourceIngredient` 연동 훅 사용). 1차엔 수동 추가만.
-  완료 체크 → 재고(`Item`) 반영도 함께 검토. **부재료(`RecipeIngredient.isOptional`)는
-  대상 아님** — `missingIngredients` 가 주재료(`!isOptional`)만 집계하므로 자동 반영(2026-06-16).
+- [x] **레시피 부족분 → 장보기 자동 생성** — `Recipe.missingIngredients` →
+  `ShoppingItem` 자동 생성(`sourceIngredient` 연동 훅 사용). `RecipeDetail` 재고 요약에서
+  부족 주재료만 장보기에 추가하고, 같은 재료/같은 이름 미완료 항목 중복은 막는다.
+  **부재료(`RecipeIngredient.isOptional`)는 대상 아님** — `missingIngredients` 가
+  주재료(`!isOptional`)만 집계하므로 자동 반영(2026-06-16).
+- [ ] **장보기 완료 → 재고(`Item`) 반영** — 구매 완료 체크 시 재고 생성/수량 증가 UX와
+  위치(`Area`) 선택 규칙을 별도 검토.
   (레시피 NL 추가 grounding 이 Item 링크까지만
   하므로 이 후속이 소비 루프를 잇는다.)
 

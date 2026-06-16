@@ -2,10 +2,10 @@ import Foundation
 import SwiftData
 
 /// 장보기 항목 — 사야 할 물건 한 줄. 재고(`Item`)와 독립된 가벼운 체크리스트 엔티티다.
-/// 수동 추가/체크/삭제만 다루며(홈 장보기 섹션), 부족분 자동 생성·재고 반영은 후속.
+/// 수동 추가/체크/삭제와 레시피 부족분 추가를 다루며, 재고 반영은 후속.
 ///
-/// `sourceIngredient` 는 후속(레시피 부족분 → 장보기 자동 생성) 연동 훅이다. 1차에는
-/// 항상 nil 이고, 재료 삭제 시 nullify 로 끊겨 장보기 항목은 온전히 남는다.
+/// `sourceIngredient` 는 레시피 부족분에서 생성된 항목을 원본 재료와 연결하는 훅이다.
+/// 재료 삭제 시 nullify 로 끊겨 장보기 항목은 온전히 남는다.
 @Model
 final class ShoppingItem {
   @Attribute(.unique) var id: UUID
@@ -18,7 +18,7 @@ final class ShoppingItem {
   var isChecked: Bool
   var createdAt: Date
 
-  /// 후속 부족분 연동 훅 — 이 항목이 어떤 레시피 재료에서 비롯됐는지(1차엔 nil).
+  /// 부족분 연동 훅 — 이 항목이 어떤 레시피 재료에서 비롯됐는지.
   @Relationship(deleteRule: .nullify)
   var sourceIngredient: RecipeIngredient?
 
