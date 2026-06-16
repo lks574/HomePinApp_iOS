@@ -9,8 +9,8 @@ screen-id: screen-01
 
 # Home (홈)
 
-스플래시 다음의 **홈 대시보드**. 검색 placeholder, 유통기한 임박 카드, 장보기 요약,
-장소 바로가기, 최근 추가 물건을 보여준다.
+스플래시 다음의 **홈 대시보드**. 유통기한 임박 카드, 장보기 요약, 장소 바로가기,
+최근 추가 물건을 보여준다.
 
 ## 역할
 
@@ -43,3 +43,4 @@ screen-id: screen-01
 ## 메모
 
 - 코드: `HomePinApp/Sources/Features/Home/HomeView.swift`
+- 홈 상단 검색 placeholder 는 실제 필터가 없어 제거했다. 전역 검색은 중앙 AI 검색 시트가 맡는다.

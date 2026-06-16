@@ -1,7 +1,7 @@
 import SwiftData
 import SwiftUI
 
-/// 홈 대시보드 — 검색 + 임박 유통기한 + 장소 바로가기 + 최근 추가.
+/// 홈 대시보드 — 임박 유통기한 + 장보기 요약 + 장소 바로가기 + 최근 추가.
 struct HomeView: View {
   @Environment(AppRouter.self) private var router
   @Query(sort: \Area.sortOrder) private var areas: [Area]
@@ -16,9 +16,6 @@ struct HomeView: View {
           Text("HomePin")
             .font(.appScreenTitle)
             .foregroundStyle(AppColor.textPrimary)
-            .padding(.bottom, 14)
-
-          AppSearchBar(placeholder: "What are you looking for?")
             .padding(.bottom, 22)
 
           if !expiringItems.isEmpty {

@@ -1565,23 +1565,6 @@
         }
       }
     },
-    "place.search.%@" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Search in %@"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@에서 찾기"
-          }
-        }
-      }
-    },
     "Places" : {
       "localizations" : {
         "ko" : {
@@ -2733,17 +2716,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "버전"
-          }
-        }
-      }
-    },
-    "What are you looking for?" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "무엇을 찾으세요?"
           }
         }
       }

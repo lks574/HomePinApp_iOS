@@ -2,7 +2,7 @@
 aliases: [PlaceDetail, 장소 상세]
 tags: [screen, screen/place]
 created: 2026-06-12
-updated: 2026-06-15
+updated: 2026-06-16
 status: in-progress
 screen-id: screen-01, screen-05, screen-06
 ---
@@ -46,4 +46,4 @@ screen-id: screen-01, screen-05, screen-06
 ## 메모
 
 - 코드: `HomePinApp/Sources/Features/Places/PlaceDetailView.swift`
-- 검색바는 표시만, 실제 필터는 후속(`screen-04`).
+- 장소 상세 상단의 표시용 검색바는 제거했다. 실제 검색은 중앙 AI 검색 시트로 일원화한다.

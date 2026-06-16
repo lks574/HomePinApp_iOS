@@ -35,8 +35,7 @@ struct PlaceDetailView: View {
       VStack(alignment: .leading, spacing: 0) {
         backButton
         headerRow
-        AppSearchBar(placeholder: "place.search.\(area.name)", style: .field)
-          .padding(.vertical, 20)
+          .padding(.bottom, 20)
         ForEach(spots) { spot in
           spotCard(title: spot.name, items: items(in: spot), spot: spot)
         }

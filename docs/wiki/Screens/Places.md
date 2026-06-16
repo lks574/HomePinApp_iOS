@@ -2,7 +2,7 @@
 aliases: [Places, 장소 목록]
 tags: [screen, screen/place]
 created: 2026-06-12
-updated: 2026-06-15
+updated: 2026-06-16
 status: in-progress
 screen-id: screen-01, screen-05
 ---
@@ -44,4 +44,4 @@ screen-id: screen-01, screen-05
 ## 메모
 
 - 코드: `HomePinApp/Sources/Features/Places/PlacesListView.swift`
-- 검색바·실제 필터는 후속(`screen-04`).
+- 장소 목록에는 별도 검색바를 두지 않는다. 전역 검색은 중앙 AI 검색 시트가 맡는다.

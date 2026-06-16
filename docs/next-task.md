@@ -90,8 +90,8 @@ UI 우선 1차(시안 C 화면 골격: 5탭·장소·레시피·홈·추가 시�
    (`Item.normalizedName` 부분 일치) + 레시피(`Recipe.title`·재료명 부분 일치) 실시간
    검색 → 물건/레시피 섹션, 결과 아래 항상 `+ "{입력어}" 추가하기` 행(명시적 추가만,
    AI 의도 자동추측 없음). 물건 결과 탭 → `ItemEditor` 편집, 레시피 결과 탭 → 레시피
-   탭 상세 push(`AppRouter.openRecipe`). 잔여: 홈/장소 검색바 실연동, 자연어 검색·
-   레시피 NL 추가. (find/add 의도판별은 검색-우선 통합으로 대체·불필요.)
+   탭 상세 push(`AppRouter.openRecipe`). 홈/장소의 정적 검색바는 제거. 잔여: 자연어 검색.
+   (find/add 의도판별은 검색-우선 통합으로 대체·불필요.)
 3. **음성 입력(STT)** — 입력기 완료 + actor 경계 분리 리팩터 완료
    (`SpeechDictationViewModel`(UI 상태/단일 세션 Task) + `SpeechDictationEngine`
    (비-MainActor 권한/오디오/모델) ↔ `DictationEvent` 스트림 경계. iOS 26
