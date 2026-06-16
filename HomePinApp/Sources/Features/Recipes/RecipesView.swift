@@ -3,6 +3,7 @@ import SwiftUI
 
 /// 레시피 — 임박 카드 + "임박 재료로 만들기" + "내 재료로 만들 수 있어요".
 struct RecipesView: View {
+  @Environment(AppRouter.self) private var router
   @Query(sort: \Recipe.title) private var recipes: [Recipe]
   @Query private var items: [Item]
   /// 필터 선택값은 저장값(raw 한국어 키) 또는 `allKey`(전체) 다. 표시 라벨만 현지화한다.
@@ -16,8 +17,13 @@ struct RecipesView: View {
   private let cuisines = [allKey] + RecipeClassification.cuisineKeys
   private let dishes = [allKey] + RecipeClassification.dishTypeKeys
 
+  /// 레시피 탭의 네비게이션 경로는 라우터가 소유한다(AI 검색 시트에서 push).
+  private var recipesPath: Binding<[Recipe]> {
+    Binding(get: { router.recipesPath }, set: { router.recipesPath = $0 })
+  }
+
   var body: some View {
-    NavigationStack {
+    NavigationStack(path: recipesPath) {
       ScrollView {
         VStack(alignment: .leading, spacing: 0) {
           HStack(alignment: .firstTextBaseline) {
@@ -141,7 +147,6 @@ struct RecipesView: View {
   private func dishFilterLabel(_ raw: String) -> String {
     raw == Self.allKey ? String(localized: "All") : RecipeClassification.dishTypeLabel(raw)
   }
-
 
   // MARK: 레시피 카드
 

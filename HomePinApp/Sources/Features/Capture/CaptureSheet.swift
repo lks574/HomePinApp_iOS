@@ -1,49 +1,48 @@
 import SwiftData
 import SwiftUI
 
-/// 중앙 버튼이 띄우는 시트 — [추가 | 검색] 두 모드 + 공용 음성 입력.
-/// - 추가: 입력 텍스트(타이핑·받아쓰기 공용)를 가용 시 온디바이스 AI 파서(`NLParseViewModel`)로
-///   구조화 드래프트로 바꿔 확인 화면(screen-09)으로 push 하고, 미가용·실패·취소·빈 결과면
-///   현 단건 스텁(이름 prefill 로 `ItemEditor` `create`)으로 폴백한다. 텍스트 경로는 항상 산다.
-/// - 검색: `Item.normalizedName` 기반 이름 검색 → 결과에 위치 경로. 결과를 누르면
-///   해당 물건 편집 시트로 진입한다. (자연어 검색은 후속)
-/// - 음성(🎤): 모드 토글 아래 공용. 받아쓰기(`SpeechDictationViewModel`) 결과는 활성 모드의 입력
-///   필드(추가=`text`, 검색=`searchText`)로 들어간 뒤, 추가 모드에선 텍스트와 같은 `add()`
-///   파서 경로로 합류한다. STT 는 텍스트를 채우는 입력기일 뿐 텍스트 경로는 항상 살아 있다.
+/// 중앙 버튼이 띄우는 시트 — 검색-우선 통합 입력 + 공용 음성 입력.
+/// - 단일 입력 필드 하나로 통합한다([추가|검색] 모드 토글 없음). 입력하면(타이핑·받아쓰기)
+///   기존 항목을 실시간 검색해 물건/레시피 섹션으로 보여준다.
+/// - 결과 아래 항상 `+ "{입력어}" 추가하기` 행을 둔다. 이 행을 눌러야만 명시적 추가가
+///   일어난다(AI 가 추가/검색 의도를 자동 추측하지 않음 — 오분류 데이터 오염 방지).
+/// - 추가는 가용 시 온디바이스 AI 파서(`NLParseViewModel`)로 구조화 드래프트로 바꿔
+///   확인 화면(screen-09)으로 push 하고, 미가용·실패·취소·빈 결과면 현 단건 스텁(이름
+///   prefill 로 `ItemEditor` `create`)으로 폴백한다. 텍스트·음성 모두 같은 `add()` 경로.
+/// - 음성(🎤): 받아쓰기(`SpeechDictationViewModel`) 결과가 같은 입력 필드로 들어가고,
+///   `추가하기` 를 누르면 동일한 파서 경로로 합류한다(단일 경로 원칙).
 struct CaptureSheet: View {
   @Environment(\.dismiss) private var dismiss
   @Environment(\.modelContext) private var modelContext
-  @State private var mode: CaptureMode = .add
-  @State private var text = ""
-  @State private var searchText = ""
+  @Environment(AppRouter.self) private var router
+  @State private var query = ""
   @State private var dictation = SpeechDictationViewModel()
   @State private var parser = NLParseViewModel()
   @State private var editorRoute: ItemEditorRoute?
   @State private var reviewRoute: DraftReviewRoute?
-  @FocusState private var focusedField: CaptureField?
+  @FocusState private var inputFocused: Bool
 
   /// 검색 대상 전체 물건. 이름순으로 받아 정규화 키로 in-memory 필터한다(개인 재고
   /// 규모에선 충분). 동적 술어 대신 단일 `@Query` + 필터.
   @Query(sort: \Item.name) private var allItems: [Item]
 
+  /// 검색 대상 전체 레시피. 제목·재료명을 정규화 키로 in-memory 필터한다.
+  @Query(sort: \Recipe.title) private var allRecipes: [Recipe]
+
   var body: some View {
     NavigationStack {
       VStack(spacing: 16) {
-        modePicker
-        micRow
+        inputRow
         if let micHint {
           micHint
             .font(.appFootnote).foregroundStyle(AppColor.textMuted)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
-        switch mode {
-        case .add: addContent
-        case .search: searchContent
-        }
+        content
       }
       .padding(20)
       .background(AppColor.screenBackground)
-      .navigationTitle(mode == .add ? Text("Add") : Text("Search"))
+      .navigationTitle(Text("Add or find"))
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {
         ToolbarItem(placement: .topBarTrailing) { Button("Close") { dismiss() } }
@@ -56,12 +55,7 @@ struct CaptureSheet: View {
           dismiss()
         }
       }
-      .onAppear { focusedField = mode == .add ? .add : .search }
-      .onChange(of: mode) { _, newMode in
-        dictation.reset()
-        parser.reset()
-        focusedField = newMode == .add ? .add : .search
-      }
+      .onAppear { inputFocused = true }
       .onChange(of: dictation.transcript) { _, newTranscript in
         applyTranscript(newTranscript)
       }
@@ -75,90 +69,100 @@ struct CaptureSheet: View {
     }
   }
 
-  // MARK: - 모드 토글
+  // MARK: - 입력 (음성 + 단일 필드)
 
-  private var modePicker: some View {
-    Picker("Mode", selection: $mode) {
-      ForEach(CaptureMode.allCases) { mode in
-        Text(mode.title).tag(mode)
-      }
-    }
-    .pickerStyle(.segmented)
-  }
-
-  // MARK: - 공용 음성 입력
-
-  /// 모드 공용 음성 진입. 받아쓰기 결과는 활성 모드의 입력 필드로 들어간다.
-  private var micRow: some View {
+  /// 공용 음성 진입 + 단일 입력 필드. 받아쓰기 결과·타이핑 모두 같은 `query` 로 들어간다.
+  private var inputRow: some View {
     let isRecording = dictation.state == .recording
-    return HStack(spacing: 12) {
+    return HStack(spacing: 10) {
       Button { Task { await dictation.toggle() } } label: {
         Image(systemName: isRecording ? "stop.fill" : "mic.fill")
-          .font(.system(size: 18, weight: .semibold))
+          .font(.system(size: 16, weight: .semibold))
           .foregroundStyle(.white)
-          .frame(width: 44, height: 44)
+          .frame(width: 40, height: 40)
           .background(isRecording ? AppColor.accentDark : AppColor.accent, in: Circle())
       }
       .buttonStyle(.plain)
       .accessibilityLabel(micAccessibilityLabel)
-      VStack(alignment: .leading, spacing: 2) {
-        Text(isRecording ? "Listening…" : "Speak")
-          .font(.appRowLabel).foregroundStyle(AppColor.textSecondary)
-        Text(micSubtitle)
-          .font(.appCaption).foregroundStyle(AppColor.textMuted)
+      Image(systemName: "sparkles").foregroundStyle(AppColor.accent)
+      TextField("Type anything", text: $query)
+        .font(.appFieldText)
+        .focused($inputFocused)
+        .submitLabel(.search)
+        .disabled(parser.isParsing)
+      if !query.isEmpty {
+        Button { query = "" } label: {
+          Image(systemName: "xmark.circle.fill").foregroundStyle(AppColor.textFaint)
+        }
+        .buttonStyle(.plain)
       }
-      Spacer()
     }
-    .padding(14)
-    .appCard(radius: 16)
+    .padding(.horizontal, 12)
+    .padding(.vertical, 8)
+    .background(
+      RoundedRectangle(cornerRadius: 16, style: .continuous).fill(AppColor.fieldBackground)
+    )
   }
 
   private var micAccessibilityLabel: LocalizedStringKey {
-    if dictation.state == .recording { return "Stop dictation" }
-    return mode == .add ? "Speak to add" : "Speak to search"
+    dictation.state == .recording ? "Stop dictation" : "Speak to fill the field"
   }
 
-  private var micSubtitle: LocalizedStringKey {
-    if dictation.state == .recording { return "Tap again to stop" }
-    return mode == .add ? "Speak to add it" : "Speak to search"
-  }
+  // MARK: - 본문 (빈 상태 / 결과 + 추가 행)
 
-  // MARK: - 추가
-
-  private var addContent: some View {
-    VStack(spacing: 18) {
-      Text("Add by speaking or typing")
-        .font(.appRowLabel)
-        .foregroundStyle(AppColor.textTertiary)
-        .frame(maxWidth: .infinity, alignment: .leading)
-
-      TextField("e.g. Put two packs of beef in the freezer", text: $text, axis: .vertical)
-        .font(.appFieldText)
-        .lineLimit(2...5)
-        .focused($focusedField, equals: .add)
-        .padding(16)
-        .appCard(radius: 16)
-        .disabled(parser.isParsing)
-
-      Text(addHint)
-        .font(.appCaption).foregroundStyle(AppColor.textMuted)
-        .frame(maxWidth: .infinity, alignment: .leading)
-
+  @ViewBuilder
+  private var content: some View {
+    if trimmedQuery.isEmpty {
       Spacer()
-
-      if parser.isParsing {
-        parsingIndicator
-      } else {
-        AppFullWidthPrimaryButton(title: "Add", isEnabled: canAdd, action: add)
+      Text("Find or add items and recipes by typing or speaking.")
+        .font(.appFootnote).foregroundStyle(AppColor.textMuted)
+        .multilineTextAlignment(.center)
+        .frame(maxWidth: .infinity)
+      Spacer()
+    } else {
+      ScrollView {
+        VStack(alignment: .leading, spacing: 18) {
+          if !itemResults.isEmpty {
+            resultSection(title: "Items") {
+              ForEach(itemResults) { item in
+                itemResultRow(item)
+              }
+            }
+          }
+          if !recipeResults.isEmpty {
+            resultSection(title: "Recipes") {
+              ForEach(recipeResults) { recipe in
+                recipeResultRow(recipe)
+              }
+            }
+          }
+          addSection
+        }
       }
     }
   }
 
-  /// 파서 가용 여부에 따른 안내. 미가용이면 단건(이름만) 폴백을 알린다.
-  private var addHint: LocalizedStringKey {
-    parser.isAvailable
-      ? "Speak or type and AI sorts out the item, place, quantity, and category for you to confirm. Multiple items at once, too."
-      : "AI sorting isn't available on this device, so only the name is captured quickly. Fill in the place and quantity on the next screen."
+  /// 명시적 추가 행. 결과 유무와 무관하게 항상 노출한다. 파서 추론 중에는 진행 표시로 바꾼다.
+  @ViewBuilder
+  private var addSection: some View {
+    if parser.isParsing {
+      parsingIndicator
+    } else {
+      Button(action: add) {
+        HStack(spacing: 10) {
+          Image(systemName: "plus.circle.fill")
+            .font(.appItemBody).foregroundStyle(AppColor.accent)
+          Text("add.create.\(trimmedQuery)")
+            .font(.appItemBody).foregroundStyle(AppColor.textPrimary)
+            .frame(maxWidth: .infinity, alignment: .leading)
+          Image(systemName: "chevron.right").font(.appTag).foregroundStyle(AppColor.textFaint)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 14)
+        .appCard()
+      }
+      .buttonStyle(.plain)
+    }
   }
 
   /// 추론 중 진행 표시 + 취소. 추론이 끝나면 확인 화면으로 넘어가거나 폴백한다.
@@ -177,58 +181,21 @@ struct CaptureSheet: View {
     .appCard(radius: 14)
   }
 
-  // MARK: - 검색
+  // MARK: - 결과 섹션
 
-  private var searchContent: some View {
-    VStack(spacing: 14) {
-      HStack(spacing: 10) {
-        Image(systemName: "magnifyingglass").foregroundStyle(AppColor.textTertiary)
-        TextField("Find by item name", text: $searchText)
-          .font(.appFieldText)
-          .focused($focusedField, equals: .search)
-          .submitLabel(.search)
-        if !searchText.isEmpty {
-          Button { searchText = "" } label: {
-            Image(systemName: "xmark.circle.fill").foregroundStyle(AppColor.textFaint)
-          }
-          .buttonStyle(.plain)
-        }
-      }
-      .padding(.horizontal, 14)
-      .frame(height: 48)
-      .background(
-        RoundedRectangle(cornerRadius: 14, style: .continuous).fill(AppColor.fieldBackground)
-      )
-
-      searchResults
+  private func resultSection(
+    title: LocalizedStringKey,
+    @ViewBuilder rows: () -> some View
+  ) -> some View {
+    VStack(alignment: .leading, spacing: 8) {
+      Text(title)
+        .font(.appSectionLabel).foregroundStyle(AppColor.textTertiary)
+        .frame(maxWidth: .infinity, alignment: .leading)
+      VStack(spacing: 0) { rows() }.appCard()
     }
   }
 
-  @ViewBuilder
-  private var searchResults: some View {
-    if searchQuery.isEmpty {
-      Spacer()
-      Text("Type an item name and we'll find where it is.")
-        .font(.appFootnote).foregroundStyle(AppColor.textMuted)
-      Spacer()
-    } else if results.isEmpty {
-      Spacer()
-      Text("search.noResults.\(searchQuery)")
-        .font(.appFootnote).foregroundStyle(AppColor.textMuted)
-      Spacer()
-    } else {
-      ScrollView {
-        VStack(spacing: 0) {
-          ForEach(results) { item in
-            resultRow(item)
-          }
-        }
-        .appCard()
-      }
-    }
-  }
-
-  private func resultRow(_ item: Item) -> some View {
+  private func itemResultRow(_ item: Item) -> some View {
     Button {
       editorRoute = ItemEditorRoute(mode: .edit(item))
     } label: {
@@ -254,9 +221,31 @@ struct CaptureSheet: View {
     .buttonStyle(.plain)
   }
 
+  /// 레시피 결과 행 — 누르면 시트를 닫고 레시피 탭 상세로 push 한다.
+  private func recipeResultRow(_ recipe: Recipe) -> some View {
+    Button {
+      dismiss()
+      router.openRecipe(recipe)
+    } label: {
+      HStack(spacing: 10) {
+        VStack(alignment: .leading, spacing: 3) {
+          Text(verbatim: recipe.title).font(.appItemBody).foregroundStyle(AppColor.textPrimary)
+          Text("recipe.ingredientCount.\(recipe.inStockCount).\(recipe.ingredients.count)")
+            .font(.appCaption).foregroundStyle(AppColor.textMuted)
+        }
+        Spacer()
+        Image(systemName: "chevron.right").font(.appTag).foregroundStyle(AppColor.textFaint)
+      }
+      .padding(.horizontal, 16)
+      .padding(.vertical, 12)
+      .overlay(alignment: .top) { Divider().padding(.leading, 16) }
+    }
+    .buttonStyle(.plain)
+  }
+
   // MARK: - 음성 입력
 
-  /// 받아쓰기 상태별 안내. 정상 대기 상태에서는 힌트를 숨긴다(텍스트 필드는 항상 노출).
+  /// 받아쓰기 상태별 안내. 정상 대기 상태에서는 힌트를 숨긴다(입력 필드는 항상 노출).
   /// `reason` 은 엔진이 이미 현지화한 문구라 그대로 끼워 넣는다.
   private var micHint: Text? {
     switch dictation.state {
@@ -269,33 +258,24 @@ struct CaptureSheet: View {
     }
   }
 
-  /// 받아쓰기 텍스트를 활성 모드 필드에 채운다. 검색은 단일 라인이라 개행을 제거한다.
+  /// 받아쓰기 텍스트를 단일 입력 필드에 채운다. 단일 라인이라 개행을 공백으로 바꾼다.
   private func applyTranscript(_ transcript: String) {
     guard !transcript.isEmpty else { return }
-    switch mode {
-    case .add:
-      text = transcript
-    case .search:
-      searchText = transcript.replacingOccurrences(of: "\n", with: " ")
-    }
+    query = transcript.replacingOccurrences(of: "\n", with: " ")
   }
 
-  // MARK: - 로직
+  // MARK: - 추가 로직
 
-  private var canAdd: Bool {
-    !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !parser.isParsing
-  }
-
-  /// 추가 진입. 파서 가용 시 자연어 파싱(→ 확인 화면 push), 미가용·실패·취소·빈 결과면
-  /// 현 단건 스텁(이름 prefill)으로 폴백한다. 분기는 `parser.state` 변화를 받아 처리한다.
+  /// 명시적 추가 진입. 파서 가용 시 자연어 파싱(→ 확인 화면 push), 미가용·실패·취소·빈
+  /// 결과면 현 단건 스텁(이름 prefill)으로 폴백한다. 분기는 `parser.state` 변화를 받아 처리.
   private func add() {
-    let name = text.trimmingCharacters(in: .whitespacesAndNewlines)
+    let name = trimmedQuery
     guard !name.isEmpty else { return }
     guard parser.isAvailable else {
       fallbackToStub(name)
       return
     }
-    focusedField = nil
+    inputFocused = false
     parser.parse(name, in: modelContext)
   }
 
@@ -306,7 +286,7 @@ struct CaptureSheet: View {
       reviewRoute = DraftReviewRoute(drafts: drafts)
       parser.reset()
     case .unavailable, .failed:
-      fallbackToStub(text.trimmingCharacters(in: .whitespacesAndNewlines))
+      fallbackToStub(trimmedQuery)
       parser.reset()
     case .idle, .parsing:
       break
@@ -319,16 +299,28 @@ struct CaptureSheet: View {
     editorRoute = ItemEditorRoute(mode: .create(initialName: name))
   }
 
-  /// 정규화한 검색어(빈 문자열이면 무검색).
-  private var searchQuery: String {
-    searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+  // MARK: - 검색 로직
+
+  /// 정규화한 입력어(앞뒤 공백 제거).
+  private var trimmedQuery: String {
+    query.trimmingCharacters(in: .whitespacesAndNewlines)
   }
 
   /// 정규화 키로 부분 일치한 물건(이름순, `@Query` 정렬 유지).
-  private var results: [Item] {
-    let key = Item.normalize(searchQuery)
+  private var itemResults: [Item] {
+    let key = Item.normalize(trimmedQuery)
     guard !key.isEmpty else { return [] }
     return allItems.filter { $0.normalizedName.contains(key) }
+  }
+
+  /// 제목 또는 재료명이 부분 일치한 레시피(제목순, `@Query` 정렬 유지).
+  private var recipeResults: [Recipe] {
+    let key = Item.normalize(trimmedQuery)
+    guard !key.isEmpty else { return [] }
+    return allRecipes.filter { recipe in
+      Item.normalize(recipe.title).contains(key)
+        || recipe.ingredients.contains { Item.normalize($0.name).contains(key) }
+    }
   }
 }
 
@@ -345,23 +337,4 @@ private struct DraftReviewRoute: Identifiable, Hashable {
   func hash(into hasher: inout Hasher) {
     hasher.combine(id)
   }
-}
-
-private enum CaptureMode: String, CaseIterable, Identifiable {
-  case add
-  case search
-
-  var id: String { rawValue }
-
-  var title: LocalizedStringKey {
-    switch self {
-    case .add: "Add"
-    case .search: "Search"
-    }
-  }
-}
-
-private enum CaptureField: Hashable {
-  case add
-  case search
 }

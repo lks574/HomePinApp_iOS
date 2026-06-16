@@ -2,7 +2,7 @@
 aliases: [wiki, MOC, 위키 허브]
 tags: [moc]
 created: 2026-06-12
-updated: 2026-06-15
+updated: 2026-06-16
 status: stable
 ---
 
@@ -28,12 +28,14 @@ SORT created ASC
 <!-- Dataview 플러그인이 없으면 위 블록은 무시된다. 수동 목록은 아래에 둔다. -->
 
 - [[Splash]] → [[Home]] (루트 흐름)
-- 탭: [[Home]] · [[Places]] · [[Capture]] (🎤) · [[Recipes]] · [[Settings]]
+- 탭: [[Home]] · [[Places]] · [[Capture]] (✨ AI) · [[Recipes]] · [[Settings]]
 - [[Places]] → [[PlaceDetail]] → [[ItemEditor]]
 - [[Places]] · [[PlaceDetail]] → [[PlaceEditor]] — 장소 추가/편집
 - [[PlaceDetail]] → [[SpotEditor]] — 세부위치 추가/편집
 - [[Home]] · [[Capture]] → [[ItemEditor]] — 물건 추가/편집 공용 에디터(AI 미가용·실패 폴백)
 - [[Capture]] → [[DraftReview]] — AI 자연어 파싱 결과 확인 드래프트(다건 일괄 저장)
+- [[Capture]] → [[RecipeDetail]] — AI 검색 레시피 결과 탭(레시피 탭 전환 + push)
+- [[Home]] → [[Shopping]] — 장보기 요약 섹션 탭(살 것 추가·체크·삭제)
 - [[Recipes]] → [[RecipeDetail]] → [[RecipeEditor]] — 레시피 상세·추가/편집
 
 ## 모델 `#model`
@@ -49,12 +51,13 @@ SORT created ASC
 - 위치: [[Space]] ⊃ [[Area]] ⊃ [[Spot]]
 - 물건: [[Item]] — 분류 [[ItemCategory]] · 태그 [[Tag]]
 - 레시피: [[Recipe]] ⊃ [[RecipeIngredient]] (재고 [[Item]] 매칭)
+- 장보기: [[ShoppingItem]] (살 것 체크리스트, 후속 [[RecipeIngredient]] 연동 훅)
 
 ## 결정 / 조사 / 아이디어
 
 - 제품 방향: [[제품-방향-재고-레시피-AI]] `#idea`
 - AI 적용 후보: [[AI-적용-후보]] `#idea`
-- 결정: [[2026-06-12-위치-물건-데이터모델]] · [[2026-06-12-식재료-모델-Item-통합]] · [[2026-06-12-swiftdata-마이그레이션-방침]] · [[2026-06-15-에디터-상태-소유-패턴]] · [[2026-06-15-음성입력-STT-아키텍처]] · [[2026-06-15-NL-추가-파서-FoundationModels]]
+- 결정: [[2026-06-12-위치-물건-데이터모델]] · [[2026-06-12-식재료-모델-Item-통합]] · [[2026-06-12-swiftdata-마이그레이션-방침]] · [[2026-06-15-에디터-상태-소유-패턴]] · [[2026-06-15-음성입력-STT-아키텍처]] · [[2026-06-15-NL-추가-파서-FoundationModels]] · [[2026-06-16-장보기-데이터모델]]
 - 외부 조사·자료: `Research/` `#research`
 - 임시 아이디어: `Idea/` `#idea`
 

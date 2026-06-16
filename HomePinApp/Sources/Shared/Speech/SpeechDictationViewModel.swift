@@ -2,7 +2,7 @@ import Foundation
 import os
 
 /// 받아쓰기 입력기의 UI 상태 소유자. 별도 인식 "엔진"이 아니라, 마이크로 들은 말을 텍스트로
-/// 바꿔 호출 측이 활성 입력 필드(추가=`text`, 검색=`searchText`)에 그대로 채워 넣게 하는
+/// 바꿔 호출 측이 입력 필드(`CaptureSheet` 단일 입력 `query`)에 그대로 채워 넣게 하는
 /// 컨트롤러다. 텍스트 입력 경로는 항상 살아 있으므로 이 입력기가 불가용·거부여도 폴백된다.
 ///
 /// 실제 권한/오디오/모델/변환은 비-MainActor `SpeechDictationEngine` 이 담당하고, ViewModel 은

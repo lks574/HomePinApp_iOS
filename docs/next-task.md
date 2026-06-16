@@ -11,11 +11,23 @@ status: draft
 UI 우선 1차(시안 C 화면 골격: 5탭·장소·레시피·홈·추가 시트) 완료 후의 다음 후보.
 보류 상세는 `docs/follow-ups.md`.
 
-> 최근 완료: **설정 언어 선택(screen-08/10)** — 시스템 추종 기본 + 설정 > 표시 > 언어에서
+> 최근 완료: **캡처 시트 검색-우선 통합(screen-04)** — [추가|검색] 모드 토글 제거,
+> 단일 입력 필드 하나로 통합. 입력 즉시 실시간 검색(물건+레시피 섹션), 결과 아래 항상
+> `+ "{입력어}" 추가하기` 행으로 **명시적 추가만**(AI 가 추가/검색 의도 자동추측 안 함 →
+> 오분류 데이터 오염 방지). 음성은 단일 입력 필드를 채우고 같은 `add()` 파서 경로로 합류.
+> `CaptureMode`·`modePicker`·이중 입력(`text`/`searchText`) dead code 제거. find/add 의도
+> 자동판별 후속은 본 통합으로 대체·불필요 처리.
+> 이전: **중앙 AI 버튼 + 레시피 검색 + 장보기(screen-04/09/11)** — 중앙 버튼
+> 아이콘 `mic.fill`→`sparkles`(AI 추가/검색, 기존 `CaptureSheet` 유지). AI 검색 시트
+> 확장: 물건 + 레시피(제목·재료명) 부분 일치 → 물건/레시피 섹션 구분, 레시피 결과 탭 시
+> 시트 닫고 레시피 탭 상세 push(`AppRouter.openRecipe`·`recipesPath` 바인딩,
+> `placesPath` 동형). 신규 `ShoppingItem` @Model + 홈 장보기 요약 섹션(미완료 N개 +
+> 상위 3개 → push) + `ShoppingListView` CRUD(추가·체크·삭제, View↔SwiftData 직결).
+> 결정: `docs/wiki/Decision/2026-06-16-장보기-데이터모델.md`, 네비 ADR §1·§3·§5 갱신.
+> 1차 컷(후속): 자연어 검색·find/add 의도판별·레시피 NL 추가·부족분→장보기 자동생성.
+> 이전: **설정 언어 선택(screen-08/10)** — 시스템 추종 기본 + 설정 > 표시 > 언어에서
 > 시스템/English/한국어 수동 오버라이드. `AppLanguagePreference`(`@AppStorage`, 테마
-> 선례) + 루트 `AppRootView` `.environment(\.locale)` 즉시 전환(재시작 불필요, ko-KR
-> 시스템에서 English 강제·그 반대 모두 런타임 확인). ADR(언어 선택 UI 없음 → 수동
-> 오버라이드 허용)·screen tasks·Settings 노트 갱신.
+> 선례) + 루트 `AppRootView` `.environment(\.locale)` 즉시 전환. ADR·screen tasks·Settings 노트 갱신.
 > 이전: **다국어(i18n, screen-10)** — 영어/한국어 + 시스템 언어 추종(기본 en).
 > UI 텍스트 String Catalog, 권한 문구 InfoPlist 카탈로그, cuisine/dishType 저장값 유지·
 > 표시만 매핑, 시드 언어 분기(`SeedText`). 잔여는 `docs/follow-ups.md` "다국어(i18n) 후속"
@@ -32,9 +44,13 @@ UI 우선 1차(시안 C 화면 골격: 5탭·장소·레시피·홈·추가 시�
    잔여: 실기기 추론·한국어 품질 검증(시뮬레이터 미가용), 모델 다운로드 유도 UX(#5),
    유통기한·메모·find/add 의도판별은 후속. (제품 방향: [[제품-방향-재고-레시피-AI]],
    결정: [[2026-06-15-NL-추가-파서-FoundationModels]])
-2. **검색 동작** — 중앙 버튼 시트 [추가 | 검색] 모드 토글로 1차 완료(`screen-04`):
-   `Item.normalizedName` 부분 일치 → 결과에 위치 경로, 결과 탭 시 `ItemEditor` 편집.
-   잔여: 홈/장소/레시피 검색바 실연동, 자연어 검색 확장.
+2. **검색 동작** — 중앙 버튼 시트 **검색-우선 통합** 완료(`screen-04`): [추가|검색]
+   모드 토글 제거, 단일 입력 필드 하나(타이핑·음성 공용). 입력 즉시 물건
+   (`Item.normalizedName` 부분 일치) + 레시피(`Recipe.title`·재료명 부분 일치) 실시간
+   검색 → 물건/레시피 섹션, 결과 아래 항상 `+ "{입력어}" 추가하기` 행(명시적 추가만,
+   AI 의도 자동추측 없음). 물건 결과 탭 → `ItemEditor` 편집, 레시피 결과 탭 → 레시피
+   탭 상세 push(`AppRouter.openRecipe`). 잔여: 홈/장소 검색바 실연동, 자연어 검색·
+   레시피 NL 추가. (find/add 의도판별은 검색-우선 통합으로 대체·불필요.)
 3. **음성 입력(STT)** — 입력기 완료 + actor 경계 분리 리팩터 완료
    (`SpeechDictationViewModel`(UI 상태/단일 세션 Task) + `SpeechDictationEngine`
    (비-MainActor 권한/오디오/모델) ↔ `DictationEvent` 스트림 경계. iOS 26

@@ -2,7 +2,7 @@
 aliases: [Recipes, 레시피]
 tags: [screen, screen/recipe]
 created: 2026-06-12
-updated: 2026-06-15
+updated: 2026-06-16
 status: in-progress
 screen-id: screen-01
 ---
@@ -21,6 +21,7 @@ screen-id: screen-01
 ## 연결된 화면
 
 - 들어옴 ←: 탭바 (5-슬롯 중 레시피 탭)
+- 들어옴 ←: [[Capture]] — AI 검색 레시피 결과 탭(레시피 탭 전환 + 상세 push). `AppRouter.openRecipe`
 - 이동 →: [[RecipeDetail]] — 레시피 카드 탭(`NavigationLink`, `screen-03`)
 - 이동 →: [[RecipeEditor]] — "레시피 추가" 버튼(`.create`, `screen-07`). `.sheet(item:)`
 
@@ -33,6 +34,8 @@ screen-id: screen-01
 ## 상태 관리
 
 - 직결(View ↔ SwiftData). 비영속 UI 상태는 `@State cuisine`(선택 칩)뿐.
+- 탭 경로는 셸 라우터가 소유: `NavigationStack(path:)` 를 `router.recipesPath` 에
+  바인딩(수동 `Binding`). [[Capture]] 검색 → 상세 교차 push 가 탭 재생성 후에도 유지.
 
 ## 관련 태스크 / 결정
 

@@ -2,7 +2,7 @@
 aliases: [screen-map, 화면 맵]
 tags: [doc/code, screens]
 created: 2026-06-12
-updated: 2026-06-15
+updated: 2026-06-16
 status: draft
 ---
 
@@ -18,7 +18,7 @@ flowchart TD
     subgraph Tab[탭바 5-슬롯]
       Home[홈 대시보드]
       Places[장소 목록]
-      Mic([🎤 NL 추가])
+      AI([✨ AI 추가/검색])
       Recipes[레시피]
       Settings[설정]
     end
@@ -28,11 +28,13 @@ flowchart TD
     PlaceDetail --> SpotEditor[세부위치 추가/편집]
     PlaceDetail --> ItemEditor[물건 추가/편집]
     Home --> ItemEditor
+    Home --> Shopping[장보기 목록<br/>추가·체크·삭제]
     Home -. 장소 바로가기(탭 전환) .-> PlaceDetail
     Capture -. 폴백(미가용·실패) .-> ItemEditor
     Capture -- AI 파싱 성공 --> DraftReview[확인 드래프트<br/>다건 수정·신규/기존 매칭]
     DraftReview -- 일괄 저장 --> Capture
-    Mic --> Capture[NL 추가 시트<br/>텍스트+음성 → 파서/확인]
+    AI --> Capture[AI 추가/검색 시트<br/>텍스트+음성 → 파서/확인·물건·레시피 검색]
+    Capture -. 레시피 검색 결과(탭 전환) .-> RecipeDetail
     Recipes --> RecipeDetail[레시피 상세]
     Recipes --> RecipeEditor[레시피 추가/편집]
     RecipeDetail --> RecipeEditor
@@ -49,7 +51,8 @@ flowchart TD
 | PlaceEditor (장소 추가/편집) | Area 추가/편집 공용 시트(이름) | in-progress |
 | SpotEditor (세부위치 추가/편집) | Spot 추가/편집 공용 시트(이름) | in-progress |
 | Recipes (레시피) | 임박 카드 + 추천 목록·상세 진입·레시피 추가 | in-progress |
-| Capture (NL 추가) | 텍스트+음성 → AI 파서/단건 폴백 | in-progress |
+| Capture (AI 추가/검색) | 텍스트+음성 → AI 파서/단건 폴백 + 물건·레시피 검색 | in-progress |
+| Shopping (장보기) | 살 것 목록 — 수동 추가·체크·삭제 | in-progress |
 | DraftReview (확인 드래프트) | AI 파서 결과 다건 확인/수정·일괄 저장 | in-progress |
 | Settings (설정) | 표시(테마)·데이터(현황·전체 정리)·정보 | in-progress |
 | ItemEditor | 물건 추가/편집 공용 시트 | in-progress |
