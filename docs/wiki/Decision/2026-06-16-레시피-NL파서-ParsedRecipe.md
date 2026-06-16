@@ -28,9 +28,13 @@ iOS 26.5 / Swift 6.2. 출력 스키마·확인 방식·진입점은 되돌리기
    `LanguageModelSession`. 물건과 동일하게 추론은 비-MainActor 엔진(`NLRecipeParser`),
    UI 상태/단일 세션 Task 는 `@MainActor @Observable`(`NLRecipeParseViewModel`)이 소유.
 2. **출력 스키마 = 기본 세트(`@Generable ParsedRecipe`).** 제목·cuisine·dishType·
-   servings(Int)·totalMinutes(Int)·재료배열 `[ParsedIngredient(name, quantity)]`·
+   servings(Int)·totalMinutes(Int)·재료배열 `[ParsedIngredient(name, quantity, isOptional)]`·
    단계 텍스트 배열 `[String]`. **단계별 타이머(`RecipeStep.minutes`)는 파싱 제외** —
    확인 화면에서 수동. 수량은 자유 문자열(`"200g"`, `"한 컵"`)로 받고 단위 분해는 사람이.
+   **(2026-06-16 추가) `ParsedIngredient.isOptional`** — 필수 주재료 false / 곁들임·취향껏·
+   선택적 부재료 true. instructions 에 주/부 구분 안내 추가. 모델이 가끔 틀리므로 확인 화면
+   ([[RecipeEditor]] 주재료/부재료 섹션)에서 교정. 부재료는 조리 가능 판정·부족분→장보기에서
+   빠진다([[Recipe]] computed 가 주재료만 집계). 가산 필드(기본 false)라 회귀 없음.
 3. **확인 화면 = 기존 에디터 prefill 재사용(신규 화면 아님).** screen-09(`AddDraft` 다건)는
    확장하지 않고, `RecipeEditorModel(prefill:)` 로 AI 결과를 채워 기존
    `RecipeEditorView` 의 재료/단계 편집·저장 로직을 그대로 쓴다. AI 가 채운 값임을

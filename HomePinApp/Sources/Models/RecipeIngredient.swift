@@ -11,6 +11,10 @@ final class RecipeIngredient {
   var unit: String?
   var note: String?
   var sortOrder: Int
+  /// 부재료(곁들임·취향껏·선택적) 여부. 기본 false = 주재료.
+  /// 조리 가능 판정·부족분·장보기 집계는 주재료(`!isOptional`)만 본다(Recipe computed 참고).
+  /// 부재료도 `item` grounding·`stockStatus` 표시는 동일하게 한다.
+  var isOptional: Bool = false
 
   var recipe: Recipe?
 
@@ -24,6 +28,7 @@ final class RecipeIngredient {
     unit: String? = nil,
     note: String? = nil,
     sortOrder: Int = 0,
+    isOptional: Bool = false,
     recipe: Recipe? = nil,
     item: Item? = nil,
   ) {
@@ -33,6 +38,7 @@ final class RecipeIngredient {
     self.unit = unit
     self.note = note
     self.sortOrder = sortOrder
+    self.isOptional = isOptional
     self.recipe = recipe
     self.item = item
   }

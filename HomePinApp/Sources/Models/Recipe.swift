@@ -54,23 +54,34 @@ final class Recipe {
     self.tags = []
   }
 
-  /// 재고에 없는 재료(매칭 Item 없음 또는 수량 0) 목록.
-  var missingIngredients: [RecipeIngredient] {
-    ingredients.filter { !$0.isInStock }
+  /// 조리 가능 판정의 기준이 되는 주재료(부재료 제외) 목록.
+  /// 부재료(`isOptional`)는 보유/부족 표시만 하고 판정·부족분·장보기 집계에서 빠진다.
+  var mainIngredients: [RecipeIngredient] {
+    ingredients.filter { !$0.isOptional }
   }
 
-  /// 없는 재료가 0이면 지금 만들 수 있다.
+  /// 주재료 수(보유 진행률·"X/전체" 분모의 기준).
+  var mainIngredientCount: Int {
+    mainIngredients.count
+  }
+
+  /// 재고에 없는 주재료(매칭 Item 없음 또는 수량 0) 목록. 부재료는 제외한다.
+  var missingIngredients: [RecipeIngredient] {
+    mainIngredients.filter { !$0.isInStock }
+  }
+
+  /// 없는 주재료가 0이면 지금 만들 수 있다(부재료는 판정에 영향 없음).
   var isReadyToCook: Bool {
     missingIngredients.isEmpty
   }
 
-  /// 보유 중인 재료 수.
+  /// 보유 중인 주재료 수.
   var inStockCount: Int {
-    ingredients.filter(\.isInStock).count
+    mainIngredients.filter(\.isInStock).count
   }
 
-  /// 임박(곧 만료) 재료를 하나라도 쓰는가.
+  /// 임박(곧 만료) 주재료를 하나라도 쓰는가.
   var usesExpiringIngredient: Bool {
-    ingredients.contains { $0.item?.isExpiringSoon ?? false }
+    mainIngredients.contains { $0.item?.isExpiringSoon ?? false }
   }
 }

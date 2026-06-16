@@ -16,7 +16,7 @@ screen-id: screen-07
 
 - 기본정보 입력: 제목(필수)·인분·소요 시간·요약.
 - 분류: 요리권(cuisine)·요리 종류(dishType)를 각각 프리셋 칩으로 단일 선택(재탭 해제).
-- 재료([[RecipeIngredient]]) 동적 편집: 이름·수량·단위 행 추가/삭제.
+- 재료([[RecipeIngredient]]) 동적 편집: **주재료 섹션 / 부재료 섹션**으로 분리. 각 섹션 이름·수량·단위 행 추가/삭제. 주재료는 항상 최소 한 행 유지, 부재료는 비어 있어도 됨(선택적, 빈 안내 표시). AI prefill 은 `ParsedIngredient.isOptional` 로 주/부를 나눠 채우고 사용자가 섹션 간 교정 가능.
 - 조리 단계([[RecipeStep]]) 동적 편집: 단계 텍스트·소요 분 행 추가/삭제.
 - 저장 시 각 재료 이름을 보유 [[Item]] 과 정규화 매칭해 `RecipeIngredient.item` 연결
   (없으면 nil) → 상세 화면 재고 상태가 산다.
@@ -39,6 +39,8 @@ screen-id: screen-07
 
 - 얇은 `@Observable` 모델(`RecipeEditorModel`). 사유: 저장 전 draft(기본정보·재료/단계
   동적 행)와 다단계 쓰기 불변식(create/edit 분기·ingredients 재구성·sortOrder·이름 매칭).
+- 재료 draft 는 `mainIngredients`/`optionalIngredients` 두 배열로 나눠 섹션 바인딩을 단순화.
+  저장 시 주재료→부재료 순으로 연속 `sortOrder` 부여하고 `isOptional` 을 [[RecipeIngredient]] 에 전달.
 - View 는 `@State private var model` + `$model.x` 바인딩(프로젝트 관례상 `@Bindable` 미사용).
 - 재고 매칭 후보 `availableItems` 는 View 의 `@Query items` 를 저장 직전 주입.
 - create 모드는 3종: 수동(`init(mode: .create)`), AI prefill 확인(`init(prefill:)`,

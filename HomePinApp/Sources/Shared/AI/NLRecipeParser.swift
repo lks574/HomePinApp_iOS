@@ -43,6 +43,8 @@ struct NLRecipeParser {
       "재료는 이름과 수량(예: \"돼지고기 200g\", \"김치 한 컵\")으로 분리하고, 단계는 조리 순서대로",
       "한 줄씩 나눈다. 텍스트에 없는 값은 지어내지 말고 빈 문자열·0·빈 배열로 둔다.",
       "인분·총 조리시간(분)은 단서가 있을 때만 채운다.",
+      "각 재료의 isOptional 은 필수 주재료면 false, 곁들임·취향껏·선택적 부재료(예: \"기호에 따라\",",
+      "\"있으면\", \"고명/토핑\")면 true 로 둔다. 애매하면 false(주재료)로 둔다.",
     ]
     if !grounding.cuisines.isEmpty {
       lines.append("요리권(cuisine) 후보: \(grounding.cuisines.joined(separator: ", ")). 해당하면 이 중 하나를 쓰고 아니면 비운다.")
@@ -96,4 +98,6 @@ struct ParsedIngredient {
   var name: String
   @Guide(description: "수량(예: 200g, 한 컵, 2). 단서 없으면 빈 문자열")
   var quantity: String
+  @Guide(description: "필수 주재료는 false, 곁들임·취향껏·선택적 부재료면 true. 애매하면 false")
+  var isOptional: Bool
 }

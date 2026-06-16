@@ -32,7 +32,8 @@ enum RecipeDraftResolver {
         return RecipeEditorPrefill.Ingredient(
           name: name,
           quantity: ingredient.quantity.trimmingCharacters(in: .whitespacesAndNewlines),
-          unit: ""
+          unit: "",
+          isOptional: ingredient.isOptional
         )
       },
       steps: parsed.steps
@@ -61,6 +62,7 @@ struct RecipeEditorPrefill {
     var name: String
     var quantity: String
     var unit: String
+    var isOptional: Bool = false
   }
 
   var title: String

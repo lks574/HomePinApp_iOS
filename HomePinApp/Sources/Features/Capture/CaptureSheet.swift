@@ -255,7 +255,7 @@ struct CaptureSheet: View {
       HStack(spacing: 10) {
         VStack(alignment: .leading, spacing: 3) {
           Text(verbatim: recipe.title).font(.appItemBody).foregroundStyle(AppColor.textPrimary)
-          Text("recipe.ingredientCount.\(recipe.inStockCount).\(recipe.ingredients.count)")
+          Text("recipe.ingredientCount.\(recipe.inStockCount).\(recipe.mainIngredientCount)")
             .font(.appCaption).foregroundStyle(AppColor.textMuted)
         }
         Spacer()

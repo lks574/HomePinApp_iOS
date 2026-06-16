@@ -11,7 +11,20 @@ status: draft
 UI 우선 1차(시안 C 화면 골격: 5탭·장소·레시피·홈·추가 시트) 완료 후의 다음 후보.
 보류 상세는 `docs/follow-ups.md`.
 
-> 최근 완료: **레시피 자연어 추가 단계 2 — 사진/스크린샷 OCR(screen-13)** —
+> 최근 완료: **레시피 부재료(optional) 횡단(screen-14)** — 주재료와 별도로
+> **부재료**(곁들임·취향껏·선택적)를 입력·표시. `RecipeIngredient.isOptional: Bool = false`
+> 가산 필드(마이그레이션 불필요). `Recipe` 의 `missingIngredients`·`isReadyToCook`·
+> `inStockCount`·신규 `mainIngredients`/`mainIngredientCount`·`usesExpiringIngredient` 가
+> **주재료(`!isOptional`)만** 집계 → "지금 가능" 판정·부족분→장보기에서 부재료 제외(부재료도
+> `item` grounding·재고 보유 표시는 동일). `RecipeEditorView` 재료 입력을 주재료/부재료
+> 섹션으로 분리(부재료는 비어도 됨), `RecipeEditorModel` 은 `mainIngredients`/
+> `optionalIngredients` 두 draft 배열·섹션별 add/remove·연속 sortOrder. `RecipeDetailView`
+> 주/부 섹션 구분·요약 분모 주재료 기준. AI 파서 `ParsedIngredient.isOptional`+instructions
+> 주/부 안내(자연어·OCR 공용)·확인 화면 교정 친화. 신규 UI 문자열 en/ko. `@Model` 스키마는
+> 가산 필드만(기존 데이터/시드 주재료로 자연 동작). 결정:
+> `docs/wiki/Decision/2026-06-16-레시피-NL파서-ParsedRecipe.md`(ParsedIngredient 갱신). 잔여:
+> 부족분→장보기 자동생성(주재료만 대상), 실기기 AI 주/부 추출 품질.
+> 이전: **레시피 자연어 추가 단계 2 — 사진/스크린샷 OCR(screen-13)** —
 > `RecipeCaptureView` 에 OCR 입력 소스 추가. 온디바이스 Apple Vision
 > (`VNRecognizeTextRequest`, `.accurate`, `usesLanguageCorrection`, 한국어+영어)으로
 > 이미지→텍스트 추출. 카메라(`UIImagePickerController`)+사진 라이브러리(`PhotosPicker`)

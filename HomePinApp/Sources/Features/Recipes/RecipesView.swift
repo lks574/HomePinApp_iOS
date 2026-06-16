@@ -152,6 +152,7 @@ struct RecipesView: View {
 
   /// 임박 재료가 있는 레시피 카드 — 진행률 + 재료 칩.
   private func recipeSoonCard(_ recipe: Recipe) -> some View {
+    // 칩은 주/부 모두 보이고, 진행률·"X/전체"는 주재료 기준(판정과 일치).
     let ingredients = recipe.ingredients.sorted { $0.sortOrder < $1.sortOrder }
     let soon = ingredients.filter { $0.stockStatus == .soon }
     let badge: String? = soon.isEmpty
@@ -159,8 +160,8 @@ struct RecipesView: View {
       : (soon.count == 1
         ? String(localized: "recipe.expiringBadge.one.\(soon[0].name)")
         : String(localized: "recipe.expiringBadge.count.\(soon.count)"))
-    let have = ingredients.filter(\.isInStock).count
-    let total = ingredients.count
+    let have = recipe.inStockCount
+    let total = recipe.mainIngredientCount
     let pct = total == 0 ? 0 : Double(have) / Double(total)
 
     return VStack(alignment: .leading, spacing: 0) {
@@ -201,7 +202,7 @@ struct RecipesView: View {
   /// 보유 재료로 만들 수 있는 레시피 한 줄.
   private func recipeCompactRow(_ recipe: Recipe) -> some View {
     let have = recipe.inStockCount
-    let total = recipe.ingredients.count
+    let total = recipe.mainIngredientCount
     let ready = total > 0 && have == total
 
     return HStack(spacing: 14) {

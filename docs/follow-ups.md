@@ -116,7 +116,9 @@ i18n·검색·장보기 1차(중앙 AI 버튼·레시피 검색·장보기 CRUD)
   미가용).
 - [ ] **레시피 부족분 → 장보기 자동 생성** — `Recipe.missingIngredients` →
   `ShoppingItem` 자동 생성(`sourceIngredient` 연동 훅 사용). 1차엔 수동 추가만.
-  완료 체크 → 재고(`Item`) 반영도 함께 검토. (레시피 NL 추가 grounding 이 Item 링크까지만
+  완료 체크 → 재고(`Item`) 반영도 함께 검토. **부재료(`RecipeIngredient.isOptional`)는
+  대상 아님** — `missingIngredients` 가 주재료(`!isOptional`)만 집계하므로 자동 반영(2026-06-16).
+  (레시피 NL 추가 grounding 이 Item 링크까지만
   하므로 이 후속이 소비 루프를 잇는다.)
 
 ## 다국어(i18n) 후속

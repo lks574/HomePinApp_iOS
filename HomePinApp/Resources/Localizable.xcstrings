@@ -1369,6 +1369,26 @@
         }
       }
     },
+    "Optional ingredients" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "부재료"
+          }
+        }
+      }
+    },
+    "Optional ingredients aren't counted toward what you can make now." : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "부재료는 지금 만들 수 있는지 판정에 들어가지 않아요."
+          }
+        }
+      }
+    },
     "picker.itemCount.%lld" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -1745,6 +1765,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "임박 %@"
+          }
+        }
+      }
+    },
+    "recipe.ingredient.optional" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Optional"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "선택"
           }
         }
       }
@@ -2182,6 +2218,7 @@
       }
     },
     "Speak the recipe" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2589,6 +2626,7 @@
       }
     },
     "Scan" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2605,6 +2643,7 @@
       }
     },
     "Photo" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {

@@ -40,6 +40,7 @@ struct RecipeEditorView: View {
           basicInfoCard
           classificationCard
           ingredientsCard
+          optionalIngredientsCard
           stepsCard
           if model.isEditing {
             deleteButton
@@ -195,19 +196,45 @@ struct RecipeEditorView: View {
 
   // MARK: - 재료
 
+  /// 주재료 섹션 — 조리 가능 판정 대상. 행은 항상 최소 하나 유지된다.
   private var ingredientsCard: some View {
     VStack(alignment: .leading, spacing: 0) {
-      sectionHeader(title: "Ingredients", action: model.addIngredient)
+      sectionHeader(title: "Ingredients", action: model.addMainIngredient)
 
-      ForEach($model.ingredients) { $ingredient in
+      ForEach($model.mainIngredients) { $ingredient in
         Divider().padding(.leading, 16)
-        ingredientRow($ingredient)
+        ingredientRow($ingredient) { model.removeMainIngredient($ingredient.wrappedValue) }
       }
     }
     .appEditorCard()
   }
 
-  private func ingredientRow(_ ingredient: Binding<RecipeEditorModel.IngredientDraft>) -> some View {
+  /// 부재료 섹션 — 선택적(비어 있어도 됨). 보유/부족 표시만 하고 판정·장보기에서 빠진다.
+  private var optionalIngredientsCard: some View {
+    VStack(alignment: .leading, spacing: 0) {
+      sectionHeader(title: "Optional ingredients", action: model.addOptionalIngredient)
+
+      if model.optionalIngredients.isEmpty {
+        Divider().padding(.leading, 16)
+        Text("Optional ingredients aren't counted toward what you can make now.")
+          .font(.appFootnote)
+          .foregroundStyle(AppColor.textTertiary)
+          .frame(maxWidth: .infinity, alignment: .leading)
+          .padding(16)
+      } else {
+        ForEach($model.optionalIngredients) { $ingredient in
+          Divider().padding(.leading, 16)
+          ingredientRow($ingredient) { model.removeOptionalIngredient($ingredient.wrappedValue) }
+        }
+      }
+    }
+    .appEditorCard()
+  }
+
+  private func ingredientRow(
+    _ ingredient: Binding<RecipeEditorModel.IngredientDraft>,
+    onRemove: @escaping () -> Void
+  ) -> some View {
     HStack(spacing: 10) {
       TextField("Ingredient", text: ingredient.name)
         .font(.appFieldText)
@@ -226,9 +253,7 @@ struct RecipeEditorView: View {
         .foregroundStyle(AppColor.textPrimary)
         .frame(width: 48)
 
-      removeRowButton {
-        model.removeIngredient(ingredient.wrappedValue)
-      }
+      removeRowButton(action: onRemove)
     }
     .padding(.horizontal, 16)
     .frame(minHeight: 52)

@@ -52,6 +52,16 @@ struct RecipeDetailView: View {
     recipe.ingredients.sorted { $0.sortOrder < $1.sortOrder }
   }
 
+  /// 주재료(부재료 제외) — 상세 재료 목록의 기본 섹션.
+  private var sortedMainIngredients: [RecipeIngredient] {
+    sortedIngredients.filter { !$0.isOptional }
+  }
+
+  /// 부재료(선택적) — 있으면 별도 섹션으로 "선택" 표시.
+  private var sortedOptionalIngredients: [RecipeIngredient] {
+    sortedIngredients.filter(\.isOptional)
+  }
+
   private var sortedSteps: [RecipeStep] {
     recipe.steps
   }
@@ -132,7 +142,8 @@ struct RecipeDetailView: View {
   /// 재고 요약 — "내 재료 X/전체" + 준비 완료/부족 안내(RecipesView 톤과 맞춤).
   private var stockSummaryCard: some View {
     let have = recipe.inStockCount
-    let total = recipe.ingredients.count
+    // 진행률·"X/전체"는 주재료 기준(부재료는 판정에 빠진다).
+    let total = recipe.mainIngredientCount
     let pct = total == 0 ? 0 : Double(have) / Double(total)
     let missing = recipe.missingIngredients
 
@@ -179,20 +190,36 @@ struct RecipeDetailView: View {
     .appCard()
   }
 
-  /// 재료 목록(sortOrder 정렬) — name · quantity+unit · 보유 상태 칩.
+  /// 재료 목록(sortOrder 정렬) — 주재료 섹션 + (있으면) 부재료 섹션.
+  /// 칩 헤더 카운트는 주재료 기준(판정 대상). 부재료는 "선택" 라벨로 구분 표시.
   private var ingredientsCard: some View {
     VStack(spacing: 0) {
       HStack {
         Text("Ingredients").font(.system(size: 15, weight: .bold)).foregroundStyle(AppColor.textPrimary)
         Spacer()
-        Text("count.ingredients.\(recipe.ingredients.count)").font(.appCaptionStrong).foregroundStyle(AppColor.textFaint)
+        Text("count.ingredients.\(recipe.mainIngredientCount)").font(.appCaptionStrong).foregroundStyle(AppColor.textFaint)
       }
       .padding(.horizontal, 16)
       .padding(.top, 14)
       .padding(.bottom, 10)
 
-      ForEach(sortedIngredients) { ingredient in
+      ForEach(sortedMainIngredients) { ingredient in
         ingredientRow(ingredient)
+      }
+
+      if !sortedOptionalIngredients.isEmpty {
+        HStack {
+          Text("Optional ingredients").font(.appCaptionStrong).foregroundStyle(AppColor.textSecondary)
+          Spacer()
+        }
+        .padding(.horizontal, 16)
+        .padding(.top, 14)
+        .padding(.bottom, 6)
+        .overlay(alignment: .top) { Divider().padding(.leading, 16) }
+
+        ForEach(sortedOptionalIngredients) { ingredient in
+          ingredientRow(ingredient)
+        }
       }
     }
     .appCard()
@@ -202,6 +229,11 @@ struct RecipeDetailView: View {
     HStack(spacing: 10) {
       Circle().fill(AppColor.itemDot).frame(width: 6, height: 6)
       Text(verbatim: ingredient.name).font(.appItemBody).foregroundStyle(AppColor.textPrimary)
+      if ingredient.isOptional {
+        Text("recipe.ingredient.optional")
+          .font(.appCaption)
+          .foregroundStyle(AppColor.textTertiary)
+      }
       Spacer()
       if let amount = amountText(ingredient) {
         Text(verbatim: amount)

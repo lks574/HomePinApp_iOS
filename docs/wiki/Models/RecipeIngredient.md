@@ -21,8 +21,9 @@ status: in-progress
 | `unit` | `String?` | g·개·큰술… |
 | `note` | `String?` | "다진 것" 등 |
 | `sortOrder` | `Int` | |
-| `isInStock` | computed | 매칭 item 있고 수량>0 |
-| `stockStatus` | computed | 재고 상태 도메인 enum `missing`/`soon`/`have` (시각 매핑은 View) |
+| `isOptional` | `Bool = false` | 부재료(곁들임·취향껏·선택적) 여부. 가산 필드(기본 false=주재료). 조리 가능 판정·부족분·장보기 집계는 주재료만 본다([[Recipe]] computed) |
+| `isInStock` | computed | 매칭 item 있고 수량>0 (주/부 무관 동일) |
+| `stockStatus` | computed | 재고 상태 도메인 enum `missing`/`soon`/`have` (주/부 무관 동일, 시각 매핑은 View) |
 
 ## 관계
 
@@ -33,6 +34,12 @@ status: in-progress
 
 1. 명시적 링크(`item`) 우선 — AI/사용자가 지정.
 2. 미링크 시 `Item.normalizedName` ↔ 재료 정규화명(+동의어·AI). 상세: [[2026-06-12-레시피-모델]].
+
+## 부재료(isOptional)
+
+- 주재료(`!isOptional`)만 [[Recipe]] 의 `missingIngredients`·`isReadyToCook`·`inStockCount`·`mainIngredientCount` 집계 대상. 부재료는 보유/부족 표시만 하고 "지금 가능" 판정·부족분→장보기에서 빠진다.
+- AI 파서(`ParsedIngredient.isOptional`)가 주/부 추출 → 확인 화면([[RecipeEditor]] 부재료 섹션)에서 교정 가능. 결정: [[2026-06-16-레시피-NL파서-ParsedRecipe]].
+- 가산 필드(기본값 보유)라 기존 데이터/시드는 전부 주재료로 자연 동작 — lightweight 마이그레이션 안전.
 
 ## 메모
 

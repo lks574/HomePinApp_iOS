@@ -24,9 +24,10 @@ status: in-progress
 | `sourceURL` | `String?` | 출처 |
 | `steps` | `[RecipeStep]` | Codable 값(text+minutes?), 순서=배열 |
 | `createdAt`/`updatedAt` | `Date` | |
-| `missingIngredients`/`isReadyToCook` | computed | 없는 재료·지금 가능 여부 |
-| `inStockCount` | computed | 보유 재료 수 (← RecipesView `haveCount`) |
-| `usesExpiringIngredient` | computed | 임박 재료 사용 여부 (← `soonRecipes` 필터) |
+| `mainIngredients`/`mainIngredientCount` | computed | 주재료(`!isOptional`)만. 판정·진행률 분모 기준 |
+| `missingIngredients`/`isReadyToCook` | computed | 없는 **주재료**·지금 가능 여부 (부재료 제외) |
+| `inStockCount` | computed | 보유 **주재료** 수 (← RecipesView `haveCount`) |
+| `usesExpiringIngredient` | computed | 임박 **주재료** 사용 여부 (← `soonRecipes` 필터) |
 
 > 사진(photoData)은 v1 제외.
 
@@ -37,8 +38,8 @@ status: in-progress
 
 ## 동작
 
-- 보유/부족: 각 [[RecipeIngredient]] 의 `isInStock` 집계 → "N개 부족 / 지금 가능".
-- 임박 추천: 임박 [[Item]] → `usedInIngredients` → 이 레시피.
+- 보유/부족: **주재료**([[RecipeIngredient]] `!isOptional`) 의 `isInStock` 집계 → "N개 부족 / 지금 가능". 부재료(`isOptional`)는 보유 표시만 하고 판정·부족분→장보기에서 빠진다.
+- 임박 추천: 임박 [[Item]] → `usedInIngredients` → 이 레시피(주재료 기준).
 - 도메인 판정은 모델 계산 프로퍼티로 둔다(View 에 비즈니스 로직 금지). 결정:
   [[2026-06-15-에디터-상태-소유-패턴]].
 
