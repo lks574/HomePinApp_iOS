@@ -79,22 +79,23 @@ final class ItemEditorModel {
 
   /// draft 를 SwiftData 에 반영한다. 세부위치를 고르면 장소를 그 세부위치의 장소로
   /// 맞춰 위치 불변식을 유지한다.
-  func save(into modelContext: ModelContext) {
-    guard canSave else { return }
+  @discardableResult
+  func save(into modelContext: ModelContext) -> Item? {
+    guard canSave else { return nil }
     let area = selectedSpot?.area ?? selectedArea
 
     switch mode {
     case .create:
-      modelContext.insert(
-        Item(
-          name: trimmedName,
-          quantity: quantity,
-          memo: trimmedMemo,
-          expiresAt: hasExpiration ? expiresAt : nil,
-          area: area,
-          spot: selectedSpot
-        )
+      let item = Item(
+        name: trimmedName,
+        quantity: quantity,
+        memo: trimmedMemo,
+        expiresAt: hasExpiration ? expiresAt : nil,
+        area: area,
+        spot: selectedSpot
       )
+      modelContext.insert(item)
+      return item
     case let .edit(item):
       item.name = trimmedName
       item.normalizedName = Item.normalize(trimmedName)
@@ -104,6 +105,7 @@ final class ItemEditorModel {
       item.expiresAt = hasExpiration ? expiresAt : nil
       item.memo = trimmedMemo
       item.updatedAt = .now
+      return item
     }
   }
 

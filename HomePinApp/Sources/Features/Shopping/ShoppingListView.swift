@@ -1,13 +1,15 @@
 import SwiftData
 import SwiftUI
 
-/// 장보기 목록 — 수동 추가 + 체크(완료 토글) + 삭제. View ↔ SwiftData 직결
+/// 장보기 목록 — 수동 추가 + 체크 시 재고 반영 + 삭제. View ↔ SwiftData 직결
 /// (`@Query` 읽기, `modelContext` 쓰기). 미완료 항목을 위에, 완료 항목을 아래에 둔다.
 /// 홈의 요약 섹션(`HomeView.shoppingSection`)에서 `ShoppingDestination` push 로 진입한다.
 struct ShoppingListView: View {
   @Environment(\.modelContext) private var modelContext
+  @Query(sort: \Item.name) private var items: [Item]
   @Query(sort: \ShoppingItem.createdAt, order: .reverse) private var shoppingItems: [ShoppingItem]
   @State private var newItemName = ""
+  @State private var stockRoute: ShoppingStockRoute?
   @FocusState private var addFieldFocused: Bool
 
   var body: some View {
@@ -30,6 +32,13 @@ struct ShoppingListView: View {
     .background(AppColor.screenBackground)
     .navigationTitle(Text("Shopping List"))
     .navigationBarTitleDisplayMode(.inline)
+    .sheet(item: $stockRoute) { route in
+      ItemEditorView(mode: .create(initialName: route.shoppingItem.name), onSaved: {
+        route.shoppingItem.isChecked = true
+      }, onSavedItem: { item in
+        route.shoppingItem.sourceIngredient?.item = item
+      })
+    }
   }
 
   // MARK: 추가
@@ -78,7 +87,7 @@ struct ShoppingListView: View {
   private func row(_ item: ShoppingItem) -> some View {
     HStack(spacing: 12) {
       Button {
-        item.isChecked.toggle()
+        toggle(item)
       } label: {
         Image(systemName: item.isChecked ? "checkmark.circle.fill" : "circle")
           .font(.system(size: 22))
@@ -119,4 +128,30 @@ struct ShoppingListView: View {
     newItemName = ""
     addFieldFocused = true
   }
+
+  private func toggle(_ shoppingItem: ShoppingItem) {
+    if shoppingItem.isChecked {
+      shoppingItem.isChecked = false
+      return
+    }
+    if let item = matchingItem(for: shoppingItem) {
+      item.quantity += max(1, shoppingItem.quantity ?? 1)
+      item.updatedAt = .now
+      shoppingItem.sourceIngredient?.item = item
+      shoppingItem.isChecked = true
+    } else {
+      stockRoute = ShoppingStockRoute(shoppingItem: shoppingItem)
+    }
+  }
+
+  private func matchingItem(for shoppingItem: ShoppingItem) -> Item? {
+    items.first { item in
+      item.normalizedName == shoppingItem.normalizedName
+    }
+  }
+}
+
+private struct ShoppingStockRoute: Identifiable {
+  let id = UUID()
+  let shoppingItem: ShoppingItem
 }

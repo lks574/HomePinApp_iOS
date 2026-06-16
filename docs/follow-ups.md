@@ -97,7 +97,7 @@ i18n·검색·장보기 1차(중앙 AI 버튼·레시피 검색·장보기 CRUD)
   `RecipeEditorModel(prefill:)` 로 재사용. 미가용·실패 시 수동 에디터 폴백. 재료 Item
   grounding 은 기존 저장 매칭(`Item.normalize`) 재사용. 결정:
   `docs/wiki/Decision/2026-06-16-레시피-NL파서-ParsedRecipe.md`. 잔여: 단계 2(사진/스크린샷
-  OCR), 장보기 완료→재고 반영, 실기기 한국어 추출 품질(아래).
+  OCR), 실기기 한국어 추출 품질(아래).
 - [x] **레시피 NL 추가 — 사진/스크린샷 OCR(단계 2) 완료(screen-13)** — 온디바이스 Apple
   Vision(`VNRecognizeTextRequest`, `.accurate`, `usesLanguageCorrection`, 한국어+영어)로
   이미지→텍스트 추출 후 기존 입력 필드에 채워 같은 코어(`NLRecipeParser` "Sort with AI")에
@@ -126,10 +126,10 @@ i18n·검색·장보기 1차(중앙 AI 버튼·레시피 검색·장보기 CRUD)
   부족 주재료만 장보기에 추가하고, 같은 재료/같은 이름 미완료 항목 중복은 막는다.
   **부재료(`RecipeIngredient.isOptional`)는 대상 아님** — `missingIngredients` 가
   주재료(`!isOptional`)만 집계하므로 자동 반영(2026-06-16).
-- [ ] **장보기 완료 → 재고(`Item`) 반영** — 구매 완료 체크 시 재고 생성/수량 증가 UX와
-  위치(`Area`) 선택 규칙을 별도 검토.
-  (레시피 NL 추가 grounding 이 Item 링크까지만
-  하므로 이 후속이 소비 루프를 잇는다.)
+- [x] **장보기 완료 → 재고(`Item`) 반영** — 구매 완료 체크 시 같은 이름의 기존 재고가
+  있으면 수량을 증가시키고, 없으면 `ItemEditor` 로 위치(`Area`)를 선택해 신규 `Item` 을
+  만든다. `sourceIngredient` 가 있으면 반영된 `Item` 을 연결해 레시피 부족 상태도 해소한다.
+  체크 해제는 재고 차감 없이 장보기 상태만 되돌린다.
 
 ## 다국어(i18n) 후속
 

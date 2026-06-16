@@ -10,15 +10,17 @@ struct ItemEditorView: View {
 
   @State private var model: ItemEditorModel
   private let onSaved: (() -> Void)?
+  private let onSavedItem: ((Item) -> Void)?
 
   @State private var showingAreaPicker = false
   @State private var showingSpotPicker = false
   @State private var showingDeleteConfirm = false
   @FocusState private var focusedField: ItemEditorField?
 
-  init(mode: ItemEditorModel.Mode, onSaved: (() -> Void)? = nil) {
+  init(mode: ItemEditorModel.Mode, onSaved: (() -> Void)? = nil, onSavedItem: ((Item) -> Void)? = nil) {
     _model = State(initialValue: ItemEditorModel(mode: mode))
     self.onSaved = onSaved
+    self.onSavedItem = onSavedItem
   }
 
   var body: some View {
@@ -187,7 +189,10 @@ struct ItemEditorView: View {
 
   private func save() {
     guard model.canSave else { return }
-    model.save(into: modelContext)
+    let item = model.save(into: modelContext)
+    if let item {
+      onSavedItem?(item)
+    }
     onSaved?()
     dismiss()
   }
