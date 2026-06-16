@@ -335,17 +335,67 @@ struct CaptureSheet: View {
   private var itemResults: [Item] {
     let key = Item.normalize(trimmedQuery)
     guard !key.isEmpty else { return [] }
-    return allItems.filter { $0.normalizedName.contains(key) }
+    return allItems.filter { itemMatches($0, key: key) }
   }
 
-  /// 제목 또는 재료명이 부분 일치한 레시피(제목순, `@Query` 정렬 유지).
+  /// 제목·요약·분류·태그·재료명이 부분 일치한 레시피(제목순, `@Query` 정렬 유지).
   private var recipeResults: [Recipe] {
     let key = Item.normalize(trimmedQuery)
     guard !key.isEmpty else { return [] }
-    return allRecipes.filter { recipe in
-      Item.normalize(recipe.title).contains(key)
-        || recipe.ingredients.contains { Item.normalize($0.name).contains(key) }
-    }
+    return allRecipes.filter { recipeMatches($0, key: key) }
+  }
+
+  /// 물건 검색은 이름 외에 위치·분류·태그·메모·수량 단위까지 같은 부분 일치로 본다.
+  private func itemMatches(_ item: Item, key: String) -> Bool {
+    searchableItemFields(item).contains { Item.normalize($0).contains(key) }
+  }
+
+  /// 레시피 검색은 제목 외에 요약·분류·태그·재료 세부 텍스트까지 같은 부분 일치로 본다.
+  private func recipeMatches(_ recipe: Recipe, key: String) -> Bool {
+    searchableRecipeFields(recipe).contains { Item.normalize($0).contains(key) }
+  }
+
+  private func searchableItemFields(_ item: Item) -> [String] {
+    var fields: [String?] = [
+      item.name,
+      item.normalizedName,
+      item.locationPath,
+      item.area?.space?.name,
+      item.area?.name,
+      item.spot?.name,
+      item.category?.name,
+      item.memo,
+      item.quantity > 1 ? String(item.quantity) : nil,
+    ]
+    fields.append(contentsOf: item.tags.map { Optional($0.name) })
+    return fields.compactMap { $0 }.filter { !$0.isEmpty }
+  }
+
+  private func searchableRecipeFields(_ recipe: Recipe) -> [String] {
+    var fields: [String?] = [
+      recipe.title,
+      recipe.summary,
+      recipe.cuisine,
+      recipe.dishType,
+      recipe.cuisine.map(RecipeClassification.cuisineLabel),
+      recipe.dishType.map(RecipeClassification.dishTypeLabel),
+      recipe.servings.map(String.init),
+      recipe.totalMinutes.map(String.init),
+    ]
+    fields.append(contentsOf: recipe.tags.map { Optional($0.name) })
+    fields.append(contentsOf: recipe.ingredients.flatMap(searchableIngredientFields).map(Optional.init))
+    return fields.compactMap { $0 }.filter { !$0.isEmpty }
+  }
+
+  private func searchableIngredientFields(_ ingredient: RecipeIngredient) -> [String] {
+    [
+      ingredient.name,
+      ingredient.unit,
+      ingredient.note,
+      ingredient.quantity.map { String($0) },
+      ingredient.item?.name,
+      ingredient.isOptional ? String(localized: "Optional ingredients") : nil,
+    ].compactMap { $0 }.filter { !$0.isEmpty }
   }
 }
 
