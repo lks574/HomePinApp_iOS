@@ -20,6 +20,7 @@ struct CaptureSheet: View {
   @State private var parser = NLParseViewModel()
   @State private var editorRoute: ItemEditorRoute?
   @State private var reviewRoute: DraftReviewRoute?
+  @State private var showingRecipeCapture = false
   @FocusState private var inputFocused: Bool
 
   /// 검색 대상 전체 물건. 이름순으로 받아 정규화 키로 in-memory 필터한다(개인 재고
@@ -54,6 +55,9 @@ struct CaptureSheet: View {
         ItemEditorView(mode: route.mode) {
           dismiss()
         }
+      }
+      .sheet(isPresented: $showingRecipeCapture) {
+        RecipeCaptureView()
       }
       .onAppear { inputFocused = true }
       .onChange(of: dictation.transcript) { _, newTranscript in
@@ -119,6 +123,7 @@ struct CaptureSheet: View {
         .multilineTextAlignment(.center)
         .frame(maxWidth: .infinity)
       Spacer()
+      addRecipeRow
     } else {
       ScrollView {
         VStack(alignment: .leading, spacing: 18) {
@@ -137,9 +142,29 @@ struct CaptureSheet: View {
             }
           }
           addSection
+          addRecipeRow
         }
       }
     }
+  }
+
+  /// 레시피 추가 진입(검색어와 무관, 항상 노출). 물건 빠른 추가와 입력 형태가 다른
+  /// 레시피 전용 입력 화면으로 보낸다 — 의도 자동 추측 없이 사용자가 명시적으로 선택한다.
+  private var addRecipeRow: some View {
+    Button { showingRecipeCapture = true } label: {
+      HStack(spacing: 10) {
+        Image(systemName: "book.closed")
+          .font(.appItemBody).foregroundStyle(AppColor.accent)
+        Text("Add a recipe")
+          .font(.appItemBody).foregroundStyle(AppColor.textPrimary)
+          .frame(maxWidth: .infinity, alignment: .leading)
+        Image(systemName: "chevron.right").font(.appTag).foregroundStyle(AppColor.textFaint)
+      }
+      .padding(.horizontal, 16)
+      .padding(.vertical, 14)
+      .appCard()
+    }
+    .buttonStyle(.plain)
   }
 
   /// 명시적 추가 행. 결과 유무와 무관하게 항상 노출한다. 파서 추론 중에는 진행 표시로 바꾼다.

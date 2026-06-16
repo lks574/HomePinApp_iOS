@@ -23,6 +23,7 @@ screen-id: screen-01
 - 이동 →: [[DraftReview]] — AI 파싱 성공 시 push(확인 드래프트). 저장 완료 시 시트 dismiss.
 - 이동 →: [[ItemEditor]] — 추가 폴백은 `create(initialName:)`, 검색 결과 탭은 `edit(item)`
 - 이동 →: [[RecipeDetail]] — 검색 레시피 결과 탭(시트 닫고 레시피 탭 push). `AppRouter.openRecipe(recipe)`
+- 이동 →: [[RecipeCapture]] — 항상 노출되는 **명시적 "Add a recipe" 행**으로 레시피 전용 NL 입력 화면을 시트로 띄운다(검색어와 무관, 의도 자동추측 없음). 물건 빠른 추가와 레시피(긴 재료·단계 텍스트)의 입력 형태가 달라 별도 입력 공간으로 분기.
 
 ## 사용 모델
 
@@ -77,8 +78,8 @@ screen-id: screen-01
 
 ## 관련 태스크 / 결정
 
-- `[screen-01]`, `[screen-04]`, `[screen-09]` (docs/screen-implementation-tasks.md)
-- 관련 결정: [[2026-06-12-네비게이션-UI구조]], [[2026-06-15-음성입력-STT-아키텍처]], [[2026-06-15-NL-추가-파서-FoundationModels]]
+- `[screen-01]`, `[screen-04]`, `[screen-09]`, `[screen-12]` (docs/screen-implementation-tasks.md)
+- 관련 결정: [[2026-06-12-네비게이션-UI구조]], [[2026-06-15-음성입력-STT-아키텍처]], [[2026-06-15-NL-추가-파서-FoundationModels]], [[2026-06-16-레시피-NL파서-ParsedRecipe]]
 
 ## 메모
 

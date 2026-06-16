@@ -90,11 +90,26 @@ i18n·검색·장보기 1차(중앙 AI 버튼·레시피 검색·장보기 CRUD)
   사용자가 결과 아래 `+ "{입력어}" 추가하기` 행을 명시적으로 누를 때만 일어난다. AI 가
   의도를 자동 추측하지 않으므로 오분류로 인한 데이터 오염 위험이 제거됨 → 의도 자동판별
   자체가 불필요. (screen-04, `CaptureSheet`)
-- [ ] **레시피 자연어 추가** — NL 파서는 물건(`Item`) 추가만 다룬다. 레시피 자연어
-  추가(재료·단계 추출)는 후속.
+- [x] **레시피 자연어 추가 — 단계 1(텍스트/음성/붙여넣기) 완료(screen-12)** — 중앙 ✨
+  시트의 명시적 "Add a recipe" 행 → `RecipeCaptureView`(여러 줄 텍스트·붙여넣기·음성)
+  → 온디바이스 Foundation Models `@Generable ParsedRecipe`(`NLRecipeParser`/
+  `NLRecipeParseViewModel`/`RecipeDraftResolver`) → 확인은 기존 `RecipeEditorView` 를
+  `RecipeEditorModel(prefill:)` 로 재사용. 미가용·실패 시 수동 에디터 폴백. 재료 Item
+  grounding 은 기존 저장 매칭(`Item.normalize`) 재사용. 결정:
+  `docs/wiki/Decision/2026-06-16-레시피-NL파서-ParsedRecipe.md`. 잔여: 단계 2(사진/스크린샷
+  OCR), 부족분→장보기 자동생성, 실기기 한국어 추출 품질(아래).
+- [ ] **레시피 NL 추가 — 사진/스크린샷 OCR(단계 2)** — VisionKit(온디바이스)로
+  이미지→텍스트 추출 후 같은 코어(`NLRecipeParser`)에 합류. 카메라·사진 권한 신규.
+  ([[레시피-간편-추가]] §Phase 2)
+- [ ] **레시피 NL 추가 실기기 한국어 추출 품질** — 빌드 green·시뮬레이터 폴백 경로
+  (미가용 → 수동 `RecipeEditorView`)·prefill·저장 매칭까지 정적/시뮬레이터 검증. 실제
+  온디바이스 추론·한국어 레시피 추출 품질(재료 분리·수량 문자열·단계 순서·분류 raw 매칭)
+  ·`@Generable` 스키마 준수는 Apple Intelligence 가용 실기기 필수(시뮬레이터 `availability`
+  미가용).
 - [ ] **레시피 부족분 → 장보기 자동 생성** — `Recipe.missingIngredients` →
   `ShoppingItem` 자동 생성(`sourceIngredient` 연동 훅 사용). 1차엔 수동 추가만.
-  완료 체크 → 재고(`Item`) 반영도 함께 검토.
+  완료 체크 → 재고(`Item`) 반영도 함께 검토. (레시피 NL 추가 grounding 이 Item 링크까지만
+  하므로 이 후속이 소비 루프를 잇는다.)
 
 ## 다국어(i18n) 후속
 

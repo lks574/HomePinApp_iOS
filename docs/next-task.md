@@ -11,7 +11,18 @@ status: draft
 UI 우선 1차(시안 C 화면 골격: 5탭·장소·레시피·홈·추가 시트) 완료 후의 다음 후보.
 보류 상세는 `docs/follow-ups.md`.
 
-> 최근 완료: **캡처 시트 검색-우선 통합(screen-04)** — [추가|검색] 모드 토글 제거,
+> 최근 완료: **레시피 자연어 추가 단계 1(screen-12)** — 중앙 ✨ 시트(`CaptureSheet`)에
+> 명시적 "Add a recipe" 행 추가(검색-우선 통합 UX 유지, 의도 자동추측 없음) →
+> 레시피 전용 입력 화면 `RecipeCaptureView`(여러 줄 텍스트·붙여넣기·음성, 단일 경로).
+> "Sort with AI" → 온디바이스 Foundation Models `@Generable ParsedRecipe`
+> (`NLRecipeParser` 비-MainActor 추출 / `NLRecipeParseViewModel` 가용성 게이트·단일 Task /
+> `RecipeDraftResolver` 분류 raw 정규화·draft 변환) → 확인은 기존 `RecipeEditorView` 를
+> `RecipeEditorModel(prefill:)` 로 재사용(AI prefill 배너·빈 행 추가로 교정 친화). 저장은
+> 수동 create 와 동일(재료 이름→보유 `Item` 정규화 매칭). 미가용·실패·취소·빈 결과면 수동
+> 에디터 폴백. `@Model` 스키마 변경 없음. 결정:
+> `docs/wiki/Decision/2026-06-16-레시피-NL파서-ParsedRecipe.md`. 잔여: 단계 2(사진/스크린샷
+> OCR), 부족분→장보기 자동생성, 실기기 한국어 추출 품질.
+> 이전: **캡처 시트 검색-우선 통합(screen-04)** — [추가|검색] 모드 토글 제거,
 > 단일 입력 필드 하나로 통합. 입력 즉시 실시간 검색(물건+레시피 섹션), 결과 아래 항상
 > `+ "{입력어}" 추가하기` 행으로 **명시적 추가만**(AI 가 추가/검색 의도 자동추측 안 함 →
 > 오분류 데이터 오염 방지). 음성은 단일 입력 필드를 채우고 같은 `add()` 파서 경로로 합류.
@@ -61,6 +72,8 @@ UI 우선 1차(시안 C 화면 골격: 5탭·장소·레시피·홈·추가 시�
 4. **물건/레시피 고급 편집** — 물건 추가/편집/삭제는 `ItemEditor` 로 연결됨.
    레시피 상세(`screen-03`)·CRUD(`screen-07`)·시드 10개 완료 — 카드 → `RecipeDetail`,
    "레시피 추가" → `RecipeEditor`, 재료/단계 동적 편집 + 재료 이름→보유 물건 매칭.
+   **레시피 자연어 추가(screen-12) 단계 1 완료** — 중앙 ✨ → "Add a recipe" → NL 입력
+   → AI 파싱 → `RecipeEditor` prefill 확인. 잔여: OCR(단계 2)·부족분→장보기.
    남은 범위는 물건 카테고리·태그·사진, 레시피 cuisine 분류/dish 칩 실제 필터.
    (장소 CRUD `screen-05`·세부위치 CRUD `screen-06` 완료 — 추가/편집은 `PlaceEditor`/`SpotEditor`, 삭제는 확인 다이얼로그.)
    장소/세부위치 에디터 확장(아이콘·Space 선택), 정렬 변경(drag) 이 후속.

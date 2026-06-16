@@ -24,10 +24,19 @@ struct RecipeEditorView: View {
     self.onSaved = onSaved
   }
 
+  /// AI 파싱 결과로 prefill 한 create 에디터(레시피 NL 추가 확인 화면).
+  init(prefill: RecipeEditorPrefill, onSaved: (() -> Void)? = nil) {
+    _model = State(initialValue: RecipeEditorModel(prefill: prefill))
+    self.onSaved = onSaved
+  }
+
   var body: some View {
     NavigationStack {
       ScrollView {
         VStack(spacing: 18) {
+          if model.isAIPrefilled {
+            aiPrefillBanner
+          }
           basicInfoCard
           classificationCard
           ingredientsCard
@@ -61,6 +70,24 @@ struct RecipeEditorView: View {
         Button("Cancel", role: .cancel) {}
       }
     }
+  }
+
+  // MARK: - AI prefill 안내
+
+  /// AI 가 채운 값임을 가볍게 알리는 배너. 모델이 단계 순서·수량을 가끔 틀리니 교정 유도.
+  private var aiPrefillBanner: some View {
+    HStack(spacing: 10) {
+      Image(systemName: "sparkles")
+        .font(.appItemBody)
+        .foregroundStyle(AppColor.accent)
+      Text("AI filled these in from your text. Check the ingredients and steps, then add.")
+        .font(.appFootnote)
+        .foregroundStyle(AppColor.textSecondary)
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+    .padding(.horizontal, 16)
+    .padding(.vertical, 12)
+    .appCard(radius: 16)
   }
 
   // MARK: - 기본정보

@@ -35,6 +35,7 @@ SORT created ASC
 - [[Home]] · [[Capture]] → [[ItemEditor]] — 물건 추가/편집 공용 에디터(AI 미가용·실패 폴백)
 - [[Capture]] → [[DraftReview]] — AI 자연어 파싱 결과 확인 드래프트(다건 일괄 저장)
 - [[Capture]] → [[RecipeDetail]] — AI 검색 레시피 결과 탭(레시피 탭 전환 + push)
+- [[Capture]] → [[RecipeCapture]] → [[RecipeEditor]] — 레시피 자연어 추가(NL 입력 → AI 파싱 → prefill 확인)
 - [[Home]] → [[Shopping]] — 장보기 요약 섹션 탭(살 것 추가·체크·삭제)
 - [[Recipes]] → [[RecipeDetail]] → [[RecipeEditor]] — 레시피 상세·추가/편집
 
@@ -57,7 +58,8 @@ SORT created ASC
 
 - 제품 방향: [[제품-방향-재고-레시피-AI]] `#idea`
 - AI 적용 후보: [[AI-적용-후보]] `#idea`
-- 결정: [[2026-06-12-위치-물건-데이터모델]] · [[2026-06-12-식재료-모델-Item-통합]] · [[2026-06-12-swiftdata-마이그레이션-방침]] · [[2026-06-15-에디터-상태-소유-패턴]] · [[2026-06-15-음성입력-STT-아키텍처]] · [[2026-06-15-NL-추가-파서-FoundationModels]] · [[2026-06-16-장보기-데이터모델]]
+- 레시피 간편 추가: [[레시피-간편-추가]] `#idea`
+- 결정: [[2026-06-12-위치-물건-데이터모델]] · [[2026-06-12-식재료-모델-Item-통합]] · [[2026-06-12-swiftdata-마이그레이션-방침]] · [[2026-06-15-에디터-상태-소유-패턴]] · [[2026-06-15-음성입력-STT-아키텍처]] · [[2026-06-15-NL-추가-파서-FoundationModels]] · [[2026-06-16-장보기-데이터모델]] · [[2026-06-16-레시피-NL파서-ParsedRecipe]]
 - 외부 조사·자료: `Research/` `#research`
 - 임시 아이디어: `Idea/` `#idea`
 

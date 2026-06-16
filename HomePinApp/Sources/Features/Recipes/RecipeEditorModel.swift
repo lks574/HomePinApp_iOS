@@ -40,11 +40,16 @@ final class RecipeEditorModel {
   var ingredients: [IngredientDraft]
   var steps: [StepDraft]
 
+  /// AI 파서가 채운 값인가(create 모드일 때만 의미). 확인 화면이 "AI 가 채움" 을 가볍게
+  /// 시각 구분하는 데 쓴다. 수동 create 는 false.
+  let isAIPrefilled: Bool
+
   /// 재고 매칭 후보. View 가 `@Query` 로 채워 넣는다(저장 시 이름 정규화로 매칭).
   @ObservationIgnored var availableItems: [Item] = []
 
   init(mode: Mode) {
     self.mode = mode
+    isAIPrefilled = false
     switch mode {
     case .create:
       title = ""
@@ -78,6 +83,27 @@ final class RecipeEditorModel {
       }
       steps = stepDrafts.isEmpty ? [StepDraft()] : stepDrafts
     }
+  }
+
+  /// AI 파서(`ParsedRecipe`) 결과로 prefill 한 create 모델. 분류는 raw 키 매핑이 끝난
+  /// 값을 받고, 재료·단계는 draft 행으로 materialize 한다. 빈 행이 없으면 마지막에 빈 행을
+  /// 하나 더해 사용자가 바로 추가 편집할 수 있게 한다(교정 친화). 저장 로직은 수동 create 와
+  /// 동일(`save(into:)` 의 `availableItems` 정규화 매칭으로 재료 Item grounding).
+  init(prefill: RecipeEditorPrefill) {
+    mode = .create
+    isAIPrefilled = true
+    title = prefill.title
+    cuisine = prefill.cuisine
+    dishType = prefill.dishType
+    servings = prefill.servings
+    totalMinutes = prefill.totalMinutes
+    summary = ""
+    let ingredientDrafts = prefill.ingredients.map { ing in
+      IngredientDraft(name: ing.name, quantity: ing.quantity, unit: ing.unit)
+    }
+    ingredients = ingredientDrafts.isEmpty ? [IngredientDraft()] : ingredientDrafts + [IngredientDraft()]
+    let stepDrafts = prefill.steps.map { StepDraft(text: $0, minutes: "") }
+    steps = stepDrafts.isEmpty ? [StepDraft()] : stepDrafts + [StepDraft()]
   }
 
   var navigationTitle: LocalizedStringKey {

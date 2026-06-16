@@ -2,7 +2,7 @@
 aliases: [Recipe, 레시피]
 tags: [model]
 created: 2026-06-12
-updated: 2026-06-15
+updated: 2026-06-16
 status: in-progress
 ---
 
@@ -44,5 +44,6 @@ status: in-progress
 
 ## 메모
 
-- 결정: [[2026-06-12-레시피-모델]] · [[2026-06-15-레시피-요리종류-dishType]] · 제품 방향: [[제품-방향-재고-레시피-AI]]
+- 결정: [[2026-06-12-레시피-모델]] · [[2026-06-15-레시피-요리종류-dishType]] · [[2026-06-16-레시피-NL파서-ParsedRecipe]] · 제품 방향: [[제품-방향-재고-레시피-AI]]
 - 코드: `HomePinApp/Sources/Models/Recipe.swift`
+- 쓰는 화면: [[RecipeEditor]](수동·AI prefill 공용) ← [[RecipeCapture]](자연어 추가, 비영속 `ParsedRecipe` → prefill). 스키마 변경 없음.

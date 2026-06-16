@@ -35,8 +35,11 @@ flowchart TD
     DraftReview -- 일괄 저장 --> Capture
     AI --> Capture[AI 추가/검색 시트<br/>텍스트+음성 → 파서/확인·물건·레시피 검색]
     Capture -. 레시피 검색 결과(탭 전환) .-> RecipeDetail
+    Capture -- 레시피 추가(명시적) --> RecipeCapture[레시피 NL 입력<br/>텍스트·붙여넣기·음성]
+    RecipeCapture -- AI 파싱 성공 --> RecipeEditor
+    RecipeCapture -. 폴백(미가용·실패) .-> RecipeEditor
     Recipes --> RecipeDetail[레시피 상세]
-    Recipes --> RecipeEditor[레시피 추가/편집]
+    Recipes --> RecipeEditor[레시피 추가/편집<br/>수동·AI prefill 확인 공용]
     RecipeDetail --> RecipeEditor
 ```
 
@@ -51,12 +54,13 @@ flowchart TD
 | PlaceEditor (장소 추가/편집) | Area 추가/편집 공용 시트(이름) | in-progress |
 | SpotEditor (세부위치 추가/편집) | Spot 추가/편집 공용 시트(이름) | in-progress |
 | Recipes (레시피) | 임박 카드 + 추천 목록·상세 진입·레시피 추가 | in-progress |
-| Capture (AI 추가/검색) | 텍스트+음성 → AI 파서/단건 폴백 + 물건·레시피 검색 | in-progress |
+| Capture (AI 추가/검색) | 텍스트+음성 → AI 파서/단건 폴백 + 물건·레시피 검색 + 레시피 추가 진입 | in-progress |
+| RecipeCapture (레시피 NL 입력) | 여러 줄 텍스트·붙여넣기·음성 → AI 파싱 → 확인 에디터 prefill | in-progress |
 | Shopping (장보기) | 살 것 목록 — 수동 추가·체크·삭제 | in-progress |
 | DraftReview (확인 드래프트) | AI 파서 결과 다건 확인/수정·일괄 저장 | in-progress |
 | Settings (설정) | 표시(테마)·데이터(현황·전체 정리)·정보 | in-progress |
 | ItemEditor | 물건 추가/편집 공용 시트 | in-progress |
 | RecipeDetail (레시피 상세) | 재료(보유 상태)·조리 단계·재고 요약·편집/삭제 진입 | in-progress |
-| RecipeEditor (레시피 추가/편집) | 기본정보 + 재료/단계 동적 편집 공용 시트 | in-progress |
+| RecipeEditor (레시피 추가/편집) | 기본정보 + 재료/단계 동적 편집 공용 시트(수동·AI prefill 확인 공용) | in-progress |
 
 UI 우선 — seed 데이터로 화면을 먼저 만들고 AI/로직은 뒤에 채운다.

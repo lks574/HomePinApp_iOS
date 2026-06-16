@@ -27,6 +27,22 @@
         }
       }
     },
+    "Add a recipe" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add a recipe"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "레시피 추가"
+          }
+        }
+      }
+    },
     "Add Item" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -135,6 +151,22 @@
         }
       }
     },
+    "AI filled these in from your text. Check the ingredients and steps, then add." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AI filled these in from your text. Check the ingredients and steps, then add."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AI 가 입력한 내용을 채웠어요. 재료와 단계를 확인하고 추가하세요."
+          }
+        }
+      }
+    },
     "AI sorting isn't available on this device, so only the name is captured quickly. Fill in the place and quantity on the next screen." : {
       "extractionState" : "stale",
       "localizations" : {
@@ -184,6 +216,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "분류"
+          }
+        }
+      }
+    },
+    "Clear" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "지우기"
           }
         }
       }
@@ -2085,6 +2133,22 @@
         }
       }
     },
+    "Sort with AI" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sort with AI"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AI 로 정리하기"
+          }
+        }
+      }
+    },
     "Sorting…" : {
       "localizations" : {
         "ko" : {
@@ -2113,6 +2177,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "말하거나 적으면 AI가 물건·장소·수량·분류를 정리해 확인 화면을 보여줘요. 여러 개도 한 번에 돼요."
+          }
+        }
+      }
+    },
+    "Speak the recipe" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Speak the recipe"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "레시피 말하기"
           }
         }
       }
@@ -2440,6 +2520,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "무엇이든 입력하세요"
+          }
+        }
+      }
+    },
+    "Type, paste, or speak a recipe. AI sorts the title, ingredients, and steps for you to confirm." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Type, paste, or speak a recipe. AI sorts the title, ingredients, and steps for you to confirm."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "레시피를 입력하거나 붙여넣거나 말해 보세요. AI 가 제목·재료·단계를 정리해 확인하게 해줘요."
           }
         }
       }

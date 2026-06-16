@@ -2,7 +2,7 @@
 aliases: [RecipeIngredient, 레시피 재료]
 tags: [model]
 created: 2026-06-12
-updated: 2026-06-15
+updated: 2026-06-16
 status: in-progress
 ---
 
