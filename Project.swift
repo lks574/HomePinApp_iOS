@@ -45,6 +45,8 @@ let project = Project(
         // 권한 설명은 InfoPlist.xcstrings(en/ko) 로 현지화한다. 여기에는 영문 source 만 둔다.
         "NSMicrophoneUsageDescription": "Used to quickly add and search items by voice.",
         "NSSpeechRecognitionUsageDescription": "Used to transcribe what you say into text.",
+        "NSCameraUsageDescription": "Used to scan a recipe from a cookbook or note into text.",
+        "NSPhotoLibraryUsageDescription": "Used to read recipe text from a photo or screenshot.",
       ]),
       sources: ["HomePinApp/Sources/**"],
       resources: ["HomePinApp/Resources/**"],

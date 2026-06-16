@@ -2524,18 +2524,98 @@
         }
       }
     },
-    "Type, paste, or speak a recipe. AI sorts the title, ingredients, and steps for you to confirm." : {
+    "Type, paste, speak, or scan a recipe. AI sorts the title, ingredients, and steps for you to confirm." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Type, paste, or speak a recipe. AI sorts the title, ingredients, and steps for you to confirm."
+            "value" : "Type, paste, speak, or scan a recipe. AI sorts the title, ingredients, and steps for you to confirm."
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "레시피를 입력하거나 붙여넣거나 말해 보세요. AI 가 제목·재료·단계를 정리해 확인하게 해줘요."
+            "value" : "레시피를 입력·붙여넣기·말하거나 사진으로 스캔해 보세요. AI 가 제목·재료·단계를 정리해 확인하게 해줘요."
+          }
+        }
+      }
+    },
+    "Couldn't read text from the image. Try another photo or type instead." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't read text from the image. Try another photo or type instead."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이미지에서 텍스트를 읽지 못했어요. 다른 사진을 쓰거나 직접 입력해 주세요."
+          }
+        }
+      }
+    },
+    "No text found in the image. Try a clearer photo or type instead." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No text found in the image. Try a clearer photo or type instead."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이미지에서 텍스트를 찾지 못했어요. 더 선명한 사진을 쓰거나 직접 입력해 주세요."
+          }
+        }
+      }
+    },
+    "Reading text from the image…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reading text from the image…"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이미지에서 텍스트를 읽는 중…"
+          }
+        }
+      }
+    },
+    "Scan" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scan"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "스캔"
+          }
+        }
+      }
+    },
+    "Photo" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Photo"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "사진"
           }
         }
       }

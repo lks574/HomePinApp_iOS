@@ -11,7 +11,20 @@ status: draft
 UI 우선 1차(시안 C 화면 골격: 5탭·장소·레시피·홈·추가 시트) 완료 후의 다음 후보.
 보류 상세는 `docs/follow-ups.md`.
 
-> 최근 완료: **레시피 자연어 추가 단계 1(screen-12)** — 중앙 ✨ 시트(`CaptureSheet`)에
+> 최근 완료: **레시피 자연어 추가 단계 2 — 사진/스크린샷 OCR(screen-13)** —
+> `RecipeCaptureView` 에 OCR 입력 소스 추가. 온디바이스 Apple Vision
+> (`VNRecognizeTextRequest`, `.accurate`, `usesLanguageCorrection`, 한국어+영어)으로
+> 이미지→텍스트 추출. 카메라(`UIImagePickerController`)+사진 라이브러리(`PhotosPicker`)
+> 둘 다 진입(카메라는 시뮬레이터 미지원이라 가용 시만). 추출 텍스트는 입력 필드에 **채우기**
+> (자동 파싱 안 함 — 확인 단계 유지) → "Sort with AI" 로 단계 1 텍스트 경로 합류.
+> `TextRecognizer`(비-MainActor `Sendable`, `Task.detached` 추론) + `RecipeOCRViewModel`
+> (@MainActor 단일 세션 Task) + `CameraImagePicker`(Coordinator nonisolated — 시스템 콜백
+> 격리 트랩 방지). 권한 신규(비가역): `NSCameraUsageDescription`·`NSPhotoLibraryUsageDescription`
+> (`Project.swift` infoPlist + `InfoPlist.xcstrings` en/ko), `tuist generate` 재실행. 권한
+> 거부·OCR 실패·빈 결과 모두 현지화 안내 + 텍스트 입력 폴백. `@Model` 스키마 변경 없음.
+> 결정: `docs/wiki/Decision/2026-06-16-레시피-OCR-VisionKit.md`. 잔여: 실기기 카메라·한국어/
+> 손글씨 OCR 품질(시뮬레이터 미지원), 부족분→장보기 자동생성.
+> 이전: **레시피 자연어 추가 단계 1(screen-12)** — 중앙 ✨ 시트(`CaptureSheet`)에
 > 명시적 "Add a recipe" 행 추가(검색-우선 통합 UX 유지, 의도 자동추측 없음) →
 > 레시피 전용 입력 화면 `RecipeCaptureView`(여러 줄 텍스트·붙여넣기·음성, 단일 경로).
 > "Sort with AI" → 온디바이스 Foundation Models `@Generable ParsedRecipe`
@@ -72,8 +85,8 @@ UI 우선 1차(시안 C 화면 골격: 5탭·장소·레시피·홈·추가 시�
 4. **물건/레시피 고급 편집** — 물건 추가/편집/삭제는 `ItemEditor` 로 연결됨.
    레시피 상세(`screen-03`)·CRUD(`screen-07`)·시드 10개 완료 — 카드 → `RecipeDetail`,
    "레시피 추가" → `RecipeEditor`, 재료/단계 동적 편집 + 재료 이름→보유 물건 매칭.
-   **레시피 자연어 추가(screen-12) 단계 1 완료** — 중앙 ✨ → "Add a recipe" → NL 입력
-   → AI 파싱 → `RecipeEditor` prefill 확인. 잔여: OCR(단계 2)·부족분→장보기.
+   **레시피 자연어 추가(screen-12/13) 단계 1·2 완료** — 중앙 ✨ → "Add a recipe" → NL 입력
+   (텍스트·음성·사진/카메라 OCR) → AI 파싱 → `RecipeEditor` prefill 확인. 잔여: 부족분→장보기.
    남은 범위는 물건 카테고리·태그·사진, 레시피 cuisine 분류/dish 칩 실제 필터.
    (장소 CRUD `screen-05`·세부위치 CRUD `screen-06` 완료 — 추가/편집은 `PlaceEditor`/`SpotEditor`, 삭제는 확인 다이얼로그.)
    장소/세부위치 에디터 확장(아이콘·Space 선택), 정렬 변경(drag) 이 후속.

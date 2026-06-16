@@ -98,9 +98,17 @@ i18n·검색·장보기 1차(중앙 AI 버튼·레시피 검색·장보기 CRUD)
   grounding 은 기존 저장 매칭(`Item.normalize`) 재사용. 결정:
   `docs/wiki/Decision/2026-06-16-레시피-NL파서-ParsedRecipe.md`. 잔여: 단계 2(사진/스크린샷
   OCR), 부족분→장보기 자동생성, 실기기 한국어 추출 품질(아래).
-- [ ] **레시피 NL 추가 — 사진/스크린샷 OCR(단계 2)** — VisionKit(온디바이스)로
-  이미지→텍스트 추출 후 같은 코어(`NLRecipeParser`)에 합류. 카메라·사진 권한 신규.
-  ([[레시피-간편-추가]] §Phase 2)
+- [x] **레시피 NL 추가 — 사진/스크린샷 OCR(단계 2) 완료(screen-13)** — 온디바이스 Apple
+  Vision(`VNRecognizeTextRequest`, `.accurate`, `usesLanguageCorrection`, 한국어+영어)로
+  이미지→텍스트 추출 후 기존 입력 필드에 채워 같은 코어(`NLRecipeParser` "Sort with AI")에
+  합류. 카메라(`UIImagePickerController`)+사진(`PhotosPicker`) 둘 다, 카메라·사진 권한 신규
+  (`InfoPlist.xcstrings` en/ko). 자동 파싱 안 함(확인 단계 유지). `TextRecognizer`(비-MainActor)
+  + `RecipeOCRViewModel`(@MainActor 단일 Task) + `CameraImagePicker`(Coordinator nonisolated).
+  결정: `docs/wiki/Decision/2026-06-16-레시피-OCR-VisionKit.md`. ([[레시피-간편-추가]] §Phase 2)
+- [ ] **레시피 OCR 실기기 카메라·한국어/손글씨 품질 검증** — 빌드 green·시뮬레이터
+  사진 라이브러리→Vision OCR→입력 필드 채움 경로는 검증. **카메라 즉석 촬영은 시뮬레이터
+  미지원**이라 코드 경로/권한 키로만 검증함. 실기기에서 카메라 촬영→OCR, 한국어 인쇄체·
+  손글씨·요리책 사진의 인식 정확도(재료/단계 줄 분리·순서 복원·언어 혼용)는 실기기 필수.
 - [ ] **레시피 NL 추가 실기기 한국어 추출 품질** — 빌드 green·시뮬레이터 폴백 경로
   (미가용 → 수동 `RecipeEditorView`)·prefill·저장 매칭까지 정적/시뮬레이터 검증. 실제
   온디바이스 추론·한국어 레시피 추출 품질(재료 분리·수량 문자열·단계 순서·분류 raw 매칭)
