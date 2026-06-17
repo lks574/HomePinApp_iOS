@@ -46,9 +46,9 @@ struct RecipeCaptureView: View {
       .padding(20)
       .background(AppColor.screenBackground)
       .navigationTitle(Text("Add a recipe"))
-      .navigationBarTitleDisplayMode(.inline)
+      .compactNavTitle()
       .toolbar {
-        ToolbarItem(placement: .topBarTrailing) { Button("Close") { dismiss() } }
+        ToolbarItem(placement: .cancellationAction) { Button("Close") { dismiss() } }
       }
       .sheet(item: $confirmRoute) { route in
         RecipeEditorView(prefill: route.prefill) { dismiss() }

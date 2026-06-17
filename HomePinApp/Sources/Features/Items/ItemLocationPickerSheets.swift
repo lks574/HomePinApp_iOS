@@ -25,7 +25,7 @@ struct AreaPickerSheet: View {
       }
       .background(AppColor.screenBackground)
       .navigationTitle("Select Place")
-      .navigationBarTitleDisplayMode(.inline)
+      .compactNavTitle()
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {
           Button("Close") { dismiss() }
@@ -86,7 +86,7 @@ struct SpotPickerSheet: View {
       }
       .background(AppColor.screenBackground)
       .navigationTitle("Select Spot")
-      .navigationBarTitleDisplayMode(.inline)
+      .compactNavTitle()
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {
           Button("Close") { dismiss() }

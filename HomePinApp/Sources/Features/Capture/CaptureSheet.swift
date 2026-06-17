@@ -47,9 +47,9 @@ struct CaptureSheet: View {
       .padding(20)
       .background(AppColor.screenBackground)
       .navigationTitle(Text("Add or find"))
-      .navigationBarTitleDisplayMode(.inline)
+      .compactNavTitle()
       .toolbar {
-        ToolbarItem(placement: .topBarTrailing) { Button("Close") { dismiss() } }
+        ToolbarItem(placement: .cancellationAction) { Button("Close") { dismiss() } }
       }
       .navigationDestination(item: $reviewRoute) { route in
         CaptureDraftReviewView(drafts: route.drafts) { dismiss() }

@@ -31,7 +31,7 @@ struct ShoppingListView: View {
     }
     .background(AppColor.screenBackground)
     .navigationTitle(Text("Shopping List"))
-    .navigationBarTitleDisplayMode(.inline)
+    .compactNavTitle()
     .sheet(item: $stockRoute) { route in
       ItemEditorView(mode: .create(initialName: route.shoppingItem.name), onSaved: {
         // 신규 재고 항목을 만들어 재고에 반영했으므로 가산 완료로 표시한다(재체크 이중 가산 방지).

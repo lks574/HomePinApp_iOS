@@ -17,7 +17,7 @@ struct DataTransferView: View {
       statusSection
     }
     .navigationTitle("Backup & Import")
-    .navigationBarTitleDisplayMode(.inline)
+    .compactNavTitle()
     // 파일 모달은 각각 별도 뷰(배경 앵커)에 하나씩 붙인다. 한 뷰에 여러 개를 쌓으면
     // SwiftUI 가 일부만 표시하고 나머지를 조용히 무시한다(백업/CSV 가림 버그 방지).
     .background(backupExportAnchor)

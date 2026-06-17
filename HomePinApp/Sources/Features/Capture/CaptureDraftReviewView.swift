@@ -34,7 +34,7 @@ struct CaptureDraftReviewView: View {
     .appEditorSaveBar(title: saveTitle, isEnabled: canSaveAll, action: saveAll)
     .background(AppColor.screenBackground)
     .navigationTitle("Confirm and Add")
-    .navigationBarTitleDisplayMode(.inline)
+    .compactNavTitle()
     .sheet(item: $pickerTarget) { target in
       pickerSheet(for: target)
     }
