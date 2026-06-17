@@ -4,7 +4,7 @@ import SwiftData
 /// 공간 — 최상위 장소(집·별장·사무실 등). 하위에 구역(Area)을 둔다.
 @Model
 final class Space {
-  @Attribute(.unique) var id: UUID
+  var id: UUID
   var name: String
   var icon: String?
   var sortOrder: Int

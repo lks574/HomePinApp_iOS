@@ -4,7 +4,7 @@ import SwiftData
 /// 세부위치 — 구역 안의 구체적 수납처(냉동실·두번째 서랍·우측 하단 등).
 @Model
 final class Spot {
-  @Attribute(.unique) var id: UUID
+  var id: UUID
   var name: String
   var sortOrder: Int
   var createdAt: Date

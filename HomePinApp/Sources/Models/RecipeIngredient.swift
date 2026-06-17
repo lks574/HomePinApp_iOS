@@ -5,7 +5,7 @@ import SwiftData
 /// 매칭 실패해도 `name` 으로 레시피는 온전(식재료=Item 통합 결정).
 @Model
 final class RecipeIngredient {
-  @Attribute(.unique) var id: UUID
+  var id: UUID
   var name: String
   var quantity: Double?
   var unit: String?

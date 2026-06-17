@@ -5,7 +5,7 @@ import SwiftData
 /// 하위에 세부위치(Spot)를 두고, 물건(Item)을 직접 가질 수도 있다.
 @Model
 final class Area {
-  @Attribute(.unique) var id: UUID
+  var id: UUID
   var name: String
   var icon: String?
   var sortOrder: Int

@@ -14,7 +14,7 @@ status: in-progress
 
 | 프로퍼티 | 타입 | 비고 |
 | --- | --- | --- |
-| `id` | `UUID` | `@Attribute(.unique)` |
+| `id` | `UUID` | 앱 로직 유일성 |
 | `name` | `String` | 한 공간 내 중복은 앱 로직 검증 |
 | `icon` | `String?` | |
 | `sortOrder` | `Int` | |

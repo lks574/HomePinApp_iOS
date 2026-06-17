@@ -15,7 +15,7 @@ nullify 로 보존된다.
 
 | 프로퍼티 | 타입 | 비고 |
 | --- | --- | --- |
-| `id` | `UUID` | `@Attribute(.unique)` |
+| `id` | `UUID` | 앱 로직 유일성 |
 | `name` | `String` | `#Index` |
 | `normalizedName` | `String` | `#Index`, 매칭/검색 키(소문자·공백정리). `Item.normalize()` |
 | `quantity` | `Int` | 기본 1 |

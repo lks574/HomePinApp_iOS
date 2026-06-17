@@ -54,7 +54,7 @@ status: draft
   `Features/DataTransfer/CSVImporter.swift`, 결정:
   `docs/wiki/Decision/2026-06-17-CSV-대량입력-스키마.md`)
 
-- [ ] **이름 중복 방지(앱 로직)** — `@Attribute(.unique)` 는 upsert 의미라 사용자 입력
+- [ ] **이름 중복 방지(앱 로직)** — `.unique` 는 upsert 의미라 사용자 입력
   이름엔 안 씀. 한 공간 내 구역명·한 구역 내 세부위치명·전역 카테고리/태그명 중복을
   **쓰기 로직에서 검증**해야 한다. (모델: [[Space]]/[[Area]]/[[Spot]]/[[ItemCategory]]/[[Tag]],
   결정: `docs/wiki/Decision/2026-06-12-위치-물건-데이터모델.md`)

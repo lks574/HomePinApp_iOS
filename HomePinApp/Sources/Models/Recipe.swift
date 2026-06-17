@@ -5,7 +5,7 @@ import SwiftData
 /// 보유/부족을 판정한다(상세: Decision 노트 "레시피 모델").
 @Model
 final class Recipe {
-  @Attribute(.unique) var id: UUID
+  var id: UUID
   var title: String
   var summary: String?
   var servings: Int?

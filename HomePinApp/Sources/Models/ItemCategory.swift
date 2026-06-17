@@ -6,7 +6,7 @@ import SwiftData
 /// 이름은 `Category`(Darwin 의 시스템 타입)와 충돌을 피하려 `ItemCategory` 로 둔다.
 @Model
 final class ItemCategory {
-  @Attribute(.unique) var id: UUID
+  var id: UUID
   var name: String
   var icon: String?
   var sortOrder: Int

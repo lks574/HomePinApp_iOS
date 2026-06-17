@@ -7,7 +7,7 @@ import SwiftData
 /// (`area`·`spot`·`category` 가 옵셔널인 이유 = nullify 보존.)
 @Model
 final class Item {
-  @Attribute(.unique) var id: UUID
+  var id: UUID
   var name: String
   /// 매칭/검색용 정규화 키(소문자·공백 정리). `name` 변경 시 함께 갱신한다.
   var normalizedName: String

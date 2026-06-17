@@ -21,8 +21,8 @@ status: active
   비가역 결정**이다.
 - **전제: 유료 Apple Developer Program($99/년) 필수.** iCloud/CloudKit entitlement 는
   무료(personal team) 계정으로 활성화 불가.
-- **선행 필수: 데이터 모델 개편.** 현재 10개 `@Model` 전부가 CloudKit 동기화 제약을
-  위반(`@Attribute(.unique)`)한다. "CloudKit 켜기"가 아니라 **스키마 마이그레이션이
+- **선행 필수: 데이터 모델 개편.** 기존 10개 `@Model` 전부가 `id` 에 `.unique` 를
+  선언해 CloudKit 동기화 제약을 위반했다. "CloudKit 켜기"가 아니라 **스키마 마이그레이션이
   본체**다.
 
 ## 2026-06-17 착수 메모
@@ -41,8 +41,7 @@ status: active
   - `AppModelContainer` 는 로컬 `ModelConfiguration(schema:isStoredInMemoryOnly:)` 만 사용한다.
   - iOS 타깃에는 entitlements 파일이 없고, macOS entitlements 는 sandbox/file/audio 권한만
     있다.
-  - 모든 영속 모델의 `id` 가 `@Attribute(.unique)` 이므로 CloudKit 호환 마이그레이션이
-    첫 작업이다.
+  - 모든 영속 모델의 `id` `.unique` 제거가 CloudKit 호환 마이그레이션의 첫 작업이다.
 
 ## 범위 (2단계로 분리)
 

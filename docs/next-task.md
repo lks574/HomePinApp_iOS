@@ -157,7 +157,7 @@ UI 우선 1차(시안 C 화면 골격: 5탭·장소·레시피·홈·추가 시�
 0. **CloudKit 동기화 + 가족공유 착수** — `feat/icloud-sync` 브랜치에서 시작. 목표는
    Settings 에서 iCloud 동기화를 켜고, 이후 CloudKit 공유 초대로 가족에게 데이터를 공유할 수
    있게 하는 것. 단, 현재 모델/프로젝트 상태상 버튼부터 추가하지 않고 아래 순서로 진행한다.
-   - **Phase 0 스키마 호환화**: 전 `@Model` 의 `@Attribute(.unique)` 제거, `#Index<Item>`
+   - **Phase 0 스키마 호환화**: 전 `@Model` 의 `id` `.unique` 제거, `#Index<Item>`
      재검토, 비옵셔널 속성 기본값/optional 감사, 관계 optional+inverse 보장 점검,
      `Item.photoData` 동기화 비용 정책 결정.
    - **Phase A Private 동기화**: iCloud container 확정 후 iOS/macOS entitlements 확장,

@@ -8,7 +8,7 @@ import SwiftData
 /// 재료 삭제 시 nullify 로 끊겨 장보기 항목은 온전히 남는다.
 @Model
 final class ShoppingItem {
-  @Attribute(.unique) var id: UUID
+  var id: UUID
   var name: String
   /// 매칭/검색용 정규화 키(`Item.normalize` 규약 재사용). `name` 변경 시 함께 갱신한다.
   var normalizedName: String
