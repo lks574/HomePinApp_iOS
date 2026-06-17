@@ -384,6 +384,11 @@ struct CaptureSheet: View {
     search: CaptureSearchQuery,
     semanticFiltersPass: () -> Bool
   ) -> MatchTier? {
+    // 초성 전용 질의는 일반 텍스트/토큰 경로 대신 초성 매칭만 쓴다(최하위 등급).
+    if search.isChoseongQuery {
+      let initialsMatch = fields.contains { Hangul.initials(of: $0).contains(search.choseongKey) }
+      return initialsMatch ? .choseong : nil
+    }
     if let tier = SearchRanking.bestTier(fields: fields, query: search.fullKey) {
       return tier
     }
@@ -475,6 +480,9 @@ struct CaptureSheet: View {
 private struct CaptureSearchQuery {
   let fullKey: String
   let tokens: [String]
+  /// 질의가 전부 초성 자음일 때의 초성 키(공백 제거). 일반 질의면 빈 문자열이다.
+  /// 이 값이 비어 있지 않을 때만 초성 매칭을 활성화한다.
+  let choseongKey: String
   let wantsExpiringSoon: Bool
   let wantsExpired: Bool
   let wantsNoLocation: Bool
@@ -483,6 +491,11 @@ private struct CaptureSearchQuery {
 
   var hasSearchText: Bool {
     !fullKey.isEmpty
+  }
+
+  /// 초성 전용 질의인지. 이때는 일반 텍스트/토큰 경로 대신 초성 경로만 쓴다.
+  var isChoseongQuery: Bool {
+    !choseongKey.isEmpty
   }
 
   /// 토큰 또는 의미 플래그 같은 구체적 검색 신호가 하나라도 있는지. 모두 없으면(불용어·
@@ -502,6 +515,7 @@ private struct CaptureSearchQuery {
     wantsNoLocation = Self.containsAny(compact, ["위치없음", "위치없는", "위치미정", "위치미지정", "장소없음", "noloca"])
     wantsReadyRecipe = Self.containsAny(compact, ["지금가능", "만들수있는", "바로가능", "ready", "cookable"])
     wantsMissingRecipe = Self.containsAny(compact, ["부족", "없는재료", "missing"])
+    choseongKey = Hangul.isChoseongQuery(normalized) ? normalized.replacingOccurrences(of: " ", with: "") : ""
     tokens = Self.tokens(from: raw)
   }
 
