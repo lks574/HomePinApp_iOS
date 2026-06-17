@@ -2,7 +2,7 @@
 aliases: [Tag, 태그]
 tags: [model]
 created: 2026-06-12
-updated: 2026-06-12
+updated: 2026-06-17
 status: in-progress
 ---
 
@@ -26,3 +26,4 @@ status: in-progress
 ## 메모
 
 - 결정: [[2026-06-12-위치-물건-데이터모델]]
+- [[DataTransfer]] — 전체 백업 export/import 대상(2-pass id upsert). CSV 대량 입력은 Item·Recipe 와 위치/분류/태그 이름 조회→생성. 결정: [[2026-06-17-데이터-백업-번들포맷]]·[[2026-06-17-CSV-대량입력-스키마]].

@@ -47,6 +47,18 @@ let project = Project(
         "NSSpeechRecognitionUsageDescription": "Used to transcribe what you say into text.",
         "NSCameraUsageDescription": "Used to scan a recipe from a cookbook or note into text.",
         "NSPhotoLibraryUsageDescription": "Used to read recipe text from a photo or screenshot.",
+        // 백업 번들 = 디렉터리 패키지(.homepinbackup). 외부 의존성 없이 FileManager 로 다룬다.
+        // 결정: docs/wiki/Decision/2026-06-17-데이터-백업-번들포맷.md
+        "UTExportedTypeDeclarations": [
+          [
+            "UTTypeIdentifier": "com.sro.homepinappios.backup",
+            "UTTypeDescription": "HomePin Backup",
+            "UTTypeConformsTo": ["com.apple.package"],
+            "UTTypeTagSpecification": [
+              "public.filename-extension": ["homepinbackup"],
+            ],
+          ],
+        ],
       ]),
       sources: ["HomePinApp/Sources/**"],
       resources: ["HomePinApp/Resources/**"],

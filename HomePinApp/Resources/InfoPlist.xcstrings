@@ -13,6 +13,23 @@
         }
       }
     },
+    "HomePin Backup" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HomePin Backup"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HomePin 백업"
+          }
+        }
+      }
+    },
     "NSCameraUsageDescription" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -30,23 +47,6 @@
         }
       }
     },
-    "NSPhotoLibraryUsageDescription" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Used to read recipe text from a photo or screenshot."
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "사진이나 스크린샷에서 레시피 텍스트를 읽어 오기 위해 사진을 사용해요."
-          }
-        }
-      }
-    },
     "NSMicrophoneUsageDescription" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -60,6 +60,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "물건을 말로 빠르게 추가·검색하기 위해 마이크를 사용해요."
+          }
+        }
+      }
+    },
+    "NSPhotoLibraryUsageDescription" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Used to read recipe text from a photo or screenshot."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "사진이나 스크린샷에서 레시피 텍스트를 읽어 오기 위해 사진을 사용해요."
           }
         }
       }

@@ -43,6 +43,8 @@ status: done
 - 재고에 가산되면 `stockCredited` 를 `true` 로 둔다. 미완료→완료→미완료→재완료 시
   이 플래그로 재가산을 막아 수량 이중 가산을 방지한다.
 
+- [[DataTransfer]] — 전체 백업 export/import 대상(2-pass id upsert). CSV 대량 입력은 Item·Recipe 와 위치/분류/태그 이름 조회→생성. 결정: [[2026-06-17-데이터-백업-번들포맷]]·[[2026-06-17-CSV-대량입력-스키마]].
+
 ## 메모
 
 - 코드: `HomePinApp/Sources/Models/ShoppingItem.swift`

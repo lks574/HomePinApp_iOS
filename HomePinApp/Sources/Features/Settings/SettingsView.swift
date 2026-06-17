@@ -58,6 +58,11 @@ struct SettingsView: View {
       LabeledContent("Items") { Text("count.items.\(items.count)") }
       LabeledContent("Places") { Text("count.places.\(areas.count)") }
       LabeledContent("Recipes") { Text("count.recipes.\(recipes.count)") }
+      NavigationLink {
+        DataTransferView()
+      } label: {
+        Text("Backup & Import")
+      }
       Button(role: .destructive) {
         showingClearConfirm = true
       } label: {
@@ -83,6 +88,7 @@ struct SettingsView: View {
   /// 모든 사용자 데이터를 삭제하고, 앱이 동작하도록 기본 공간(Space)만 다시 만든다.
   private func clearAllData() {
     do {
+      try modelContext.delete(model: ShoppingItem.self)
       try modelContext.delete(model: Item.self)
       try modelContext.delete(model: RecipeIngredient.self)
       try modelContext.delete(model: Recipe.self)

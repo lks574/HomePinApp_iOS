@@ -2,7 +2,7 @@
 aliases: [screen-map, 화면 맵]
 tags: [doc/code, screens]
 created: 2026-06-12
-updated: 2026-06-16
+updated: 2026-06-17
 status: draft
 ---
 
@@ -42,6 +42,8 @@ flowchart TD
     Recipes --> RecipeDetail[레시피 상세]
     Recipes --> RecipeEditor[레시피 추가/편집<br/>수동·AI prefill 확인 공용]
     RecipeDetail --> RecipeEditor
+    Settings --> DataTransfer[백업/가져오기·CSV<br/>전체 백업 export/import·CSV 대량 입력]
+    DataTransfer -- fileExporter/fileImporter --> DataTransfer
 ```
 
 ## 화면 목록
@@ -59,7 +61,8 @@ flowchart TD
 | RecipeCapture (레시피 NL 입력) | 여러 줄 텍스트·붙여넣기·음성·사진/카메라 OCR → AI 파싱 → 확인 에디터 prefill | in-progress |
 | Shopping (장보기) | 살 것 목록 — 수동 추가·체크·삭제 | in-progress |
 | DraftReview (확인 드래프트) | AI 파서 결과 다건 확인/수정·일괄 저장 | in-progress |
-| Settings (설정) | 표시(테마)·데이터(현황·전체 정리)·정보 | in-progress |
+| Settings (설정) | 표시(테마)·데이터(현황·백업/가져오기·전체 정리)·정보 | in-progress |
+| DataTransfer (백업/가져오기·CSV) | 전체 백업 export/import(디렉터리 패키지·id upsert) + CSV 대량 입력(Item·Recipe, 템플릿) | in-progress |
 | ItemEditor | 물건 추가/편집 공용 시트 | in-progress |
 | RecipeDetail (레시피 상세) | 재료(보유 상태)·조리 단계·재고 요약·편집/삭제 진입 | in-progress |
 | RecipeEditor (레시피 추가/편집) | 기본정보 + 재료/단계 동적 편집 공용 시트(수동·AI prefill 확인 공용) | in-progress |

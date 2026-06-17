@@ -2,7 +2,7 @@
 aliases: [Spot, 세부위치]
 tags: [model]
 created: 2026-06-12
-updated: 2026-06-15
+updated: 2026-06-17
 status: in-progress
 ---
 
@@ -30,6 +30,8 @@ status: in-progress
 - [[PlaceDetail]] — 세부위치별 물건 목록·추가/편집/삭제
 - [[SpotEditor]] — 추가/편집 쓰기
 - [[ItemEditor]] — 물건 세부위치 선택
+
+- [[DataTransfer]] — 전체 백업 export/import 대상(2-pass id upsert). CSV 대량 입력은 Item·Recipe 와 위치/분류/태그 이름 조회→생성. 결정: [[2026-06-17-데이터-백업-번들포맷]]·[[2026-06-17-CSV-대량입력-스키마]].
 
 ## 메모
 

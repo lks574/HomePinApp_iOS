@@ -2,7 +2,7 @@
 aliases: [follow-ups, 후속 항목]
 tags: [doc/code, followups]
 created: 2026-06-12
-updated: 2026-06-16
+updated: 2026-06-17
 status: draft
 ---
 
@@ -11,6 +11,27 @@ status: draft
 리뷰 스코프 외 지적·검증 대기 항목을 누적한다.
 
 ## 데이터 / 영속화
+
+- [ ] **백업 사진 downsampling/압축** — screen-15 백업은 아이템 사진을
+  `photos/<itemID>.dat` 에 **원본 그대로** 번들에 넣는다(이번 범위 제외). 대용량 사진이
+  많으면 패키지가 커지므로, export 시 다운샘플/압축(예: HEIC·JPEG quality) 정책을 정해야
+  한다. (모듈: `Features/DataTransfer/BackupArchive.swift`, 결정:
+  `docs/wiki/Decision/2026-06-17-데이터-백업-번들포맷.md`)
+- [ ] **백업 schemaVersion ↔ VersionedSchema 연동** — `BackupBundle.schemaVersion`(현재 1)
+  은 import 가드(상위 버전 거부)만 쓴다. 첫 릴리스 `VersionedSchema` 도입 시(아래 항목),
+  백업 스키마 버전을 모델 스키마 버전과 연동하고 구버전 번들 마이그레이션 경로를 정해야
+  한다. (모듈: `Features/DataTransfer/`, 결정:
+  `docs/wiki/Decision/2026-06-17-데이터-백업-번들포맷.md`)
+- [ ] **백업 import 사진 클리어 비대칭** — 번들 아이템의 `photoFile == nil`(사진 없음)이고
+  기존 아이템에 사진이 있으면 `restorePhotos` 가 기존 `photoData` 를 보존한다(다른 스칼라
+  필드는 전부 덮어쓰는 것과 비대칭). "병합" 관점에선 안전한 보존이라 버그는 아니나, 의도를
+  명시하거나 사진도 덮어쓰기로 통일할지 정해야 한다. (모듈:
+  `Features/DataTransfer/BackupArchive.swift` restorePhotos)
+- [ ] **CSV 재료 재import 중복 누적** — `recipe_ingredients.csv` 재료는 id 키가 없어(스키마상
+  의도) upsert 불가, 항상 신규 insert 된다. 같은 재료 CSV 를 두 번 넣으면 재료가 중복
+  누적된다. 재료 식별 키(예: recipeTitle+name) 기반 dedup 도입 여부 검토. (모듈:
+  `Features/DataTransfer/CSVImporter.swift`, 결정:
+  `docs/wiki/Decision/2026-06-17-CSV-대량입력-스키마.md`)
 
 - [ ] **이름 중복 방지(앱 로직)** — `@Attribute(.unique)` 는 upsert 의미라 사용자 입력
   이름엔 안 씀. 한 공간 내 구역명·한 구역 내 세부위치명·전역 카테고리/태그명 중복을

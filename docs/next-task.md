@@ -2,7 +2,7 @@
 aliases: [next-task, 다음 할 일]
 tags: [doc/code, tasks]
 created: 2026-06-12
-updated: 2026-06-16
+updated: 2026-06-17
 status: draft
 ---
 
@@ -11,7 +11,25 @@ status: draft
 UI 우선 1차(시안 C 화면 골격: 5탭·장소·레시피·홈·추가 시트) 완료 후의 다음 후보.
 보류 상세는 `docs/follow-ups.md`.
 
-> 최근 완료: **레시피 부재료(optional) 횡단(screen-14)** — 주재료와 별도로
+> 최근 완료: **데이터 백업/가져오기 + CSV 대량 입력(screen-15)** — `Settings > Data >
+> Backup & Import`(`DataTransferView`) 진입. **전체 백업** = 디렉터리 패키지
+> (`.homepinbackup`, exported UTType `com.sro.homepinappios.backup`/`com.apple.package`) —
+> `data.json`(schemaVersion 메타 + 9 엔티티 Codable DTO, 관계 전부 UUID 참조,
+> `RecipeStep` 인라인) + `photos/<itemID>.dat`(사진 원본). 외부 의존성 없이 `FileManager`
+> 만(ZIP 불채택, `dependencies: []` 유지). export = 전체 fetch→DTO→임시 패키지→`fileExporter`,
+> import = `fileImporter`→디코드→schemaVersion 가드→**2-pass upsert**(`BackupUpsertEngine`:
+> pass-1 id fetch→갱신/insert, pass-2 UUID 참조 관계 재연결)+사진 복원, 엔티티 단위 스킵+요약.
+> import 정책 = id(UUID) upsert/덮어쓰기. **CSV 대량 입력** = Item·Recipe, 3파일
+> (`items.csv`·`recipes.csv`·`recipe_ingredients.csv`, 재료는 `recipeTitle` 연결), RFC4180
+> 최소 자체 파서/직렬화(`CSV`)+템플릿 export. upsert 키 = id 있으면 id, 없으면
+> `normalizedName`(Item)/`title`(Recipe), area/spot/category/tags 는 이름 조회→없으면 생성,
+> 행 단위 스킵+요약. 엔진 강제: `normalizedName` 동반 갱신·불변식 `spot→area`·`stockCredited`
+> 보존. 얇은 `@Observable DataTransferModel`(비영속 UI 상태+다단계 쓰기 오케스트레이션).
+> `SettingsView.clearAllData()` 의 `ShoppingItem` 삭제 누락 수정(export 9종 일치). `@Model`
+> 스키마 변경 없음. 결정: `docs/wiki/Decision/2026-06-17-데이터-백업-번들포맷.md`,
+> `docs/wiki/Decision/2026-06-17-CSV-대량입력-스키마.md`. 잔여: 사진 downsampling/압축,
+> `VersionedSchema` 연동(`docs/follow-ups.md`).
+> 이전: **레시피 부재료(optional) 횡단(screen-14)** — 주재료와 별도로
 > **부재료**(곁들임·취향껏·선택적)를 입력·표시. `RecipeIngredient.isOptional: Bool = false`
 > 가산 필드(마이그레이션 불필요). `Recipe` 의 `missingIngredients`·`isReadyToCook`·
 > `inStockCount`·신규 `mainIngredients`/`mainIngredientCount`·`usesExpiringIngredient` 가
