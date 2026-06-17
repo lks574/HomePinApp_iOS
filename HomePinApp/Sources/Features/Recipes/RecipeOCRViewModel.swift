@@ -1,6 +1,5 @@
 import Foundation
 import os
-import UIKit
 
 /// 레시피 OCR 입력기의 UI 상태 소유자. 사진 라이브러리·카메라에서 받은 이미지를 비-MainActor
 /// `TextRecognizer` 로 인식해, 결과 텍스트를 호출 측(`RecipeCaptureView`)이 입력 필드에 채우게 한다.
@@ -41,7 +40,7 @@ final class RecipeOCRViewModel {
 
   /// 이미지에서 텍스트를 인식한다. 진행 중이던 인식은 취소하고 새로 시작한다.
   /// 인식은 배경(`Task.detached`)에서 수행하고, 결과 문자열만 MainActor 로 가져온다.
-  func recognize(_ image: UIImage) {
+  func recognize(_ image: PlatformImage) {
     cancel()
     state = .recognizing
 

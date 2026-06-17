@@ -1,7 +1,6 @@
 import PhotosUI
 import SwiftData
 import SwiftUI
-import UIKit
 
 /// 물건 추가/편집 공용 에디터. draft·저장 규칙은 `ItemEditorModel` 이 소유하고,
 /// 이 View 는 레이아웃과 순수 UI 상태(포커스·picker 시트 표시)만 갖는다.
@@ -171,7 +170,7 @@ struct ItemEditorView: View {
       }
 
       if let image = selectedImage {
-        Image(uiImage: image)
+        Image(platformImage: image)
           .resizable()
           .scaledToFill()
           .frame(maxWidth: .infinity)
@@ -283,9 +282,9 @@ struct ItemEditorView: View {
     .appEditorCard()
   }
 
-  private var selectedImage: UIImage? {
+  private var selectedImage: PlatformImage? {
     guard let data = model.photoData else { return nil }
-    return UIImage(data: data)
+    return PlatformImage.from(data: data)
   }
 
   private var tagSummary: String {
