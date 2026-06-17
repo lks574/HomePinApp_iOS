@@ -59,6 +59,9 @@ let iOSInfoPlist: [String: Plist.Value] = sharedInfoPlist.merging([
   // InfoPlist.xcstrings(en/ko), 여기엔 영문 source 만 둔다.
   "NSUserTrackingUsageDescription": "Used to show you more relevant ads. You can still use the app if you decline.",
   "SKAdNetworkItems": .array(adSKAdNetworkItems),
+  // SwiftData + CloudKit private sync. 실제 sync 는 ModelContainer 구성에 의해 자동 수행되고,
+  // Settings 의 토글은 다음 앱 시작부터 이 컨테이너를 사용하도록 설정한다.
+  "UIBackgroundModes": ["remote-notification"],
   // 백업 번들 = 디렉터리 패키지(.homepinbackup). 외부 의존성 없이 FileManager 로 다룬다.
   // 결정: docs/wiki/Decision/2026-06-17-데이터-백업-번들포맷.md
   "UTExportedTypeDeclarations": [
@@ -143,6 +146,7 @@ let project = Project(
       // API 선언은 iOS(광고 SDK 링크 타깃)에만 의미가 있어 공유 glob 밖에 두고 iOS 타깃에만
       // 포함한다. AdMob SDK 동봉 매니페스트와 빌드시 병합된다.
       resources: ["HomePinApp/Resources/**", "HomePinApp/Resources-iOS/PrivacyInfo.xcprivacy"],
+      entitlements: "Tuist/Support/HomePinApp-iOS.entitlements",
       dependencies: iOSAdDependencies,
       settings: .settings(
         base: [

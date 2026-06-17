@@ -42,6 +42,13 @@ xcodebuild -workspace HomePinApp.xcworkspace -scheme HomePinApp-macOS \
 
 - 스킴 목록 확인: `xcodebuild -workspace HomePinApp.xcworkspace -list`.
 - 분리 빌드 검증: iOS·macOS 두 스킴 모두 `** BUILD SUCCEEDED **` 인지 각각 확인.
+- CloudKit entitlement 가 켜진 macOS 타깃은 실행 가능한 서명 빌드에 Apple Development
+  인증서가 필요하다. 서명 환경이 준비되지 않은 컴파일 검증은 아래처럼 수행한다.
+
+```bash
+xcodebuild -workspace HomePinApp.xcworkspace -scheme HomePinApp-macOS \
+  -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO build
+```
 
 - `tuist generate` 산출물(`*.xcworkspace`/`*.xcodeproj`/`Derived/`)은 git 무시.
   매니페스트(`Project.swift`)만 추적한다.

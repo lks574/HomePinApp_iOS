@@ -19,7 +19,11 @@ enum AppModelContainer {
   @MainActor
   static func make() -> ModelContainer {
     let schema = Schema(models)
-    let configuration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
+    let configuration = ModelConfiguration(
+      schema: schema,
+      isStoredInMemoryOnly: false,
+      cloudKitDatabase: cloudKitDatabase
+    )
     let container: ModelContainer
     do {
       container = try ModelContainer(for: schema, configurations: configuration)
@@ -41,6 +45,12 @@ enum AppModelContainer {
     SeedData.populateIfEmpty(container.mainContext)
     #endif
     return container
+  }
+
+  private static var cloudKitDatabase: ModelConfiguration.CloudKitDatabase {
+    UserDefaults.standard.bool(forKey: CloudSyncPreference.storageKey)
+      ? .private(CloudSyncPreference.containerIdentifier)
+      : .none
   }
 
   #if DEBUG

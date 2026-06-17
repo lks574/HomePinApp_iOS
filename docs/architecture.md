@@ -15,13 +15,16 @@ status: draft
 | UI | SwiftUI |
 | 대상 | iOS 기기, 최소 **iOS 26.5** |
 | 언어 | **Swift 6.2** (Swift 6 언어 모드, strict concurrency) |
-| 영속화 | **SwiftData** (`@Model`, `ModelContainer`, `@Query`) — 서버 없이 기기 내부 저장 |
+| 영속화 | **SwiftData** (`@Model`, `ModelContainer`, `@Query`) — 기본 로컬 저장, 선택적으로 CloudKit private DB 동기화 |
 | 프로젝트 구성 | **Tuist** (`Project.swift` manifest, mise 로 설치) |
 
 - iOS 26.5 / Swift 6.2 최소 사양이라 최신 SwiftUI · Observation(`@Observable`) ·
   SwiftData API 를 제약 없이 사용한다. 하위 호환 우회 코드는 두지 않는다.
 - 동시성은 Swift 6 strict concurrency 를 기준으로 한다 — `Sendable`, actor 격리,
   `async`/`await`. 경고를 억지로 끄거나 우회하지 않는다.
+- CloudKit 동기화는 Settings 의 `iCloud Sync` 토글이 켜진 다음 앱 시작부터
+  `ModelConfiguration.cloudKitDatabase = .private("iCloud.com.sro.homepinapp")` 로
+  적용한다. 가족공유는 private 동기화 검증 뒤 `CKShare` 초대 흐름으로 분리한다.
 
 ### SwiftData 매크로 적극 사용
 

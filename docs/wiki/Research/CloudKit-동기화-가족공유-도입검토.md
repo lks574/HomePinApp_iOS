@@ -8,9 +8,9 @@ status: active
 
 # CloudKit 동기화·가족공유 도입 검토
 
-> `feat/icloud-sync` 브랜치에서 착수 검토 중. 실제 CloudKit capability 적용 전에는
-> 데이터 모델 호환화와 iCloud container 확정이 먼저 필요하다. 동기화·공유는
-> persistence 구조를 바꾸는 비가역 결정이므로 Decision 노트 승격 후 구현한다.
+> `feat/icloud-sync` 브랜치에서 착수 중. CloudKit capability 골격과 데이터 모델
+> 호환화는 적용했지만, Apple Developer 포털 container 생성/확인과 실기기 동기화 검증은
+> 아직 필요하다. 동기화·공유는 persistence 구조를 바꾸는 비가역 결정으로 다룬다.
 
 ## 요약
 
@@ -38,10 +38,11 @@ status: active
   - 가족 공유는 Apple 가족 그룹 자동 연동이 아니라 **CloudKit `CKShare` 초대 기반 공유**
     로 다룬다.
 - 현재 코드 확인:
-  - `AppModelContainer` 는 로컬 `ModelConfiguration(schema:isStoredInMemoryOnly:)` 만 사용한다.
-  - iOS 타깃에는 entitlements 파일이 없고, macOS entitlements 는 sandbox/file/audio 권한만
-    있다.
-  - 모든 영속 모델의 `id` `.unique` 제거가 CloudKit 호환 마이그레이션의 첫 작업이다.
+  - `AppModelContainer` 는 Settings 토글 값에 따라 `.none` 또는
+    `.private("iCloud.com.sro.homepinapp")` 를 사용한다.
+  - iOS/macOS 타깃에 CloudKit entitlements 를 추가했다.
+  - 모든 영속 모델의 `id` `.unique` 를 제거했고, to-many 관계를 optional 관계로 전환했다.
+  - macOS iCloud entitlement 는 실행 가능한 서명 빌드에 Apple Development 인증서가 필요하다.
 
 ## 범위 (2단계로 분리)
 
@@ -99,10 +100,11 @@ CloudKit 동기화(NSPersistentCloudKitContainer 계열) 제약과 현재 모델
 ## 착수 전 체크리스트
 
 1. [ ] 유료 Apple Developer Program 가입
-2. [ ] hpi:plan 으로 Phase A/B 분리 기획 + Decision 노트 승격(데이터모델·동기화 비가역)
-3. [ ] 모델 CloudKit 호환 마이그레이션(`.unique` 제거 등) — 무료 상태에서 선행 가능
-4. [ ] iCloud 컨테이너 생성·iOS/macOS entitlement 확장
-5. [ ] Phase A(private) 구현·검증 → 안정화 후 Phase B(가족공유) 착수
+2. [x] hpi:auto 로 Phase A/B 분리 기획 + Decision 노트 승격(데이터모델·동기화 비가역)
+3. [x] 모델 CloudKit 호환 마이그레이션(`.unique` 제거, to-many optional 관계)
+4. [x] iCloud 컨테이너 ID 결정·iOS/macOS entitlement 확장
+5. [ ] Apple Developer 포털에서 `iCloud.com.sro.homepinapp` 컨테이너 생성/확인
+6. [ ] Phase A(private) 실기기/실계정 검증 → 안정화 후 Phase B(가족공유) 착수
 
 ## 적용
 

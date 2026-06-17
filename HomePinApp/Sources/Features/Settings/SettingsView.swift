@@ -6,12 +6,15 @@ struct SettingsView: View {
   @Environment(\.modelContext) private var modelContext
   @AppStorage(AppThemePreference.storageKey) private var themeRaw = AppThemePreference.system.rawValue
   @AppStorage(AppLanguagePreference.storageKey) private var languageRaw = AppLanguagePreference.system.rawValue
+  @AppStorage(CloudSyncPreference.storageKey) private var cloudSyncEnabled = false
 
   @Query private var items: [Item]
   @Query private var areas: [Area]
   @Query private var recipes: [Recipe]
 
   @State private var showingClearConfirm = false
+  @State private var showingCloudSyncRestartAlert = false
+  @State private var cloudSyncStatus = CloudSyncStatusModel()
 
   #if os(iOS)
   @Environment(AdService.self) private var adService
@@ -37,6 +40,11 @@ struct SettingsView: View {
         Button("Cancel", role: .cancel) {}
       } message: {
         Text("All items, places, storage spots, recipes, categories, and tags will be deleted. This cannot be undone.")
+      }
+      .alert("Restart HomePin to apply iCloud Sync", isPresented: $showingCloudSyncRestartAlert) {
+        Button("OK", role: .cancel) {}
+      } message: {
+        Text("The app will use the iCloud CloudKit store the next time it starts.")
       }
     }
   }
@@ -65,6 +73,7 @@ struct SettingsView: View {
       LabeledContent("Items") { Text("count.items.\(items.count)") }
       LabeledContent("Places") { Text("count.places.\(areas.count)") }
       LabeledContent("Recipes") { Text("count.recipes.\(recipes.count)") }
+      cloudSyncRow
       NavigationLink {
         DataTransferView()
       } label: {
@@ -74,6 +83,36 @@ struct SettingsView: View {
         showingClearConfirm = true
       } label: {
         Text("Clear All Data")
+      }
+    }
+  }
+
+  private var cloudSyncRow: some View {
+    VStack(alignment: .leading, spacing: 8) {
+      Toggle("iCloud Sync", isOn: cloudSyncBinding)
+      LabeledContent("iCloud Account") {
+        Text(cloudSyncStatus.state.title)
+      }
+      Button {
+        cloudSyncStatus.refresh()
+      } label: {
+        Label("Check iCloud Account", systemImage: "icloud")
+      }
+      Text("Sync uses CloudKit private database for this iCloud account. Family sharing will use a separate invite flow after private sync is verified.")
+        .font(.footnote)
+        .foregroundStyle(.secondary)
+    }
+  }
+
+  private var cloudSyncBinding: Binding<Bool> {
+    Binding {
+      cloudSyncEnabled
+    } set: { newValue in
+      guard cloudSyncEnabled != newValue else { return }
+      cloudSyncEnabled = newValue
+      showingCloudSyncRestartAlert = true
+      if newValue {
+        cloudSyncStatus.refresh()
       }
     }
   }

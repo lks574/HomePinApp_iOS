@@ -17,11 +17,23 @@ status: draft
   - `HomePinApp` — iOS, `.iOS("26.5")`, bundleId `com.sro.homepinappios`.
   - `HomePinApp-macOS` — 네이티브 macOS, `.macOS("26.0")`, bundleId
     `com.sro.homepinappmac`, entitlements `Tuist/Support/HomePinApp-macOS.entitlements`
-    (app-sandbox·files.user-selected.read-write·device.audio-input).
+    (app-sandbox·files.user-selected.read-write·device.audio-input·CloudKit).
+  - `HomePinApp` — iOS entitlements `Tuist/Support/HomePinApp-iOS.entitlements`
+    (CloudKit).
 - **스킴**: `automaticSchemesOptions` `targetSchemesGrouping: .notGrouped` 로 타깃별
   스킴 분리 → `HomePinApp`(iOS) / `HomePinApp-macOS`(macOS). 한 스킴에 묶으면
   (`.singleScheme`) macOS 빌드 시 iOS 타깃까지 끌려와 서명 오류가 나서 분리했다.
 - 명령은 `docs/development.md` 참고.
+
+## Sync / CloudKit
+
+- `Features/Sync/CloudSyncPreference.swift` — iCloud sync 설정 키와 CloudKit container
+  ID(`iCloud.com.sro.homepinapp`), Settings 계정 상태 확인 모델.
+- `Persistence/AppModelContainer.swift` — `cloudSync.isEnabled` 가 켜져 있으면
+  SwiftData `ModelConfiguration` 을 `.private("iCloud.com.sro.homepinapp")` 로 만들고,
+  아니면 `.none` 으로 로컬 저장소만 사용한다.
+- Settings 의 `iCloud Sync` 토글은 다음 앱 시작부터 CloudKit private DB 구성을 적용한다.
+  가족 공유는 Phase B(`CKShare` 초대 기반)로 분리한다.
 
 ## 공용 / 플랫폼 추상화 (`Shared/`)
 
