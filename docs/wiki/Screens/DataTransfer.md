@@ -62,5 +62,11 @@ screen-id: screen-15
 ## 메모
 
 - 외부 의존성 없음(`FileManager` 만). 디렉터리 패키지 UTType 은 `Project.swift`
-  `UTExportedTypeDeclarations` 에 선언.
-- 잔여(`docs/follow-ups.md`): 사진 downsampling/압축, `VersionedSchema` 연동.
+  `UTExportedTypeDeclarations` 에 선언(iOS `com.sro.homepinappios.backup` / macOS
+  `com.sro.homepinappmac.backup`, 둘 다 `.homepinbackup`).
+- **macOS 분기(screen-17)**: 파일 Import/Export 는 sandbox
+  entitlement `files.user-selected.read-write` 로 동작(`fileExporter`/`fileImporter`
+  공통 코드, 분기 없음). 결정: [[2026-06-17-macOS-네이티브-타깃-추가]]. 실기 검증은
+  follow-up(AC-005).
+- 잔여(`docs/follow-ups.md`): 사진 downsampling/압축, `VersionedSchema` 연동,
+  macOS 파일 Import/Export 실기 검증(AC-005).

@@ -10,6 +10,27 @@ status: draft
 
 리뷰 스코프 외 지적·검증 대기 항목을 누적한다.
 
+## 플랫폼 / macOS (screen-17)
+
+- [ ] **macOS 실기 런타임 검증(AC-004~006)** — iOS·macOS 빌드는 green 이나 macOS 는
+  실기 런타임 미검증(빌드만으로는 권한·파일·디바이스 경로를 확인 못 함).
+  - AC-004 PhotosPicker OCR — 사진 라이브러리 선택→Vision OCR→[[RecipeCapture]] 채우기.
+  - AC-005 파일 Import/Export — [[DataTransfer]] `.homepinbackup` export/import 가
+    sandbox(`files.user-selected.read-write`)에서 정상인지.
+  - AC-006 STT 권한/받아쓰기 — 마이크(`device.audio-input`)·음성인식 권한·온디바이스
+    받아쓰기가 macOS 에서 정상인지(`AVAudioSession` 없이).
+  (결정: `docs/wiki/Decision/2026-06-17-macOS-네이티브-타깃-추가.md`)
+- [ ] **sandbox 사진 entitlement 보정 필요 여부** — 현재 macOS entitlements 는
+  app-sandbox·files.user-selected.read-write·device.audio-input 만. PhotosPicker 사진
+  접근이 런타임에 막히면 사진 관련 entitlement 추가가 필요할 수 있다(AC-004 검증에서
+  판단). (파일: `Tuist/Support/HomePinApp-macOS.entitlements`)
+- [ ] **macOS 데스크톱 UX 최적화** — 셸(`RootTabView`)·네비게이션은 macOS 재설계 없이
+  그대로 동작(이번 범위). 메뉴 바·창 크기/리사이즈·사이드바·키보드 단축키 등 데스크톱
+  1급 경험은 후속. (결정: `docs/wiki/Decision/2026-06-17-macOS-네이티브-타깃-추가.md`)
+- [ ] **macOS 카메라 입력 대응 여부** — 카메라 OCR 은 `UIImagePickerController` 기반이라
+  macOS 비노출(사진 라이브러리 OCR 로 대체). 필요 시 AVFoundation 캡처로 macOS 카메라
+  입력을 새로 구현할지 검토. (모듈: `Shared/OCR/CameraImagePicker.swift`)
+
 ## 데이터 / 영속화
 
 - [ ] **백업 사진 downsampling/압축** — screen-15 백업은 아이템 사진을

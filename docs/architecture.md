@@ -2,7 +2,7 @@
 aliases: [architecture, 아키텍처]
 tags: [doc/code, architecture]
 created: 2026-06-12
-updated: 2026-06-15
+updated: 2026-06-17
 status: draft
 ---
 
@@ -78,24 +78,50 @@ status: draft
 테스트는 개발 초기에 작성하지 않고 후반 테스트 단계에서 작성한다. 상세는 `CLAUDE.md`
 "테스트 정책" 을 단일 기준으로 한다.
 
+## 멀티플랫폼 (iOS + macOS, 확정)
+
+상세: [[2026-06-17-macOS-네이티브-타깃-추가]], [[2026-06-17-플랫폼-이미지-추상화]].
+
+- **두 네이티브 타깃이 소스·리소스 한 벌을 공유**한다 — `HomePinApp`(iOS, `.iOS("26.5")`,
+  `com.sro.homepinappios`) / `HomePinApp-macOS`(네이티브 macOS, `.macOS("26.0")`,
+  `com.sro.homepinappmac`). Mac Catalyst·Designed-for-iPad 가 아니라 **네이티브
+  macOS** 다. SwiftUI·SwiftData·Observation 이 cross-platform 이라 코드 한 벌을 공유
+  하고, AppKit/UIKit 가 갈리는 지점만 **`#if os(macOS)` / `#if os(iOS)`** 로 흡수한다.
+- **플랫폼 추상화 계층 `Shared/Platform/`**: 갈리는 지점을 한 곳에 모은다 —
+  `PlatformImage`(UIImage/NSImage typealias + `CGImage`/orientation 추출 + SwiftUI
+  `Image` 래퍼), nav/입력 modifier 헬퍼(`compactNavTitle`/`hideNavBar`/
+  `plainTextInput`/`numericKeyboard`/`cameraCaptureCover`, macOS no-op), 동적 색
+  provider 분기(`DesignSystem/Color+Hex.swift` UIColor/NSColor). 화면 코드는 분기를
+  들지 않는다.
+- **카메라(`UIImagePickerController`)는 macOS 비노출** — 카메라 OCR 진입점이 macOS 에
+  없어 `CameraImagePicker` 를 `#if os(iOS)` 로 감싸고 호출부가 `cameraAvailable`(macOS
+  false)로 버튼을 숨긴다. 사진 라이브러리(`PhotosPicker`) OCR·STT(`SpeechAnalyzer`)·
+  FoundationModels NL 파서는 양 플랫폼 공통(macOS 는 `AVAudioSession` 분기만 건너뜀).
+- **셸은 그대로**: `RootTabView` 등 셸·네비게이션은 macOS 재설계 없이 그대로 동작한다.
+  데스크톱 전용 UX 최적화(메뉴/창/사이드바)는 범위 밖(후속).
+
 ## 프로젝트 구성 / 폴더 (초기 확정)
 
-Tuist 단일 앱 타깃(`Project.swift`). 번들 ID `com.sro.homepinappios`. 소스는
-`HomePinApp/Sources/` 아래.
+Tuist 멀티플랫폼 2타깃(`Project.swift`). iOS `com.sro.homepinappios` /
+macOS `com.sro.homepinappmac`. 소스·리소스는 `HomePinApp/` 아래 한 벌을 공유한다.
 
 ```text
 Project.swift            # Tuist manifest (단일 소스; .xcodeproj/.xcworkspace 는 생성물, git 무시)
 mise.toml                # tuist 4.192.3 핀
+Tuist/Support/HomePinApp-macOS.entitlements   # macOS sandbox 권한(파일·마이크)
 HomePinApp/
   Sources/App/           # @main App, AppModel(앱 단계), AppRouter(탭/탭간 네비), AppRootView·RootTabView(셸)
   Sources/Models/        # SwiftData @Model 6종
   Sources/Persistence/   # AppModelContainer (스키마·DEBUG 리셋)
   Sources/Features/      # 화면당 폴더 (Splash, Home, …) — feature-first
-  Sources/Shared/        # (생기면) 공용 컴포넌트/확장
+  Sources/Shared/        # 공용 컴포넌트/확장 (Platform/ 플랫폼 추상화 포함)
   Resources/             # Assets.xcassets
 ```
 
-- 생성: `tuist generate`. 빌드: `xcodebuild -workspace HomePinApp.xcworkspace -scheme HomePinApp ...`.
+- 생성: `tuist generate`. iOS 빌드: `xcodebuild -workspace HomePinApp.xcworkspace
+  -scheme HomePinApp -destination 'generic/platform=iOS' build`. macOS 빌드:
+  `xcodebuild -workspace HomePinApp.xcworkspace -scheme HomePinApp-macOS
+  -destination 'platform=macOS' build`. (스킴 분리 — `docs/development.md`.)
 - 테스트 타깃은 후반 테스트 단계에서 추가한다(`CLAUDE.md` "테스트 정책").
 
 ## 네비게이션 (확정)

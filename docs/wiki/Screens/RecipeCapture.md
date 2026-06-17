@@ -2,7 +2,7 @@
 aliases: [RecipeCapture, 레시피 NL 입력, 레시피 자연어 추가]
 tags: [screen, screen/recipe]
 created: 2026-06-16
-updated: 2026-06-16
+updated: 2026-06-17
 status: in-progress
 screen-id: screen-12, screen-13
 ---
@@ -66,6 +66,11 @@ OCR 이 모두 같은 단일 입력으로 합류하고, "Sort with AI" 를 눌�
   `Coordinator` 는 nonisolated `NSObject` 로 분리(시스템 콜백 격리 트랩 방지), 콜백 안에서만
   `Task { @MainActor in }` hop. 카메라 미가용(시뮬레이터)이면 버튼 숨김.
 - 사진 라이브러리는 SwiftUI 네이티브 `PhotosPicker`(`matching: .images`).
+- **macOS 분기(screen-17)**: 카메라(`UIImagePickerController`)는 macOS 비노출
+  (`CameraImagePicker` `#if os(iOS)`, `cameraAvailable` false 로 버튼 숨김,
+  `cameraCaptureCover` no-op). 사진 라이브러리 OCR·음성·텍스트 입력은 양 플랫폼 공통.
+  OCR 이미지는 `PlatformImage`(UIImage/NSImage)로 받아 Vision 에 넘긴다
+  ([[2026-06-17-플랫폼-이미지-추상화]]). 결정: [[2026-06-17-macOS-네이티브-타깃-추가]].
 - 권한 신규: `NSCameraUsageDescription`·`NSPhotoLibraryUsageDescription`(`Project.swift`
   infoPlist + `InfoPlist.xcstrings` en/ko). 권한 추가 후 `tuist generate` 재실행.
 
