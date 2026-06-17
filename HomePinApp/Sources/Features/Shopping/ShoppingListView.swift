@@ -34,7 +34,9 @@ struct ShoppingListView: View {
     .navigationBarTitleDisplayMode(.inline)
     .sheet(item: $stockRoute) { route in
       ItemEditorView(mode: .create(initialName: route.shoppingItem.name), onSaved: {
+        // 신규 재고 항목을 만들어 재고에 반영했으므로 가산 완료로 표시한다(재체크 이중 가산 방지).
         route.shoppingItem.isChecked = true
+        route.shoppingItem.stockCredited = true
       }, onSavedItem: { item in
         route.shoppingItem.sourceIngredient?.item = item
       })
@@ -131,7 +133,14 @@ struct ShoppingListView: View {
 
   private func toggle(_ shoppingItem: ShoppingItem) {
     if shoppingItem.isChecked {
+      // 체크 해제는 재고를 차감하지 않고 장보기 상태만 되돌린다(의도된 비대칭). 단,
+      // 이미 가산됐다는 사실(`stockCredited`)은 유지해 재체크 시 이중 가산을 막는다.
       shoppingItem.isChecked = false
+      return
+    }
+    // 이미 한 번 재고에 반영된 항목은 재체크 시 가산하지 않고 상태만 되돌린다.
+    if shoppingItem.stockCredited {
+      shoppingItem.isChecked = true
       return
     }
     if let item = matchingItem(for: shoppingItem) {
@@ -139,6 +148,7 @@ struct ShoppingListView: View {
       item.updatedAt = .now
       shoppingItem.sourceIngredient?.item = item
       shoppingItem.isChecked = true
+      shoppingItem.stockCredited = true
     } else {
       stockRoute = ShoppingStockRoute(shoppingItem: shoppingItem)
     }

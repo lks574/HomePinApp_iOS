@@ -351,6 +351,10 @@ struct CaptureSheet: View {
     if fields.contains(where: { Item.normalize($0).contains(search.fullKey) }) {
       return true
     }
+    // 토큰·의미 플래그가 전혀 없으면(불용어/조사만 남은 질의) `fullKey` 부분 일치 외에는
+    // 구체적 신호가 없으므로, 빈 토큰 `allSatisfy` 의 vacuous truth 로 전체가 매칭되지
+    // 않도록 막는다.
+    guard search.hasConcreteSignal else { return false }
     guard itemMatchesSemanticFilters(item, search: search) else { return false }
     return search.tokens.allSatisfy { token in
       fields.contains { Item.normalize($0).contains(token) }
@@ -363,6 +367,9 @@ struct CaptureSheet: View {
     if fields.contains(where: { Item.normalize($0).contains(search.fullKey) }) {
       return true
     }
+    // 토큰·의미 플래그가 전혀 없으면 `fullKey` 부분 일치 외에 구체적 신호가 없으므로
+    // 전체 카탈로그가 매칭되지 않게 막는다.
+    guard search.hasConcreteSignal else { return false }
     guard recipeMatchesSemanticFilters(recipe, search: search) else { return false }
     return search.tokens.allSatisfy { token in
       fields.contains { Item.normalize($0).contains(token) }
@@ -440,6 +447,14 @@ private struct CaptureSearchQuery {
 
   var hasSearchText: Bool {
     !fullKey.isEmpty
+  }
+
+  /// 토큰 또는 의미 플래그 같은 구체적 검색 신호가 하나라도 있는지. 모두 없으면(불용어·
+  /// 조사만 남은 질의) 빈 토큰 `allSatisfy` 의 vacuous truth 로 전체가 매칭되는 것을 막는다.
+  var hasConcreteSignal: Bool {
+    !tokens.isEmpty
+      || wantsExpiringSoon || wantsExpired || wantsNoLocation
+      || wantsReadyRecipe || wantsMissingRecipe
   }
 
   init(_ raw: String) {

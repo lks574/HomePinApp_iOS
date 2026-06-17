@@ -16,6 +16,11 @@ final class ShoppingItem {
   var quantity: Int?
   /// 구매 완료 체크 상태.
   var isChecked: Bool
+  /// 한 번이라도 체크되어 재고(`Item`)에 수량이 가산됐는지. 체크 해제는 재고를 차감하지
+  /// 않으므로(의도된 비대칭), 재체크 시 이 플래그로 이중 가산을 막는다. 기존 데이터는
+  /// 기본값 `false` 로 시작하지만, 이미 체크된 항목은 재고에 반영된 것으로 보고 재체크 시
+  /// 가산하지 않는다(아래 토글 로직 참조).
+  var stockCredited: Bool = false
   var createdAt: Date
 
   /// 부족분 연동 훅 — 이 항목이 어떤 레시피 재료에서 비롯됐는지.
@@ -28,6 +33,7 @@ final class ShoppingItem {
     normalizedName: String? = nil,
     quantity: Int? = nil,
     isChecked: Bool = false,
+    stockCredited: Bool = false,
     createdAt: Date = .now,
     sourceIngredient: RecipeIngredient? = nil,
   ) {
@@ -36,6 +42,7 @@ final class ShoppingItem {
     self.normalizedName = normalizedName ?? Item.normalize(name)
     self.quantity = quantity
     self.isChecked = isChecked
+    self.stockCredited = stockCredited
     self.createdAt = createdAt
     self.sourceIngredient = sourceIngredient
   }
