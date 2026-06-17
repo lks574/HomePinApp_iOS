@@ -54,7 +54,7 @@ struct PlacesListView: View {
         .padding(20)
       }
       .background(AppColor.screenBackground)
-      .toolbar(.hidden, for: .navigationBar)
+      .hideNavBar()
       .navigationDestination(for: Area.self) { PlaceDetailView(area: $0) }
       .sheet(item: $editorRoute) { route in
         PlaceEditorView(mode: route.mode)

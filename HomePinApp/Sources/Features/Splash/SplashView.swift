@@ -5,7 +5,7 @@ import SwiftUI
 struct SplashView: View {
   var body: some View {
     ZStack {
-      Color(.systemBackground)
+      AppColor.screenBackground
         .ignoresSafeArea()
       VStack(spacing: 16) {
         Image(systemName: "house.fill")

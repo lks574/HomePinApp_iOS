@@ -195,7 +195,7 @@ private func createRow(
   HStack(spacing: 10) {
     TextField(placeholder, text: text)
       .font(.appItemBody)
-      .textInputAutocapitalization(.never)
+      .plainTextInput()
     Button(title, action: action)
       .font(.appRowLabel)
       .foregroundStyle(AppColor.accent)

@@ -47,7 +47,7 @@ struct PlaceDetailView: View {
       .padding(20)
     }
     .background(AppColor.screenBackground)
-    .toolbar(.hidden, for: .navigationBar)
+    .hideNavBar()
     .sheet(item: $editorRoute) { route in
       ItemEditorView(mode: route.mode)
     }

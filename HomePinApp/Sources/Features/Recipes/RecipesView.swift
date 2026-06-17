@@ -73,7 +73,7 @@ struct RecipesView: View {
         .padding(20)
       }
       .background(AppColor.screenBackground)
-      .toolbar(.hidden, for: .navigationBar)
+      .hideNavBar()
       .navigationDestination(for: Recipe.self) { RecipeDetailView(recipe: $0) }
       .sheet(item: $editorRoute) { route in
         RecipeEditorView(mode: route.mode)

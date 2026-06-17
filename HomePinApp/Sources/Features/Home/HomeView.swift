@@ -44,7 +44,7 @@ struct HomeView: View {
         .padding(20)
       }
       .background(AppColor.screenBackground)
-      .toolbar(.hidden, for: .navigationBar)
+      .hideNavBar()
       .navigationDestination(for: ShoppingDestination.self) { _ in
         ShoppingListView()
       }
