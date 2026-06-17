@@ -9,8 +9,13 @@ struct ItemEditorView: View {
   @Environment(\.dismiss) private var dismiss
   @Environment(\.modelContext) private var modelContext
   @Query(sort: \Area.sortOrder) private var areas: [Area]
+  @Query(sort: \Spot.name) private var spots: [Spot]
   @Query(sort: \ItemCategory.sortOrder) private var categories: [ItemCategory]
   @Query(sort: \Tag.name) private var tags: [Tag]
+
+  /// 직전 추가 위치(다음 추가 기본값으로 prefill). UUID 문자열로 저장한다.
+  @AppStorage("lastAreaID") private var lastAreaID = ""
+  @AppStorage("lastSpotID") private var lastSpotID = ""
 
   @State private var model: ItemEditorModel
   private let onSaved: (() -> Void)?
@@ -72,6 +77,7 @@ struct ItemEditorView: View {
         loadPickedPhoto(newItem)
       }
       .onAppear {
+        prefillLastLocationIfNeeded()
         if model.name.isEmpty {
           focusedField = .name
         }
@@ -296,10 +302,34 @@ struct ItemEditorView: View {
     guard model.canSave else { return }
     let item = model.save(into: modelContext)
     if let item {
+      rememberLastLocation(of: item)
       onSavedItem?(item)
     }
     onSaved?()
     dismiss()
+  }
+
+  /// create 모드에서 위치가 비어 있으면 직전 추가 위치를 기본값으로 채운다. 저장된 id 가
+  /// 삭제된 위치를 가리키면 fetch 가 nil 이라 무시한다(안전 폴백). 위치 불변식 유지.
+  private func prefillLastLocationIfNeeded() {
+    guard case .create = model.mode else { return }
+    guard model.selectedArea == nil, model.selectedSpot == nil else { return }
+    if let spotID = UUID(uuidString: lastSpotID),
+       let spot = spots.first(where: { $0.id == spotID }) {
+      model.selectedSpot = spot
+      model.selectedArea = spot.area
+      return
+    }
+    if let areaID = UUID(uuidString: lastAreaID),
+       let area = areas.first(where: { $0.id == areaID }) {
+      model.selectedArea = area
+    }
+  }
+
+  /// 저장 성공 시 위치를 직전 위치로 기록한다(세부위치 없으면 비운다).
+  private func rememberLastLocation(of item: Item) {
+    lastAreaID = item.area?.id.uuidString ?? ""
+    lastSpotID = item.spot?.id.uuidString ?? ""
   }
 
   private func deleteItem() {
