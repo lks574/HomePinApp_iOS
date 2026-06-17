@@ -1,8 +1,9 @@
 import SwiftUI
 
-/// 검색 바(카드형/필드형). 현재는 placeholder 표시 전용(실제 검색은 후속 screen-04).
+/// 검색 바(카드형/필드형). `text` 를 받으면 실제 입력 필드, 없으면 표시 전용 placeholder.
 struct AppSearchBar: View {
   let placeholder: LocalizedStringKey
+  var text: Binding<String>? = nil
   var style: Style = .card
 
   enum Style {
@@ -14,9 +15,24 @@ struct AppSearchBar: View {
     HStack(spacing: style.iconSpacing) {
       Image(systemName: "magnifyingglass")
         .foregroundStyle(style.foreground)
-      Text(placeholder)
-        .foregroundStyle(style.foreground)
+      if let text {
+        TextField(placeholder, text: text)
+          .foregroundStyle(AppColor.textPrimary)
+          .submitLabel(.search)
+      } else {
+        Text(placeholder)
+          .foregroundStyle(style.foreground)
+      }
       Spacer()
+      if let text, !text.wrappedValue.isEmpty {
+        Button {
+          text.wrappedValue = ""
+        } label: {
+          Image(systemName: "xmark.circle.fill")
+            .foregroundStyle(AppColor.textFaint)
+        }
+        .buttonStyle(.plain)
+      }
     }
     .font(.appItemBody)
     .padding(.horizontal, style.horizontalPadding)

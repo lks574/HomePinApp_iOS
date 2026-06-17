@@ -7,6 +7,7 @@ struct RecipesView: View {
   @Query(sort: \Recipe.title) private var recipes: [Recipe]
   @Query private var items: [Item]
   /// 필터 선택값은 저장값(raw 한국어 키) 또는 `allKey`(전체) 다. 표시 라벨만 현지화한다.
+  @State private var searchText = ""
   @State private var cuisine = Self.allKey
   @State private var dish = Self.allKey
   @State private var editorRoute: RecipeEditorRoute?
@@ -37,7 +38,7 @@ struct RecipesView: View {
             .font(.system(size: 14)).foregroundStyle(AppColor.textTertiary)
             .padding(.bottom, 16)
 
-          AppSearchBar(placeholder: "Search recipes and ingredients")
+          AppSearchBar(placeholder: "Search recipes and ingredients", text: $searchText)
             .padding(.bottom, 14)
           cuisineChips
           dishChips
@@ -83,9 +84,11 @@ struct RecipesView: View {
   // MARK: 파생
 
   private var filteredRecipes: [Recipe] {
-    recipes.filter { recipe in
+    let searchKey = Item.normalize(searchText)
+    return recipes.filter { recipe in
       (cuisine == Self.allKey || recipe.cuisine == cuisine)
         && (dish == Self.allKey || recipe.dishType == dish)
+        && (searchKey.isEmpty || recipeMatchesSearch(recipe, key: searchKey))
     }
   }
 
@@ -113,6 +116,32 @@ struct RecipesView: View {
     case .soon: .soon
     case .have: .have
     }
+  }
+
+  private func recipeMatchesSearch(_ recipe: Recipe, key: String) -> Bool {
+    searchableRecipeFields(recipe).contains { Item.normalize($0).contains(key) }
+  }
+
+  private func searchableRecipeFields(_ recipe: Recipe) -> [String] {
+    var fields: [String?] = [
+      recipe.title,
+      recipe.summary,
+      recipe.cuisine,
+      recipe.dishType,
+      recipe.cuisine.map(RecipeClassification.cuisineLabel),
+      recipe.dishType.map(RecipeClassification.dishTypeLabel),
+    ]
+    fields.append(contentsOf: recipe.ingredients.flatMap(searchableIngredientFields).map(Optional.init))
+    return fields.compactMap { $0 }.filter { !$0.isEmpty }
+  }
+
+  private func searchableIngredientFields(_ ingredient: RecipeIngredient) -> [String] {
+    [
+      ingredient.name,
+      ingredient.unit,
+      ingredient.note,
+      ingredient.item?.name,
+    ].compactMap { $0 }.filter { !$0.isEmpty }
   }
 
   // MARK: 조각

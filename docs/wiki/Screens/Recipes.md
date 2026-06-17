@@ -2,7 +2,7 @@
 aliases: [Recipes, 레시피]
 tags: [screen, screen/recipe]
 created: 2026-06-12
-updated: 2026-06-16
+updated: 2026-06-17
 status: in-progress
 screen-id: screen-01
 ---
@@ -15,6 +15,7 @@ screen-id: screen-01
 
 - 유통기한 임박 [[Item]] 을 요약 카드로 보여준다.
 - 임박 재료를 쓰는 [[Recipe]] 와 보유 재료로 만들 수 있는 레시피를 나눠 나열한다.
+- 검색어로 제목·요약·분류 라벨·재료명/단위/메모를 부분 일치 필터한다.
 - 요리권(한식/일식…) 칩과 요리 종류(국·찌개/볶음…) 칩으로 필터([[Recipe]]
   `cuisine`·`dishType` AND 필터).
 
@@ -33,7 +34,8 @@ screen-id: screen-01
 
 ## 상태 관리
 
-- 직결(View ↔ SwiftData). 비영속 UI 상태는 `@State cuisine`(선택 칩)뿐.
+- 직결(View ↔ SwiftData). 비영속 UI 상태는 `@State searchText`(검색어),
+  `@State cuisine`/`dish`(선택 칩).
 - 탭 경로는 셸 라우터가 소유: `NavigationStack(path:)` 를 `router.recipesPath` 에
   바인딩(수동 `Binding`). [[Capture]] 검색 → 상세 교차 push 가 탭 재생성 후에도 유지.
 

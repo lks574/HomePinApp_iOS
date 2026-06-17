@@ -1,5 +1,7 @@
+import PhotosUI
 import SwiftData
 import SwiftUI
+import UIKit
 
 /// 물건 추가/편집 공용 에디터. draft·저장 규칙은 `ItemEditorModel` 이 소유하고,
 /// 이 View 는 레이아웃과 순수 UI 상태(포커스·picker 시트 표시)만 갖는다.
@@ -7,6 +9,8 @@ struct ItemEditorView: View {
   @Environment(\.dismiss) private var dismiss
   @Environment(\.modelContext) private var modelContext
   @Query(sort: \Area.sortOrder) private var areas: [Area]
+  @Query(sort: \ItemCategory.sortOrder) private var categories: [ItemCategory]
+  @Query(sort: \Tag.name) private var tags: [Tag]
 
   @State private var model: ItemEditorModel
   private let onSaved: (() -> Void)?
@@ -14,7 +18,11 @@ struct ItemEditorView: View {
 
   @State private var showingAreaPicker = false
   @State private var showingSpotPicker = false
+  @State private var showingCategoryPicker = false
+  @State private var showingTagPicker = false
+  @State private var showingPhotoPicker = false
   @State private var showingDeleteConfirm = false
+  @State private var photoItem: PhotosPickerItem?
   @FocusState private var focusedField: ItemEditorField?
 
   init(mode: ItemEditorModel.Mode, onSaved: (() -> Void)? = nil, onSavedItem: ((Item) -> Void)? = nil) {
@@ -28,7 +36,9 @@ struct ItemEditorView: View {
       ScrollView {
         VStack(spacing: 18) {
           basicInfoCard
+          photoCard
           locationCard
+          taxonomyCard
           optionCard
           if model.isEditing {
             deleteButton
@@ -50,6 +60,16 @@ struct ItemEditorView: View {
       }
       .sheet(isPresented: $showingSpotPicker) {
         SpotPickerSheet(area: model.selectedArea, selectedSpot: $model.selectedSpot, selectedArea: $model.selectedArea)
+      }
+      .sheet(isPresented: $showingCategoryPicker) {
+        ItemCategoryPickerSheet(categories: categories, selectedCategory: $model.selectedCategory)
+      }
+      .sheet(isPresented: $showingTagPicker) {
+        ItemTagPickerSheet(tags: tags, selectedTags: $model.selectedTags)
+      }
+      .photosPicker(isPresented: $showingPhotoPicker, selection: $photoItem, matching: .images)
+      .onChange(of: photoItem) { _, newItem in
+        loadPickedPhoto(newItem)
       }
       .onAppear {
         if model.name.isEmpty {
@@ -130,6 +150,59 @@ struct ItemEditorView: View {
     .appEditorCard()
   }
 
+  private var photoCard: some View {
+    VStack(alignment: .leading, spacing: 12) {
+      HStack {
+        Text("Photo")
+          .font(.appRowLabel)
+          .foregroundStyle(AppColor.textPrimary)
+        Spacer()
+        Button(model.photoData == nil ? "Choose Photo" : "Change Photo") {
+          showingPhotoPicker = true
+        }
+        .font(.appRowLabel)
+        .foregroundStyle(AppColor.accent)
+      }
+
+      if let image = selectedImage {
+        Image(uiImage: image)
+          .resizable()
+          .scaledToFill()
+          .frame(maxWidth: .infinity)
+          .frame(height: 170)
+          .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+
+        Button(role: .destructive) {
+          model.photoData = nil
+          photoItem = nil
+        } label: {
+          Text("Remove Photo")
+            .font(.appCaptionStrong)
+            .foregroundStyle(.red)
+        }
+        .buttonStyle(.plain)
+      } else {
+        Button {
+          showingPhotoPicker = true
+        } label: {
+          HStack(spacing: 10) {
+            Image(systemName: "photo")
+              .font(.appItemBody)
+              .foregroundStyle(AppColor.textFaint)
+            Text("No photo")
+              .font(.appItemBody)
+              .foregroundStyle(AppColor.textMuted)
+            Spacer()
+          }
+          .frame(height: 56)
+        }
+        .buttonStyle(.plain)
+      }
+    }
+    .padding(16)
+    .appEditorCard()
+  }
+
   private var locationCard: some View {
     VStack(spacing: 0) {
       AppEditorSelectionRow(
@@ -144,6 +217,25 @@ struct ItemEditorView: View {
         value: model.selectedSpot?.name ?? String(localized: "None"),
         isPlaceholder: model.selectedSpot == nil,
         action: { showingSpotPicker = true }
+      )
+    }
+    .appEditorCard()
+  }
+
+  private var taxonomyCard: some View {
+    VStack(spacing: 0) {
+      AppEditorSelectionRow(
+        title: "Category",
+        value: model.selectedCategory?.name ?? String(localized: "Uncategorized"),
+        isPlaceholder: model.selectedCategory == nil,
+        action: { showingCategoryPicker = true }
+      )
+      Divider().padding(.leading, 16)
+      AppEditorSelectionRow(
+        title: "Tags",
+        value: tagSummary,
+        isPlaceholder: model.selectedTags.isEmpty,
+        action: { showingTagPicker = true }
       )
     }
     .appEditorCard()
@@ -185,6 +277,21 @@ struct ItemEditorView: View {
     .appEditorCard()
   }
 
+  private var selectedImage: UIImage? {
+    guard let data = model.photoData else { return nil }
+    return UIImage(data: data)
+  }
+
+  private var tagSummary: String {
+    guard !model.selectedTags.isEmpty else {
+      return String(localized: "No tags")
+    }
+    return model.selectedTags
+      .sorted { $0.name < $1.name }
+      .map(\.name)
+      .joined(separator: ", ")
+  }
+
   private func save() {
     guard model.canSave else { return }
     let item = model.save(into: modelContext)
@@ -206,6 +313,19 @@ struct ItemEditorView: View {
       model.quantity -= 1
     } else if model.canDeleteAtMinimumQuantity {
       showingDeleteConfirm = true
+    }
+  }
+
+  private func loadPickedPhoto(_ item: PhotosPickerItem?) {
+    guard let item else { return }
+    Task {
+      let data = try? await item.loadTransferable(type: Data.self)
+      await MainActor.run {
+        if let data {
+          model.photoData = data
+        }
+        photoItem = nil
+      }
     }
   }
 }

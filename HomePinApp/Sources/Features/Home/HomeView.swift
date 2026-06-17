@@ -19,10 +19,17 @@ struct HomeView: View {
             .padding(.bottom, 22)
 
           if !expiringItems.isEmpty {
-            AppExpiringItemsBanner(
-              items: expiringItems,
-              headline: expiringItems.prefix(3).map(\.name).joined(separator: " · ")
-            )
+            Button {
+              if let item = expiringItems.first {
+                editorRoute = ItemEditorRoute(mode: .edit(item))
+              }
+            } label: {
+              AppExpiringItemsBanner(
+                items: expiringItems,
+                headline: expiringItems.prefix(3).map(\.name).joined(separator: " · ")
+              )
+            }
+            .buttonStyle(.plain)
             .padding(.bottom, 26)
           }
 

@@ -2,7 +2,7 @@
 aliases: [Home, 홈]
 tags: [screen, screen/home]
 created: 2026-06-12
-updated: 2026-06-16
+updated: 2026-06-17
 status: in-progress
 screen-id: screen-01
 ---
@@ -16,6 +16,7 @@ screen-id: screen-01
 
 - 앱의 주 진입 화면.
 - 임박 물건과 최근 추가 물건을 빠르게 확인한다.
+- 임박 배너를 탭하면 가장 임박한 물건을 [[ItemEditor]] 로 편집한다.
 - 최근 추가 행을 탭해 [[ItemEditor]] 로 편집한다.
 - 장소 바로가기를 탭하면 장소 탭으로 전환하고 그 장소 상세로 이동한다.
 - **장보기 요약 섹션**: 미완료 살 것 개수 + 상위 3개 미리보기. 탭하면 [[Shopping]]
@@ -24,7 +25,7 @@ screen-id: screen-01
 ## 연결된 화면
 
 - 들어옴 ←: [[Splash]] (`phase = .home`)
-- 이동 →: [[ItemEditor]] — 최근 추가 물건 행 탭
+- 이동 →: [[ItemEditor]] — 임박 배너 탭(첫 임박 물건), 최근 추가 물건 행 탭
 - 이동 →: [[PlaceDetail]] — 장소 바로가기 탭(탭 전환). `AppRouter.openPlace(area)`
 - 이동 →: [[Shopping]] — 장보기 요약 섹션 탭(`navigationDestination(for: ShoppingDestination.self)`)
 

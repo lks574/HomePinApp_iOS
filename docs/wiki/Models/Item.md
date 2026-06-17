@@ -35,9 +35,9 @@ nullify 로 보존된다.
 
 ## 사용 화면
 
-- [[Home]] — 임박/최근 물건 표시, 최근 행 편집 진입.
+- [[Home]] — 임박/최근 물건 표시, 임박 배너·최근 행 편집 진입.
 - [[PlaceDetail]] — 장소별 물건 목록, 행 편집, "다 썼어요" 빠른 정리.
-- [[ItemEditor]] — 추가/편집/삭제.
+- [[ItemEditor]] — 추가/편집/삭제, 사진·분류·태그 수동 편집.
 - [[Capture]] — 검색 결과·AI 추가 저장 대상.
 - [[RecipeDetail]]/[[Recipes]] — `RecipeIngredient.item` 연결을 통해 보유/부족 판정.
 

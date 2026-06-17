@@ -19,6 +19,9 @@ final class ItemEditorModel {
   var quantity: Int
   var selectedArea: Area?
   var selectedSpot: Spot?
+  var selectedCategory: ItemCategory?
+  var selectedTags: [Tag]
+  var photoData: Data?
   var hasExpiration: Bool
   var expiresAt: Date
   var memo: String
@@ -31,6 +34,9 @@ final class ItemEditorModel {
       quantity = 1
       selectedArea = spot?.area ?? area
       selectedSpot = spot
+      selectedCategory = nil
+      selectedTags = []
+      photoData = nil
       hasExpiration = false
       expiresAt = .now
       memo = ""
@@ -39,6 +45,9 @@ final class ItemEditorModel {
       quantity = item.quantity
       selectedArea = item.area
       selectedSpot = item.spot
+      selectedCategory = item.category
+      selectedTags = item.tags.sorted { $0.name < $1.name }
+      photoData = item.photoData
       hasExpiration = item.expiresAt != nil
       expiresAt = item.expiresAt ?? .now
       memo = item.memo ?? ""
@@ -93,11 +102,14 @@ final class ItemEditorModel {
       let item = Item(
         name: trimmedName,
         quantity: quantity,
+        photoData: photoData,
         memo: trimmedMemo,
         expiresAt: hasExpiration ? expiresAt : nil,
         area: area,
-        spot: selectedSpot
+        spot: selectedSpot,
+        category: selectedCategory
       )
+      item.tags = selectedTags
       modelContext.insert(item)
       return item
     case let .edit(item):
@@ -106,6 +118,9 @@ final class ItemEditorModel {
       item.quantity = quantity
       item.area = area
       item.spot = selectedSpot
+      item.category = selectedCategory
+      item.tags = selectedTags
+      item.photoData = photoData
       item.expiresAt = hasExpiration ? expiresAt : nil
       item.memo = trimmedMemo
       item.updatedAt = .now
