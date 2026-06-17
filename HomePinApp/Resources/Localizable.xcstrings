@@ -43,6 +43,16 @@
         }
       }
     },
+    "Add as new" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "새로 추가"
+          }
+        }
+      }
+    },
     "Add Category" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -1525,6 +1535,33 @@
         }
       }
     },
+    "merge.alreadyExists.%@" : {
+      "comment" : "Confirmation dialog title shown when adding an item whose name already exists. The argument is the existing item name.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "\"%@\" already exists"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "\"%@\" 은(는) 이미 있어요"
+          }
+        }
+      }
+    },
+    "Merge quantity" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "수량 합치기"
+          }
+        }
+      }
+    },
     "Microphone or speech recognition permission is off. Allow it in Settings or type instead." : {
       "localizations" : {
         "ko" : {
@@ -2970,6 +3007,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "AI가 정리한 내용이에요. 맞는지 확인하고 고친 뒤 추가하세요. ‘신규’는 이번에 새로 만들어져요."
+          }
+        }
+      }
+    },
+    "This item already exists" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이 물건은 이미 있어요"
           }
         }
       }

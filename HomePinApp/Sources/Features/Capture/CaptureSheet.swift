@@ -21,6 +21,8 @@ struct CaptureSheet: View {
   @State private var editorRoute: ItemEditorRoute?
   @State private var reviewRoute: DraftReviewRoute?
   @State private var showingRecipeCapture = false
+  /// 같은 이름 물건 추가 시 합치기/새로 추가를 묻기 위한 후보(있으면 다이얼로그 표시).
+  @State private var mergeCandidate: Item?
   @AppStorage(RecentSearches.storageKey) private var recentSearchesJSON = "[]"
   @FocusState private var inputFocused: Bool
 
@@ -59,6 +61,15 @@ struct CaptureSheet: View {
       }
       .sheet(isPresented: $showingRecipeCapture) {
         RecipeCaptureView()
+      }
+      .confirmationDialog(
+        mergeDialogTitle,
+        isPresented: mergeDialogPresented,
+        titleVisibility: .visible
+      ) {
+        Button("Merge quantity") { mergeWithCandidate() }
+        Button("Add as new") { addAsNewFromMerge() }
+        Button("Cancel", role: .cancel) { mergeCandidate = nil }
       }
       .onAppear { inputFocused = true }
       .onChange(of: dictation.transcript) { _, newTranscript in
@@ -358,12 +369,24 @@ struct CaptureSheet: View {
 
   // MARK: - 추가 로직
 
-  /// 명시적 추가 진입. 파서 가용 시 자연어 파싱(→ 확인 화면 push), 미가용·실패·취소·빈
-  /// 결과면 현 단건 스텁(이름 prefill)으로 폴백한다. 분기는 `parser.state` 변화를 받아 처리.
+  /// 명시적 추가 진입. 같은 정규화 이름의 기존 물건이 있으면 "수량 합치기/새로 추가" 를
+  /// 먼저 제안하고(자동 합치기·자동 저장 없음), 없으면 바로 추가 경로로 진행한다.
   private func add() {
     let name = trimmedQuery
     guard !name.isEmpty else { return }
     recordRecentSearch()
+    let key = Item.normalize(name)
+    if let duplicate = allItems.first(where: { $0.normalizedName == key }) {
+      mergeCandidate = duplicate
+      return
+    }
+    proceedToAdd(name)
+  }
+
+  /// 실제 추가 경로. 파서 가용 시 자연어 파싱(→ 확인 화면 push), 미가용·실패·취소·빈
+  /// 결과면 현 단건 스텁(이름 prefill)으로 폴백한다. 분기는 `parser.state` 변화를 받아 처리.
+  private func proceedToAdd(_ name: String) {
+    guard !name.isEmpty else { return }
     guard parser.isAvailable else {
       fallbackToStub(name)
       return
@@ -375,6 +398,37 @@ struct CaptureSheet: View {
   /// 검색 의도가 확정된 시점(결과 탭·추가 진입)에 현재 입력어를 최근 검색어로 적재한다.
   private func recordRecentSearch() {
     recentSearchesJSON = RecentSearches.adding(trimmedQuery, to: recentSearchesJSON)
+  }
+
+  /// 중복 합치기 다이얼로그 표시 바인딩. 닫으면 후보를 비운다.
+  private var mergeDialogPresented: Binding<Bool> {
+    Binding(
+      get: { mergeCandidate != nil },
+      set: { if !$0 { mergeCandidate = nil } }
+    )
+  }
+
+  /// 다이얼로그 제목 — 이미 있는 물건 이름을 끼워 안내한다(사용자 입력이라 verbatim).
+  private var mergeDialogTitle: Text {
+    if let name = mergeCandidate?.name {
+      Text("merge.alreadyExists.\(name)")
+    } else {
+      Text("This item already exists")
+    }
+  }
+
+  /// "수량 합치기" — 기존 물건 편집 화면으로 진입한다(수량 가산은 에디터에서 사용자가
+  /// 직접 올려 저장; 자동 저장하지 않는다 — 명시적 쓰기 원칙).
+  private func mergeWithCandidate() {
+    guard let duplicate = mergeCandidate else { return }
+    mergeCandidate = nil
+    editorRoute = ItemEditorRoute(mode: .edit(duplicate))
+  }
+
+  /// "새로 추가" — 합치기를 거부하고 기존 추가 경로(파서/스텁)로 진행한다.
+  private func addAsNewFromMerge() {
+    mergeCandidate = nil
+    proceedToAdd(trimmedQuery)
   }
 
   /// 파서 상태에 따라 분기한다. 성공이면 확인 화면 push, 실패·미가용이면 단건 스텁 폴백.
