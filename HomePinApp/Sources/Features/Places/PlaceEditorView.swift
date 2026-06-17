@@ -39,7 +39,7 @@ struct PlaceEditorView: View {
       .appEditorSaveBar(title: saveTitle, isEnabled: canSave, action: save)
       .background(AppColor.screenBackground)
       .navigationTitle(title)
-      .navigationBarTitleDisplayMode(.inline)
+      .compactNavTitle()
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {
           Button("Close") { dismiss() }

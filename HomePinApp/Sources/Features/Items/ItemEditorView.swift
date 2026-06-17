@@ -53,7 +53,7 @@ struct ItemEditorView: View {
       .appEditorSaveBar(title: model.saveTitle, isEnabled: model.canSave, action: save)
       .background(AppColor.screenBackground)
       .navigationTitle(model.title)
-      .navigationBarTitleDisplayMode(.inline)
+      .compactNavTitle()
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {
           Button("Close") { dismiss() }

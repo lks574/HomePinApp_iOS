@@ -43,7 +43,7 @@ struct DraftCategoryPickerSheet: View {
       }
       .background(AppColor.screenBackground)
       .navigationTitle("Select Category")
-      .navigationBarTitleDisplayMode(.inline)
+      .compactNavTitle()
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {
           Button("Close") { dismiss() }
@@ -122,7 +122,7 @@ struct DraftTagPickerSheet: View {
       }
       .background(AppColor.screenBackground)
       .navigationTitle("Select Tags")
-      .navigationBarTitleDisplayMode(.inline)
+      .compactNavTitle()
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {
           Button("Done") { dismiss() }
