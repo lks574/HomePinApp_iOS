@@ -11,7 +11,22 @@ status: draft
 UI 우선 1차(시안 C 화면 골격: 5탭·장소·레시피·홈·추가 시트) 완료 후의 다음 후보.
 보류 상세는 `docs/follow-ups.md`.
 
-> 최근 완료: **검색·추가 정교화 횡단(screen-16)** — 중앙 검색([[Capture]],
+> 최근 완료: **macOS 플랫폼 지원 횡단(screen-17)** — 네이티브 macOS 앱 타깃 추가
+> (화면 추가 아님, 플랫폼 확장). `Project.swift` 에 `HomePinApp-macOS`(`.macOS("26.0")`,
+> bundleId `com.sro.homepinappmac`, entitlements app-sandbox·files.user-selected.read-write·
+> device.audio-input) 추가, **소스·리소스 한 벌 공유** + `#if os` 흡수(Mac Catalyst·
+> Designed-for-iPad 아닌 네이티브). 플랫폼 추상화 `Shared/Platform/`(`PlatformImage`
+> UIImage/NSImage typealias·`CGImage`/orientation 추출(macOS `.up`)·`Image(platformImage:)`;
+> nav/입력 modifier 헬퍼 macOS no-op) + 동적 색 provider UIColor/NSColor 분기 +
+> `cameraCaptureCover` no-op. **카메라(`UIImagePickerController`) macOS 비노출**(사진
+> 라이브러리 OCR·STT·FoundationModels 는 공통, macOS 는 `AVAudioSession` 분기만 skip).
+> 셸·네비게이션 재설계 없이 동작. **스킴 분리**(`targetSchemesGrouping: .notGrouped`) →
+> `HomePinApp`(iOS)/`HomePinApp-macOS`(macOS) 각각 노출(한 스킴 묶음은 macOS 빌드 시 iOS
+> 타깃 서명 오류라 분리). iOS·macOS 빌드 둘 다 green. 동작 로직 변경 없음(iOS 회귀 0).
+> 결정: `docs/wiki/Decision/2026-06-17-macOS-네이티브-타깃-추가.md`,
+> `docs/wiki/Decision/2026-06-17-플랫폼-이미지-추상화.md`. 잔여(다음 할 일):
+> macOS 실기 런타임 검증(AC-004~006)·sandbox 사진 entitlement 보정 필요 여부.
+> 이전: **검색·추가 정교화 횡단(screen-16)** — 중앙 검색([[Capture]],
 > `CaptureSheet`)·물건 추가 경로의 횡단 정교화(새 화면 아님, `Shared/Search/`).
 > (1) 자연어 규칙 외부화 — 조사·불용어·의미단어 3개를 `Resources/SearchRules.json` +
 > `SearchRules.swift`(번들 1회 로드, 누락 시 `preconditionFailure`)로 분리(토큰화/`Item.normalize`
@@ -113,6 +128,17 @@ UI 우선 1차(시안 C 화면 골격: 5탭·장소·레시피·홈·추가 시�
 
 ## 다음 후보 (우선순위순 제안)
 
+0. **macOS 실기 런타임 검증(screen-17 후속)** — iOS·macOS 빌드는 green 이나 macOS 는
+   실기 런타임 검증이 남았다(시뮬레이터/CI 빌드만으로는 못 보는 권한·파일·디바이스 경로).
+   - **AC-004 PhotosPicker OCR** — macOS 에서 사진 라이브러리 선택 → Vision OCR →
+     [[RecipeCapture]] 입력 채우기. sandbox 에서 사진 접근/읽기 정상 여부.
+   - **AC-005 파일 Import/Export** — [[DataTransfer]] 백업 `.homepinbackup` 패키지
+     export/import 가 sandbox(`files.user-selected.read-write`)에서 정상 동작하는지.
+   - **AC-006 STT 권한/받아쓰기** — 마이크(`device.audio-input`)·음성인식 권한 시트와
+     온디바이스 받아쓰기가 macOS 에서 정상인지(`AVAudioSession` 없이).
+   - 검증 중 sandbox 사진 entitlement(예: `files.photos`/PhotosPicker 접근) 보정이
+     필요하면 entitlements 에 추가. macOS 데스크톱 UX 최적화(메뉴/창/사이드바)는 별도
+     후속. 결정: [[2026-06-17-macOS-네이티브-타깃-추가]].
 1. **AI 자연어 추가** — 1차 구현 완료(screen-09). Foundation Models `@Generable`
    (`NLItemParser`, 추출만·비-MainActor) → `NLParseViewModel`(@MainActor, 가용성
    게이트·단일 세션 Task) → 확인 드래프트(`CaptureDraftReviewView`) → `AddDraftResolver`

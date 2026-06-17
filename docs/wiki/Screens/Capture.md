@@ -82,7 +82,11 @@ related-tasks: [screen-01, screen-04, screen-09, screen-12, screen-16]
 - 모델 미설치 시 `AssetInventory` 로 확인/설치, 미지원·거부 시 `state` 를
   `.unavailable`/`.denied` 로 떨어뜨리고 시트는 안내 + 텍스트 폴백을 노출한다.
 - Info.plist 권한 키(`NSMicrophoneUsageDescription`,
-  `NSSpeechRecognitionUsageDescription`)는 `Project.swift` 에서 추가.
+  `NSSpeechRecognitionUsageDescription`)는 `Project.swift` 공유 Info.plist 에 둔다(양
+  플랫폼 공통).
+- **macOS 분기(screen-17)**: STT 는 macOS 공통(audio-input entitlement 로 마이크 접근).
+  `AVAudioSession` 설정만 `#if os(iOS)` 로 건너뛴다(macOS 는 세션 개념 없음). 텍스트·검색·
+  AI 추가 경로는 양 플랫폼 동일. 결정: [[2026-06-17-macOS-네이티브-타깃-추가]].
 
 ## 관련 태스크 / 결정
 

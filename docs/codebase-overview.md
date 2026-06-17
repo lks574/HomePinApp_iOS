@@ -11,6 +11,32 @@ status: draft
 > [!note] 작성 예정 (placeholder)
 > 코드가 생기면 빌드·구조·Feature·Dependency·위젯·테스트 전체 지도를 작성한다.
 
+## 빌드 타깃 / 스킴
+
+- **타깃 2개**(멀티플랫폼, 소스·리소스 한 벌 공유 — [[2026-06-17-macOS-네이티브-타깃-추가]]):
+  - `HomePinApp` — iOS, `.iOS("26.5")`, bundleId `com.sro.homepinappios`.
+  - `HomePinApp-macOS` — 네이티브 macOS, `.macOS("26.0")`, bundleId
+    `com.sro.homepinappmac`, entitlements `Tuist/Support/HomePinApp-macOS.entitlements`
+    (app-sandbox·files.user-selected.read-write·device.audio-input).
+- **스킴**: `automaticSchemesOptions` `targetSchemesGrouping: .notGrouped` 로 타깃별
+  스킴 분리 → `HomePinApp`(iOS) / `HomePinApp-macOS`(macOS). 한 스킴에 묶으면
+  (`.singleScheme`) macOS 빌드 시 iOS 타깃까지 끌려와 서명 오류가 나서 분리했다.
+- 명령은 `docs/development.md` 참고.
+
+## 공용 / 플랫폼 추상화 (`Shared/`)
+
+- `Shared/Platform/`(신규, [[2026-06-17-플랫폼-이미지-추상화]]):
+  - `PlatformImage.swift` — `PlatformImage`(UIImage/NSImage) typealias + `from(data:)`·
+    `platformCGImage`·`platformCGImageOrientation`(macOS `.up` 고정) + `Image(platformImage:)`.
+  - `View+PlatformNav.swift` — iOS 전용 modifier 를 한 곳에서 분기(macOS no-op):
+    `compactNavTitle`/`hideNavBar`/`plainTextInput`/`numericKeyboard`.
+- `Shared/DesignSystem/Color+Hex.swift` — 동적 색 provider 를 UIColor/NSColor 로 분기.
+- `Shared/OCR/CameraImagePicker.swift` — `CameraImagePicker`(`#if os(iOS)`) +
+  `cameraCaptureCover` 헬퍼(macOS no-op). `TextRecognizer` 의 `CGImage`/orientation
+  추출은 `PlatformImage` 로 이관.
+- `Shared/Speech/SpeechDictationEngine.swift` — `AVAudioSession` 설정만 `#if os(iOS)`
+  (macOS 는 세션 개념 없음, audio-input entitlement 로 마이크 접근).
+
 ## Feature 모듈 메모 (점증 기록)
 
 - `Features/DataTransfer/` — 전체 데이터 백업/가져오기 + CSV 대량 입력(screen-15).

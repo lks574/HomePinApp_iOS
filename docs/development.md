@@ -2,7 +2,7 @@
 aliases: [development, 개발 워크플로]
 tags: [doc/code, dev]
 created: 2026-06-12
-updated: 2026-06-12
+updated: 2026-06-17
 status: draft
 ---
 
@@ -19,11 +19,29 @@ status: draft
 ```bash
 mise trust                    # 최초 1회, mise.toml 신뢰
 tuist generate                # Project.swift -> HomePinApp.xcworkspace 생성 (.xcodeproj 는 생성물)
-# 생성된 워크스페이스로 빌드:
+# iOS 빌드(시뮬레이터):
 xcodebuild build \
   -workspace HomePinApp.xcworkspace -scheme HomePinApp \
   -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO
 ```
+
+### 멀티플랫폼 빌드 (iOS / macOS 분리)
+
+타깃별 스킴이 분리돼 있다 — `HomePinApp`(iOS) / `HomePinApp-macOS`(macOS). 데스티네이션
+별로 해당 스킴을 골라 각 타깃만 빌드한다(한 스킴에 묶으면 macOS 빌드 시 iOS 타깃까지
+끌려와 서명 오류가 난다 — `targetSchemesGrouping: .notGrouped`).
+
+```bash
+# iOS 디바이스 타깃 빌드:
+xcodebuild -workspace HomePinApp.xcworkspace -scheme HomePinApp \
+  -destination 'generic/platform=iOS' build
+# macOS 네이티브 타깃 빌드(서명 자동, sandbox entitlements 적용):
+xcodebuild -workspace HomePinApp.xcworkspace -scheme HomePinApp-macOS \
+  -destination 'platform=macOS' build
+```
+
+- 스킴 목록 확인: `xcodebuild -workspace HomePinApp.xcworkspace -list`.
+- 분리 빌드 검증: iOS·macOS 두 스킴 모두 `** BUILD SUCCEEDED **` 인지 각각 확인.
 
 - `tuist generate` 산출물(`*.xcworkspace`/`*.xcodeproj`/`Derived/`)은 git 무시.
   매니페스트(`Project.swift`)만 추적한다.
