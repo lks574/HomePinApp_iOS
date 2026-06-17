@@ -470,6 +470,7 @@ private struct CaptureSearchQuery {
   }
 
   private static func tokens(from raw: String) -> [String] {
+    let rules = SearchRules.shared
     let separators = CharacterSet.whitespacesAndNewlines
       .union(.punctuationCharacters)
       .union(.symbols)
@@ -477,20 +478,20 @@ private struct CaptureSearchQuery {
       .components(separatedBy: separators)
       .map(Item.normalize)
     let normalizedTokens = rawTokens
-      .map(stripKoreanSuffixes)
+      .map { stripKoreanSuffixes($0, suffixes: rules.koreanSuffixes) }
       .filter { !$0.isEmpty }
-      .filter { !stopwords.contains($0) }
-      .filter { !semanticWords.contains($0) }
+      .filter { !rules.stopwords.contains($0) }
+      .filter { !rules.semanticWords.contains($0) }
     var seen = Set<String>()
     return normalizedTokens.filter { seen.insert($0).inserted }
   }
 
-  private static func stripKoreanSuffixes(_ raw: String) -> String {
+  private static func stripKoreanSuffixes(_ raw: String, suffixes: [String]) -> String {
     var token = raw
     var didStrip = true
     while didStrip {
       didStrip = false
-      for suffix in koreanSuffixes where token.hasSuffix(suffix) && token.count > suffix.count + 1 {
+      for suffix in suffixes where token.hasSuffix(suffix) && token.count > suffix.count + 1 {
         token.removeLast(suffix.count)
         didStrip = true
         break
@@ -502,24 +503,6 @@ private struct CaptureSearchQuery {
   private static func containsAny(_ text: String, _ candidates: [String]) -> Bool {
     candidates.contains { text.contains($0) }
   }
-
-  private static let koreanSuffixes = [
-    "에서는", "에게는", "으로는", "로는", "에는", "에서", "에게", "으로", "하고", "처럼",
-    "보다", "까지", "부터", "마다", "밖에", "만큼", "라는", "이나", "나", "로", "에",
-    "은", "는", "이", "가", "을", "를", "의", "도", "만", "와", "과", "랑",
-  ]
-
-  private static let stopwords: Set<String> = [
-    "있는", "있어", "있나", "있나요", "찾아", "찾아줘", "보여줘", "검색", "어디", "어디에",
-    "물건", "항목", "재고", "레시피", "요리", "재료", "만들", "만드는", "만들기", "가능한",
-    "가능", "없는", "수", "것", "거", "좀", "내", "우리", "집", "homepin",
-  ]
-
-  private static let semanticWords: Set<String> = [
-    "임박", "곧만료", "유통기한", "만료", "만료됨", "기한지남", "expired", "soon",
-    "위치없음", "위치없는", "위치미정", "위치미지정", "장소없음", "ready", "cookable", "missing",
-    "부족", "없는재료", "지금가능", "바로가능",
-  ]
 }
 
 /// 확인 드래프트 화면(screen-09) push 라우트. `navigationDestination(item:)` 요건
