@@ -4,6 +4,7 @@ import SwiftUI
 /// 단계 분기 로직은 `AppModel.start()` 가 담당한다(셸은 표시만).
 struct AppRootView: View {
   @State private var appModel = AppModel()
+  @State private var adService = AdService()
   @AppStorage(AppThemePreference.storageKey) private var themeRaw = AppThemePreference.system.rawValue
   @AppStorage(AppLanguagePreference.storageKey) private var languageRaw = AppLanguagePreference.system.rawValue
 
@@ -21,8 +22,9 @@ struct AppRootView: View {
     .animation(.default, value: appModel.phase)
     .preferredColorScheme(theme.colorScheme)
     .applyLanguage(language)
+    .environment(adService)
     .task {
-      await appModel.start()
+      await appModel.start(adService: adService)
     }
   }
 

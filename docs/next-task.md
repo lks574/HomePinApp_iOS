@@ -11,7 +11,26 @@ status: draft
 UI 우선 1차(시안 C 화면 골격: 5탭·장소·레시피·홈·추가 시트) 완료 후의 다음 후보.
 보류 상세는 `docs/follow-ups.md`.
 
-> 최근 완료: **macOS 플랫폼 지원 횡단(screen-17)** — 네이티브 macOS 앱 타깃 추가
+> 최근 완료: **AdMob 광고 수익화 P1(SDK + 동의/ATT 골격, 광고 미표시)** — 첫 외부
+> 의존성. `Project.swift` 에 Google Mobile Ads SDK(SPM `13.5.0` `.exact`) + UMP
+> (`GoogleUserMessagingPlatform` `3.1.0` `.exact`) 추가, **iOS 타깃에만 링크**(macOS
+> `dependencies: []` 유지 → macOS 빌드 green, SDK 미링크). iOS Info.plist 에
+> `GADApplicationIdentifier`(Google 테스트 앱 ID)·`SKAdNetworkItems`(50개)·
+> `NSUserTrackingUsageDescription`(en/ko 현지화) 추가. 앱 레벨 `PrivacyInfo.xcprivacy`
+> iOS 전용 리소스(`Resources-iOS/`, 공유 glob 밖)로 추가. `AdService`
+> (`@MainActor @Observable`, `Features/Monetization/`) — iOS 실구현/macOS no-op,
+> SDK 타입은 `#if canImport(GoogleMobileAds)` 안에만. 시작 플로우
+> `AppModel.start(adService:)` → `AdService.startup()`: ① UMP 동의 → ② ATT →
+> ③ `MobileAds.shared.start()` → `.home`(거부해도 비개인화로 진행, 차단 없음, 스플래시
+> 최소노출과 병렬). `AppRootView` 가 `AdService` 소유·`.environment` 주입. UMP 완료
+> 핸들러 nonisolated 콜백은 `nonisolated static` 헬퍼+`withCheckedContinuation` 으로
+> 받아 메인 액터 hop(격리 트랩 회피). iOS·macOS 빌드 둘 다 green, 동시성 경고 0.
+> **P1 광고 미표시**(표시 메서드는 시그니처만, 본문 no-op). 결정:
+> `docs/wiki/Decision/2026-06-17-AdMob-광고-수익화-도입.md`. 잔여: **P2 전면 광고**
+> (`showInterstitialIfEligible(trigger:)` 로드·빈도·쿨다운·표시), **P3 보상형**
+> (`presentRewarded()` 로드·표시·보상 콜백), 출시 전 실광고 앱/단위 ID 교체,
+> ATT/동의 실기 런타임 검증.
+> 이전 완료: **macOS 플랫폼 지원 횡단(screen-17)** — 네이티브 macOS 앱 타깃 추가
 > (화면 추가 아님, 플랫폼 확장). `Project.swift` 에 `HomePinApp-macOS`(`.macOS("26.0")`,
 > bundleId `com.sro.homepinappmac`, entitlements app-sandbox·files.user-selected.read-write·
 > device.audio-input) 추가, **소스·리소스 한 벌 공유** + `#if os` 흡수(Mac Catalyst·
