@@ -21,6 +21,7 @@ struct CaptureSheet: View {
   @State private var editorRoute: ItemEditorRoute?
   @State private var reviewRoute: DraftReviewRoute?
   @State private var showingRecipeCapture = false
+  @AppStorage(RecentSearches.storageKey) private var recentSearchesJSON = "[]"
   @FocusState private var inputFocused: Bool
 
   /// 검색 대상 전체 물건. 이름순으로 받아 정규화 키로 in-memory 필터한다(개인 재고
@@ -117,13 +118,7 @@ struct CaptureSheet: View {
   @ViewBuilder
   private var content: some View {
     if trimmedQuery.isEmpty {
-      Spacer()
-      Text("Find or add items and recipes by typing or speaking.")
-        .font(.appFootnote).foregroundStyle(AppColor.textMuted)
-        .multilineTextAlignment(.center)
-        .frame(maxWidth: .infinity)
-      Spacer()
-      addRecipeRow
+      emptyStateContent
     } else {
       ScrollView {
         VStack(alignment: .leading, spacing: 18) {
@@ -146,6 +141,76 @@ struct CaptureSheet: View {
         }
       }
     }
+  }
+
+  /// 빈 입력 상태. 최근 검색어·임박 물건 추천 칩을 보여준다(있을 때만). 칩 탭은
+  /// 입력 필드만 채우고 검색/추가를 자동 실행하지 않는다(명시적 추가 원칙 유지).
+  @ViewBuilder
+  private var emptyStateContent: some View {
+    let recents = RecentSearches.decode(recentSearchesJSON)
+    let expiring = Array(allItems.expiringSoonByExpiry.prefix(6))
+    if recents.isEmpty, expiring.isEmpty {
+      Spacer()
+      Text("Find or add items and recipes by typing or speaking.")
+        .font(.appFootnote).foregroundStyle(AppColor.textMuted)
+        .multilineTextAlignment(.center)
+        .frame(maxWidth: .infinity)
+      Spacer()
+    } else {
+      ScrollView {
+        VStack(alignment: .leading, spacing: 18) {
+          if !recents.isEmpty {
+            suggestionSection(title: "Recent searches") {
+              ForEach(recents, id: \.self) { term in
+                suggestionChip(title: term, icon: "clock.arrow.circlepath") { fillQuery(term) }
+              }
+            }
+          }
+          if !expiring.isEmpty {
+            suggestionSection(title: "Expiring soon") {
+              ForEach(expiring) { item in
+                suggestionChip(title: item.name, icon: "exclamationmark.circle") { fillQuery(item.name) }
+              }
+            }
+          }
+        }
+      }
+    }
+    addRecipeRow
+  }
+
+  /// 추천 칩 섹션(제목 + 줄바꿈 흐름 배치 칩). 칩이 없으면 호출부에서 분기로 숨긴다.
+  private func suggestionSection(
+    title: LocalizedStringKey,
+    @ViewBuilder chips: () -> some View
+  ) -> some View {
+    VStack(alignment: .leading, spacing: 8) {
+      Text(title)
+        .font(.appSectionLabel).foregroundStyle(AppColor.textTertiary)
+        .frame(maxWidth: .infinity, alignment: .leading)
+      FlowLayout(spacing: 8) { chips() }
+    }
+  }
+
+  /// 추천 칩 한 개. 탭하면 입력 필드를 채우고 포커스를 둔다(자동 검색·추가 아님).
+  private func suggestionChip(title: String, icon: String, action: @escaping () -> Void) -> some View {
+    Button(action: action) {
+      HStack(spacing: 6) {
+        Image(systemName: icon).font(.appTag)
+        Text(verbatim: title).font(.appSectionLabel)
+      }
+      .foregroundStyle(AppColor.textSecondary)
+      .padding(.horizontal, 14)
+      .padding(.vertical, 8)
+      .background(AppColor.card, in: Capsule())
+    }
+    .buttonStyle(.plain)
+  }
+
+  /// 칩 탭 → 입력 필드 채우기(검색은 입력 반응으로 자연히 일어남, 추가는 명시적 행 필요).
+  private func fillQuery(_ term: String) {
+    query = term
+    inputFocused = true
   }
 
   /// 레시피 추가 진입(검색어와 무관, 항상 노출). 물건 빠른 추가와 입력 형태가 다른
@@ -222,6 +287,7 @@ struct CaptureSheet: View {
 
   private func itemResultRow(_ item: Item) -> some View {
     Button {
+      recordRecentSearch()
       editorRoute = ItemEditorRoute(mode: .edit(item))
     } label: {
       HStack(spacing: 10) {
@@ -249,6 +315,7 @@ struct CaptureSheet: View {
   /// 레시피 결과 행 — 누르면 시트를 닫고 레시피 탭 상세로 push 한다.
   private func recipeResultRow(_ recipe: Recipe) -> some View {
     Button {
+      recordRecentSearch()
       dismiss()
       router.openRecipe(recipe)
     } label: {
@@ -296,12 +363,18 @@ struct CaptureSheet: View {
   private func add() {
     let name = trimmedQuery
     guard !name.isEmpty else { return }
+    recordRecentSearch()
     guard parser.isAvailable else {
       fallbackToStub(name)
       return
     }
     inputFocused = false
     parser.parse(name, in: modelContext)
+  }
+
+  /// 검색 의도가 확정된 시점(결과 탭·추가 진입)에 현재 입력어를 최근 검색어로 적재한다.
+  private func recordRecentSearch() {
+    recentSearchesJSON = RecentSearches.adding(trimmedQuery, to: recentSearchesJSON)
   }
 
   /// 파서 상태에 따라 분기한다. 성공이면 확인 화면 push, 실패·미가용이면 단건 스텁 폴백.
