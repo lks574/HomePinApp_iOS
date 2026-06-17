@@ -336,10 +336,35 @@ struct CaptureSheet: View {
   private var itemResults: [Item] {
     let search = CaptureSearchQuery(trimmedQuery)
     guard search.hasSearchText else { return [] }
-    return allItems
+    let ranked = allItems
       .compactMap { item in itemRank(item, search: search).map { (item, $0) } }
       .sorted { lhs, rhs in lhs.1 < rhs.1 }
       .map(\.0)
+    if !ranked.isEmpty { return ranked }
+    return fuzzyItemFallback(search: search)
+  }
+
+  /// 정상 매칭 결과가 하나도 없을 때만, 전체 물건에 대해 토큰별 편집 거리 근사 매칭으로
+  /// 폴백한다. `hasConcreteSignal` 가드를 유지해 빈 토큰 질의에서는 작동하지 않는다.
+  /// 결과는 최하위 `.fuzzy` 등급으로 상태 가중치·이름순 정렬한다.
+  private func fuzzyItemFallback(search: CaptureSearchQuery) -> [Item] {
+    guard search.hasConcreteSignal, !search.isChoseongQuery, !search.tokens.isEmpty else { return [] }
+    return allItems
+      .filter { fuzzyMatchesAllTokens($0, search: search) }
+      .map { (item: $0, rank: SearchRank(tier: .fuzzy, statusWeight: itemStatusWeight($0))) }
+      .sorted { lhs, rhs in lhs.rank < rhs.rank }
+      .map(\.item)
+  }
+
+  /// 모든 질의 토큰이 물건 필드의 어떤 단어와도 임계 이내 편집 거리인지.
+  private func fuzzyMatchesAllTokens(_ item: Item, search: CaptureSearchQuery) -> Bool {
+    let words = searchableItemFields(item)
+      .flatMap { Item.normalize($0).split(separator: " ").map(String.init) }
+    guard !words.isEmpty else { return false }
+    return search.tokens.allSatisfy { token in
+      let limit = Levenshtein.threshold(forLength: token.count)
+      return words.contains { word in Levenshtein.distance(token, word) <= limit }
+    }
   }
 
   /// 매칭 레시피를 같은 규칙(등급 → 상태 가중치 → 제목순)으로 정렬한다.
