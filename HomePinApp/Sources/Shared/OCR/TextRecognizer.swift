@@ -1,7 +1,5 @@
-import CoreImage
 import Foundation
 import os
-import UIKit
 import Vision
 
 /// 온디바이스 텍스트 인식기(이미지 → 텍스트). 사진 라이브러리·카메라에서 고른 정지 이미지를
@@ -28,8 +26,8 @@ struct TextRecognizer: Sendable {
   /// throw 로 한다 — 잘못된 이미지/Vision 오류만 throw).
   ///
   /// 비-MainActor 에서 동기 추론한다. 호출 측이 배경 컨텍스트에서 await 로 부른다.
-  func recognizeText(in image: UIImage) throws -> String {
-    guard let cgImage = image.cgImage ?? ciBackedCGImage(from: image) else {
+  func recognizeText(in image: PlatformImage) throws -> String {
+    guard let cgImage = image.platformCGImage else {
       throw TextRecognitionError.invalidImage
     }
 
@@ -38,7 +36,7 @@ struct TextRecognizer: Sendable {
     request.usesLanguageCorrection = true
     request.recognitionLanguages = Self.recognitionLanguages
 
-    let handler = VNImageRequestHandler(cgImage: cgImage, orientation: cgImageOrientation(from: image), options: [:])
+    let handler = VNImageRequestHandler(cgImage: cgImage, orientation: image.platformCGImageOrientation, options: [:])
     do {
       try handler.perform([request])
     } catch {
@@ -122,27 +120,6 @@ struct TextRecognizer: Sendable {
     let text: String
   }
 
-  /// `cgImage` 가 비어 있는(`CIImage` 백킹) 사진 라이브러리 이미지 대비. CIContext 로 한 번 굽는다.
-  private func ciBackedCGImage(from image: UIImage) -> CGImage? {
-    guard let ciImage = image.ciImage else { return nil }
-    return CIContext().createCGImage(ciImage, from: ciImage.extent)
-  }
-
-  /// `UIImage.imageOrientation` 을 Vision 이 이해하는 `CGImagePropertyOrientation` 으로 옮긴다.
-  /// 카메라 사진은 회전 메타데이터를 가질 수 있어 그대로 두면 인식 정확도가 떨어진다.
-  private func cgImageOrientation(from image: UIImage) -> CGImagePropertyOrientation {
-    switch image.imageOrientation {
-    case .up: .up
-    case .down: .down
-    case .left: .left
-    case .right: .right
-    case .upMirrored: .upMirrored
-    case .downMirrored: .downMirrored
-    case .leftMirrored: .leftMirrored
-    case .rightMirrored: .rightMirrored
-    @unknown default: .up
-    }
-  }
 }
 
 /// 텍스트 인식 실패 사유. 호출 측은 현지화한 안내로 바꿔 보여준다.

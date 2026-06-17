@@ -261,7 +261,7 @@ struct RecipeCaptureView: View {
     Task {
       guard
         let data = try? await item.loadTransferable(type: Data.self),
-        let image = UIImage(data: data)
+        let image = PlatformImage.from(data: data)
       else {
         photoItem = nil
         return
