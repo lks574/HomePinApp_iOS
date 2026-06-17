@@ -24,7 +24,9 @@ status: draft
   `async`/`await`. 경고를 억지로 끄거나 우회하지 않는다.
 - CloudKit 동기화는 Settings 의 `iCloud Sync` 토글이 켜진 다음 앱 시작부터
   `ModelConfiguration.cloudKitDatabase = .private("iCloud.com.sro.homepinapp")` 로
-  적용한다. 가족공유는 private 동기화 검증 뒤 `CKShare` 초대 흐름으로 분리한다.
+  적용한다. 토글을 켤 때 iCloud 계정 상태를 먼저 확인하고, 앱 시작 시 CloudKit store
+  생성이 실패하면 설정을 끄고 로컬 SwiftData store로 fallback한다. 가족공유는 private
+  동기화 검증 뒤 `CKShare` 초대 흐름으로 분리한다.
 
 ### SwiftData 매크로 적극 사용
 

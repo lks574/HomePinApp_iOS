@@ -28,12 +28,15 @@ status: draft
 ## Sync / CloudKit
 
 - `Features/Sync/CloudSyncPreference.swift` — iCloud sync 설정 키와 CloudKit container
-  ID(`iCloud.com.sro.homepinapp`), Settings 계정 상태 확인 모델.
+  ID(`iCloud.com.sro.homepinapp`), startup fallback 사유 키, Settings 계정 상태 확인 모델.
 - `Persistence/AppModelContainer.swift` — `cloudSync.isEnabled` 가 켜져 있으면
   SwiftData `ModelConfiguration` 을 `.private("iCloud.com.sro.homepinapp")` 로 만들고,
-  아니면 `.none` 으로 로컬 저장소만 사용한다.
-- Settings 의 `iCloud Sync` 토글은 다음 앱 시작부터 CloudKit private DB 구성을 적용한다.
-  가족 공유는 Phase B(`CKShare` 초대 기반)로 분리한다.
+  아니면 `.none` 으로 로컬 저장소만 사용한다. CloudKit container 생성이 실패하면
+  `cloudSync.isEnabled` 를 끄고 fallback 사유를 저장한 뒤 로컬 저장소로 다시 시작한다.
+- Settings 의 `iCloud Sync` 토글은 켜기 전에 `CKContainer.accountStatus()` 를 확인한다.
+  iCloud 계정이 사용 가능할 때만 다음 앱 시작부터 CloudKit private DB 구성을 적용한다.
+  fallback 사유가 있으면 Settings 데이터 섹션에 표시한다. 가족 공유는 Phase B(`CKShare`
+  초대 기반)로 분리한다.
 
 ## 공용 / 플랫폼 추상화 (`Shared/`)
 

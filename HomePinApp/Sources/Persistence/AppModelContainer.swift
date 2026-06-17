@@ -19,20 +19,52 @@ enum AppModelContainer {
   @MainActor
   static func make() -> ModelContainer {
     let schema = Schema(models)
+    let isCloudSyncEnabled = UserDefaults.standard.bool(forKey: CloudSyncPreference.storageKey)
+    if isCloudSyncEnabled {
+      do {
+        let container = try makeContainer(
+          schema: schema,
+          cloudKitDatabase: .private(CloudSyncPreference.containerIdentifier)
+        )
+        CloudSyncPreference.clearFallbackReason()
+        populateSeedIfNeeded(container)
+        return container
+      } catch {
+        CloudSyncPreference.disableAfterStartupFailure(error)
+      }
+    }
+
+    let container = makeLocalContainer(schema: schema)
+    populateSeedIfNeeded(container)
+    return container
+  }
+
+  private static func makeContainer(
+    schema: Schema,
+    cloudKitDatabase: ModelConfiguration.CloudKitDatabase
+  ) throws -> ModelContainer {
     let configuration = ModelConfiguration(
       schema: schema,
       isStoredInMemoryOnly: false,
       cloudKitDatabase: cloudKitDatabase
     )
-    let container: ModelContainer
+    return try ModelContainer(for: schema, configurations: configuration)
+  }
+
+  private static func makeLocalContainer(schema: Schema) -> ModelContainer {
+    let configuration = ModelConfiguration(
+      schema: schema,
+      isStoredInMemoryOnly: false,
+      cloudKitDatabase: .none
+    )
     do {
-      container = try ModelContainer(for: schema, configurations: configuration)
+      return try ModelContainer(for: schema, configurations: configuration)
     } catch {
       #if DEBUG
       // 개발 단계 파괴적 리셋: 스토어를 지우고 한 번 더 시도한다.
       eraseStore(at: configuration.url)
       do {
-        container = try ModelContainer(for: schema, configurations: configuration)
+        return try ModelContainer(for: schema, configurations: configuration)
       } catch {
         fatalError("ModelContainer 재생성 실패: \(error)")
       }
@@ -40,17 +72,14 @@ enum AppModelContainer {
       fatalError("ModelContainer 생성 실패: \(error)")
       #endif
     }
+  }
+
+  @MainActor
+  private static func populateSeedIfNeeded(_ container: ModelContainer) {
     #if DEBUG
     // 개발 중 빈 스토어면 시드 주입.
     SeedData.populateIfEmpty(container.mainContext)
     #endif
-    return container
-  }
-
-  private static var cloudKitDatabase: ModelConfiguration.CloudKitDatabase {
-    UserDefaults.standard.bool(forKey: CloudSyncPreference.storageKey)
-      ? .private(CloudSyncPreference.containerIdentifier)
-      : .none
   }
 
   #if DEBUG

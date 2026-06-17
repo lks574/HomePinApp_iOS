@@ -18,8 +18,9 @@ screen-id: screen-08
   선택. `AppLanguagePreference` `@AppStorage` 로 저장, 루트에서 `.environment(\.locale)`
   적용 → 앱 재시작 없이 즉시 전환(시스템 따름이면 환경 locale 강제 안 함).
 - **데이터**: 저장 현황(물건·장소·레시피 개수) 표시 + **iCloud Sync** 토글/계정
-  상태 확인 + **백업/가져오기·CSV**([[DataTransfer]] push) + **전체 데이터 정리**
-  (확인 다이얼로그 후 전 모델 일괄 삭제, 앱 동작 위해 기본 [[Space]] "우리집" 복구).
+  상태 확인(사용 가능할 때만 켜기 허용, startup fallback 사유 표시) +
+  **백업/가져오기·CSV**([[DataTransfer]] push) + **전체 데이터 정리**(확인 다이얼로그 후
+  전 모델 일괄 삭제, 앱 동작 위해 기본 [[Space]] "우리집" 복구).
 - **정보**: 버전(번들)·저장 위치·앱 소개 + 로컬 저장 안내.
 
 ## 연결된 화면
@@ -36,9 +37,9 @@ screen-id: screen-08
 
 ## 상태 관리
 
-- 직결(View ↔ SwiftData) + 테마·언어·iCloud Sync 설정은 `@AppStorage`.
+- 직결(View ↔ SwiftData) + 테마·언어·iCloud Sync 설정/fallback 사유는 `@AppStorage`.
 - 비영속 UI 상태: 전체 정리 확인 `showingClearConfirm`, iCloud 계정 상태 확인용
-  `CloudSyncStatusModel`.
+  `CloudSyncStatusModel`, iCloud 토글 처리 중/불가 alert 상태.
 
 ## 관련 태스크 / 결정
 

@@ -7,6 +7,7 @@ struct SettingsView: View {
   @AppStorage(AppThemePreference.storageKey) private var themeRaw = AppThemePreference.system.rawValue
   @AppStorage(AppLanguagePreference.storageKey) private var languageRaw = AppLanguagePreference.system.rawValue
   @AppStorage(CloudSyncPreference.storageKey) private var cloudSyncEnabled = false
+  @AppStorage(CloudSyncPreference.fallbackReasonKey) private var cloudSyncFallbackReason = ""
 
   @Query private var items: [Item]
   @Query private var areas: [Area]
@@ -14,6 +15,8 @@ struct SettingsView: View {
 
   @State private var showingClearConfirm = false
   @State private var showingCloudSyncRestartAlert = false
+  @State private var showingCloudSyncUnavailableAlert = false
+  @State private var isChangingCloudSync = false
   @State private var cloudSyncStatus = CloudSyncStatusModel()
 
   #if os(iOS)
@@ -44,7 +47,12 @@ struct SettingsView: View {
       .alert("Restart HomePin to apply iCloud Sync", isPresented: $showingCloudSyncRestartAlert) {
         Button("OK", role: .cancel) {}
       } message: {
-        Text("The app will use the iCloud CloudKit store the next time it starts.")
+        Text("The storage mode changes the next time HomePin starts.")
+      }
+      .alert("iCloud Sync Unavailable", isPresented: $showingCloudSyncUnavailableAlert) {
+        Button("OK", role: .cancel) {}
+      } message: {
+        Text(cloudSyncStatus.state.title)
       }
     }
   }
@@ -90,6 +98,7 @@ struct SettingsView: View {
   private var cloudSyncRow: some View {
     VStack(alignment: .leading, spacing: 8) {
       Toggle("iCloud Sync", isOn: cloudSyncBinding)
+        .disabled(isChangingCloudSync)
       LabeledContent("iCloud Account") {
         Text(cloudSyncStatus.state.title)
       }
@@ -101,6 +110,11 @@ struct SettingsView: View {
       Text("Sync uses CloudKit private database for this iCloud account. Family sharing will use a separate invite flow after private sync is verified.")
         .font(.footnote)
         .foregroundStyle(.secondary)
+      if !cloudSyncFallbackReason.isEmpty {
+        Label(cloudSyncFallbackReason, systemImage: "exclamationmark.triangle")
+          .font(.footnote)
+          .foregroundStyle(.orange)
+      }
     }
   }
 
@@ -109,11 +123,30 @@ struct SettingsView: View {
       cloudSyncEnabled
     } set: { newValue in
       guard cloudSyncEnabled != newValue else { return }
-      cloudSyncEnabled = newValue
-      showingCloudSyncRestartAlert = true
       if newValue {
-        cloudSyncStatus.refresh()
+        enableCloudSyncIfAvailable()
+      } else {
+        cloudSyncEnabled = false
+        cloudSyncFallbackReason = ""
+        showingCloudSyncRestartAlert = true
       }
+    }
+  }
+
+  private func enableCloudSyncIfAvailable() {
+    guard !isChangingCloudSync else { return }
+    isChangingCloudSync = true
+    Task {
+      let isAvailable = await cloudSyncStatus.checkAvailability()
+      isChangingCloudSync = false
+      guard isAvailable else {
+        cloudSyncEnabled = false
+        showingCloudSyncUnavailableAlert = true
+        return
+      }
+      cloudSyncFallbackReason = ""
+      cloudSyncEnabled = true
+      showingCloudSyncRestartAlert = true
     }
   }
 

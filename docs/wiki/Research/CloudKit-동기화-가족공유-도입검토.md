@@ -40,6 +40,8 @@ status: active
 - 현재 코드 확인:
   - `AppModelContainer` 는 Settings 토글 값에 따라 `.none` 또는
     `.private("iCloud.com.sro.homepinapp")` 를 사용한다.
+  - 토글을 켤 때 iCloud 계정 상태를 확인하고, 앱 시작 시 CloudKit store 생성 실패는
+    로컬 store fallback + Settings 사유 표시로 처리한다.
   - iOS/macOS 타깃에 CloudKit entitlements 를 추가했다.
   - 모든 영속 모델의 `id` `.unique` 를 제거했고, to-many 관계를 optional 관계로 전환했다.
   - macOS iCloud entitlement 는 실행 가능한 서명 빌드에 Apple Development 인증서가 필요하다.

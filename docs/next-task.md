@@ -163,8 +163,9 @@ UI 우선 1차(시안 C 화면 골격: 5탭·장소·레시피·홈·추가 시�
    - **Phase A Private 동기화**: iCloud container 확정 후 iOS/macOS entitlements 확장,
      `AppModelContainer` 를 CloudKit private DB 구성으로 전환, Settings 에 sync 상태/안내
      진입점 추가. 골격 구현 완료: container ID `iCloud.com.sro.homepinapp`, Settings
-     `iCloud Sync` 토글, iCloud 계정 상태 확인, iOS/macOS entitlements. 잔여는 Apple
-     Developer 포털 container 생성/확인과 실기기/실계정 검증.
+     `iCloud Sync` 토글, iCloud 계정 상태 확인, 토글 전 계정 가용성 확인, startup
+     CloudKit 실패 시 로컬 store fallback + Settings 사유 표시, iOS/macOS entitlements.
+     잔여는 Apple Developer 포털 container 생성/확인과 실기기/실계정 검증.
    - **Phase B 가족공유**: Private 동기화 안정화 뒤 `CKShare` 초대 기반 공유 UI와 참여자
      관리 설계. Apple 가족 그룹 자동 연동이 아니라 초대 기반 공유로 다룬다.
    - 전제: 유료 Apple Developer Program 및 사용할 iCloud container ID 확정.

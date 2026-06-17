@@ -24,6 +24,11 @@ status: accepted
 - Settings 토글은 “즉시 수동 동기화”가 아니라 **동기화 저장소 사용 여부를 켜는
   설정**이다. SwiftData + CloudKit 의 실제 업로드/다운로드 타이밍은 시스템이 관리한다.
 - iCloud 계정 상태 확인은 Settings 에서 `CKContainer.accountStatus()` 로 제공한다.
+- Settings 에서 `iCloud Sync` 를 켤 때 계정 상태를 먼저 확인한다. `.available` 이 아니면
+  토글을 켜지 않고 불가 사유를 alert 로 표시한다.
+- 앱 시작 시 CloudKit private store 생성이 실패하면 `cloudSync.isEnabled` 를 끄고
+  fallback 사유를 저장한 뒤 `.none` 로컬 SwiftData store로 시작한다. fallback 사유는
+  Settings 데이터 섹션에 표시한다.
 - iOS/macOS 양 타깃에 CloudKit container entitlement 를 둔다.
   - iOS 는 `UIBackgroundModes = remote-notification` 도 추가한다.
   - macOS 는 iCloud entitlement 때문에 일반 실행 빌드에 Apple Development 서명이 필요하다.
@@ -45,6 +50,7 @@ status: accepted
 - iOS simulator build: green
 - macOS compile build: green with `CODE_SIGNING_ALLOWED=NO`
 - macOS signed build: 개발 서명 설정 전에는 iCloud entitlement 때문에 실패 가능
+- iCloud 불가/CloudKit store 생성 실패 경로: 토글 차단 또는 로컬 fallback 설계 반영
 
 ## 관련
 
