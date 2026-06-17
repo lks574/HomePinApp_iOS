@@ -180,6 +180,14 @@ UI 우선 1차(시안 C 화면 골격: 5탭·장소·레시피·홈·추가 시�
    한국어 모델 다운로드/Apple Intelligence 미설치 유도 UX(진행률·동의), 시작 전 사전
    게이팅(마이크/추가 진입 시 미가용 사전 안내), 실기기 한국어 인식·추론 정확도 검증.
 
+## 추후 (보류)
+
+- **CloudKit 동기화 + 가족공유** — 같은 사용자 아이폰↔맥 동일 데이터(Private DB) +
+  가족 구성원 데이터 공유(Shared DB/CKShare). **현재 미착수.** 전제: 유료 Apple
+  Developer Program 가입. 선행: 전 `@Model` 의 `@Attribute(.unique)` 제거 등 CloudKit
+  호환 마이그레이션. 검토 문서:
+  `docs/wiki/Research/CloudKit-동기화-가족공유-도입검토.md`.
+
 ## 진행 메모
 
 - 빌드 검증: `tuist generate` → `xcodebuild ... -scheme HomePinApp`.
