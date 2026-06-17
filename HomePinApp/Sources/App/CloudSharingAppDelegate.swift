@@ -9,11 +9,7 @@ final class CloudSharingAppDelegate: NSObject, UIApplicationDelegate {
   ) {
     Task {
       do {
-        let container = CKContainer(identifier: CloudSyncPreference.containerIdentifier)
-        let results = try await container.accept([cloudKitShareMetadata])
-        if case let .failure(error) = results[cloudKitShareMetadata] {
-          print("CloudKit share accept failed: \(error)")
-        }
+        try await HomeShareService.acceptShare(cloudKitShareMetadata)
       } catch {
         print("CloudKit share accept failed: \(error)")
       }

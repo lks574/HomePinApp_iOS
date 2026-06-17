@@ -9,9 +9,9 @@ status: active
 # CloudKit 동기화·가족공유 도입 검토
 
 > `feat/icloud-sync` 브랜치에서 착수 중. CloudKit capability 골격, 데이터 모델 호환화,
-> private DB 구성, 1차 가족공유 초대 골격은 적용했다. Apple Developer 포털 container
-> 생성/확인과 실기기 동기화·공유 검증은 아직 필요하다. 동기화·공유는 persistence 구조를
-> 바꾸는 비가역 결정으로 다룬다.
+> private DB 구성, 가족공유 초대·참가자 가져오기 골격은 적용했다. Apple Developer 포털
+> container 생성/확인과 실기기 동기화·공유 검증은 아직 필요하다. 동기화·공유는 persistence
+> 구조를 바꾸는 비가역 결정으로 다룬다.
 
 ## 요약
 
@@ -48,7 +48,10 @@ status: active
   - Settings 에 iOS 전용 `Share Home Data` 버튼을 추가했다. 1차는 custom zone root record 에
     현재 `BackupBundle` JSON 스냅샷(사진 제외)을 저장하고 `CKShare` + `UICloudSharingController`
     로 초대 UI를 띄우는 골격이다.
-  - 초대 수락은 iOS app delegate 에서 `CKContainer.accept(_:)` 로 처리한다.
+  - 초대 수락은 iOS app delegate 에서 `CKContainer.accept(_:)` 로 처리하고,
+    `hierarchicalRootRecordID` 를 저장한다.
+  - Settings 의 `Import Shared Home Data` 버튼은 저장된 root record 를
+    `sharedCloudDatabase` 에서 읽어 `BackupUpsertEngine` 으로 로컬 SwiftData 에 병합한다.
   - macOS iCloud entitlement 는 실행 가능한 서명 빌드에 Apple Development 인증서가 필요하다.
 
 ## 범위 (2단계로 분리)
@@ -71,7 +74,8 @@ status: active
 - 난이도: **상** (구조·UI 모두 추가 작업 큼). Phase A 안정화 후 별도 착수 권장.
 - 1차 구현: `HomePinFamilyHome` zone 의 `HomePinSharedHome/homepin-home-root` record 를
   `CKShare` root 로 공유한다. record payload 는 현재 데이터의 JSON 스냅샷이며, 참가자
-  `sharedCloudDatabase` 병합·실시간 공동 편집은 후속이다.
+  `sharedCloudDatabase` 병합은 2차에서 수동 가져오기 버튼으로 구현했다. 실시간 공동 편집은
+  후속이다.
 
 ## 선행 필수: 데이터 모델 개편
 
@@ -116,7 +120,8 @@ CloudKit 동기화(NSPersistentCloudKitContainer 계열) 제약과 현재 모델
 5. [ ] Apple Developer 포털에서 `iCloud.com.sro.homepinapp` 컨테이너 생성/확인
 6. [ ] Phase A(private) 실기기/실계정 검증
 7. [x] Phase B 1차 `CKShare` 초대 골격 구현(스냅샷 공유, iOS UICloudSharingController)
-8. [ ] 참가자 shared DB 읽기·병합, 충돌 처리, 사진 공유 정책 구현
+8. [x] 참가자 shared DB 읽기·로컬 병합 골격 구현(`Import Shared Home Data`)
+9. [ ] 충돌 처리, 참가자 push, 사진 공유 정책 구현
 
 ## 적용
 

@@ -166,11 +166,12 @@ UI 우선 1차(시안 C 화면 골격: 5탭·장소·레시피·홈·추가 시�
      `iCloud Sync` 토글, iCloud 계정 상태 확인, 토글 전 계정 가용성 확인, startup
      CloudKit 실패 시 로컬 store fallback + Settings 사유 표시, iOS/macOS entitlements.
      잔여는 Apple Developer 포털 container 생성/확인과 실기기/실계정 검증.
-   - **Phase B 가족공유**: 1차 초대 골격 구현 완료. Settings `Share Home Data` 가 iOS
+   - **Phase B 가족공유**: 1차 초대 골격과 2차 가져오기 골격 구현 완료. Settings `Share Home Data` 가 iOS
      `UICloudSharingController` 를 띄우고, custom zone root record 에 현재 데이터를
-     `BackupBundle` JSON 스냅샷(사진 제외)으로 저장해 `CKShare` 한다. Apple 가족 그룹 자동
-     연동이 아니라 초대 기반 공유로 다룬다. 잔여는 참가자 `sharedCloudDatabase` 읽기·병합,
-     충돌 처리, 사진 공유, 실기기/실계정 초대 검증.
+     `BackupBundle` JSON 스냅샷(사진 제외)으로 저장해 `CKShare` 한다. 초대 수락 후
+     `Import Shared Home Data` 는 `sharedCloudDatabase` 의 root snapshot 을 로컬 SwiftData 로
+     upsert 한다. Apple 가족 그룹 자동 연동이 아니라 초대 기반 공유로 다룬다. 잔여는
+     참가자 push, 충돌 처리, 사진 공유, 실기기/실계정 초대·가져오기 검증.
    - 전제: 유료 Apple Developer Program 및 사용할 iCloud container ID 확정.
    - 검토 문서: `docs/wiki/Research/CloudKit-동기화-가족공유-도입검토.md`.
 1. **macOS 실기 런타임 검증(screen-17 후속)** — iOS·macOS 빌드는 green 이나 macOS 는

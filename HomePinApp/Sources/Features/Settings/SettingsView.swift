@@ -8,6 +8,8 @@ struct SettingsView: View {
   @AppStorage(AppLanguagePreference.storageKey) private var languageRaw = AppLanguagePreference.system.rawValue
   @AppStorage(CloudSyncPreference.storageKey) private var cloudSyncEnabled = false
   @AppStorage(CloudSyncPreference.fallbackReasonKey) private var cloudSyncFallbackReason = ""
+  @AppStorage(HomeShareService.acceptedAtKey) private var acceptedHomeShareAt = 0.0
+  @AppStorage(HomeShareService.lastImportedAtKey) private var lastImportedHomeShareAt = 0.0
 
   @Query private var items: [Item]
   @Query private var areas: [Area]
@@ -17,9 +19,12 @@ struct SettingsView: View {
   @State private var showingCloudSyncRestartAlert = false
   @State private var showingCloudSyncUnavailableAlert = false
   @State private var showingHomeShareErrorAlert = false
+  @State private var showingHomeShareImportResultAlert = false
   @State private var isChangingCloudSync = false
   @State private var isPreparingHomeShare = false
+  @State private var isImportingSharedHome = false
   @State private var homeShareErrorMessage = ""
+  @State private var homeShareImportResultMessage = ""
   @State private var homeSharePresentation: HomeSharePresentation?
   @State private var cloudSyncStatus = CloudSyncStatusModel()
 
@@ -62,6 +67,11 @@ struct SettingsView: View {
         Button("OK", role: .cancel) {}
       } message: {
         Text(homeShareErrorMessage)
+      }
+      .alert("Shared Home Imported", isPresented: $showingHomeShareImportResultAlert) {
+        Button("OK", role: .cancel) {}
+      } message: {
+        Text(homeShareImportResultMessage)
       }
       #if os(iOS)
       .sheet(item: $homeSharePresentation) { presentation in
@@ -122,7 +132,7 @@ struct SettingsView: View {
         Label("Check iCloud Account", systemImage: "icloud")
       }
       familySharingRow
-      Text("Sync uses CloudKit private database for this iCloud account. Family sharing sends an invite with the current home data snapshot.")
+      Text("Sync uses CloudKit private database for this iCloud account. Family sharing sends an invite with the current home data snapshot, and accepted shares can be imported into local data.")
         .font(.footnote)
         .foregroundStyle(.secondary)
       if !cloudSyncFallbackReason.isEmpty {
@@ -135,12 +145,32 @@ struct SettingsView: View {
 
   private var familySharingRow: some View {
     #if os(iOS)
-    Button {
-      prepareHomeShare()
-    } label: {
-      Label("Share Home Data", systemImage: "person.2")
+    VStack(alignment: .leading, spacing: 8) {
+      Button {
+        prepareHomeShare()
+      } label: {
+        Label("Share Home Data", systemImage: "person.2")
+      }
+      .disabled(!cloudSyncEnabled || isPreparingHomeShare)
+
+      Button {
+        importSharedHome()
+      } label: {
+        Label("Import Shared Home Data", systemImage: "square.and.arrow.down")
+      }
+      .disabled(acceptedHomeShareAt <= 0 || isImportingSharedHome)
+
+      if acceptedHomeShareAt > 0 {
+        Text("Accepted shared home: \(Date(timeIntervalSince1970: acceptedHomeShareAt).formatted(date: .abbreviated, time: .shortened))")
+          .font(.footnote)
+          .foregroundStyle(.secondary)
+      }
+      if lastImportedHomeShareAt > 0 {
+        Text("Last shared import: \(Date(timeIntervalSince1970: lastImportedHomeShareAt).formatted(date: .abbreviated, time: .shortened))")
+          .font(.footnote)
+          .foregroundStyle(.secondary)
+      }
     }
-    .disabled(!cloudSyncEnabled || isPreparingHomeShare)
     #else
     Label("Share Home Data is available on iOS", systemImage: "person.2.slash")
       .foregroundStyle(.secondary)
@@ -195,6 +225,22 @@ struct SettingsView: View {
         showingHomeShareErrorAlert = true
       }
       isPreparingHomeShare = false
+    }
+  }
+
+  private func importSharedHome() {
+    guard !isImportingSharedHome else { return }
+    isImportingSharedHome = true
+    Task {
+      do {
+        let result = try await HomeShareService.importAcceptedShare(into: modelContext)
+        homeShareImportResultMessage = result.message
+        showingHomeShareImportResultAlert = true
+      } catch {
+        homeShareErrorMessage = error.localizedDescription
+        showingHomeShareErrorAlert = true
+      }
+      isImportingSharedHome = false
     }
   }
 

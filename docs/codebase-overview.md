@@ -36,11 +36,13 @@ status: draft
 - Settings 의 `iCloud Sync` 토글은 켜기 전에 `CKContainer.accountStatus()` 를 확인한다.
   iCloud 계정이 사용 가능할 때만 다음 앱 시작부터 CloudKit private DB 구성을 적용한다.
   fallback 사유가 있으면 Settings 데이터 섹션에 표시한다.
-- `Features/Sync/HomeShareService.swift` — iOS 가족공유 1차 서비스. custom zone/root record
-  를 준비하고 현재 `BackupBundle` JSON 스냅샷(사진 제외)을 저장한 뒤 `CKShare` 를 만든다.
+- `Features/Sync/HomeShareService.swift` — 가족공유 서비스. owner 는 custom zone/root
+  record 를 준비하고 현재 `BackupBundle` JSON 스냅샷(사진 제외)을 저장한 뒤 `CKShare` 를
+  만든다. participant 는 accepted share 의 root record ID 를 저장하고
+  `sharedCloudDatabase` 에서 snapshot 을 fetch 해 `BackupUpsertEngine` 으로 로컬 병합한다.
 - `Features/Sync/HomeShareSheet.swift` — iOS `UICloudSharingController` SwiftUI wrapper.
 - `App/CloudSharingAppDelegate.swift` — CloudKit 공유 초대 수락 metadata 를
-  `CKContainer.accept(_:)` 로 처리한다.
+  `CKContainer.accept(_:)` 로 처리하고 root record ID 를 저장한다.
 
 ## 공용 / 플랫폼 추상화 (`Shared/`)
 
