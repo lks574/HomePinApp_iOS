@@ -119,7 +119,6 @@ struct TextRecognizer: Sendable {
     let box: CGRect
     let text: String
   }
-
 }
 
 /// 텍스트 인식 실패 사유. 호출 측은 현지화한 안내로 바꿔 보여준다.
