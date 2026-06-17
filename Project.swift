@@ -52,6 +52,10 @@ let iOSInfoPlist: [String: Plist.Value] = sharedInfoPlist.merging([
 ]) { _, new in new }
 
 let macOSInfoPlist: [String: Plist.Value] = sharedInfoPlist.merging([
+  // 표시 이름을 명시한다. 지정하지 않으면 타깃명(HomePinApp-macOS)이 노출되고, Xcode 가
+  // 공유 InfoPlist.xcstrings 를 그 값으로 덮어쓴다. iOS 앱과 동일하게 "HomePinApp" 로 둔다.
+  "CFBundleDisplayName": "HomePinApp",
+  "CFBundleName": "HomePinApp",
   // macOS 도 백업 번들 UTType 을 선언한다(파일 Import/Export 로 .homepinbackup 을 다룬다).
   "UTExportedTypeDeclarations": [
     [
