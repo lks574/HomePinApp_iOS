@@ -13,6 +13,13 @@ struct SettingsView: View {
 
   @State private var showingClearConfirm = false
 
+  #if os(iOS)
+  @Environment(AdService.self) private var adService
+  /// 보상형(응원) 광고 표시 중 중복 탭 방지. 표시 후 감사 안내 노출 트리거로도 쓴다.
+  @State private var isPresentingSupportAd = false
+  @State private var showingSupportThanks = false
+  #endif
+
   var body: some View {
     NavigationStack {
       List {
@@ -80,8 +87,56 @@ struct SettingsView: View {
       Text("HomePin — a local app to pin your home's items to places, and add and find them by voice.\nAll data is stored only on this device and is never sent anywhere.")
         .font(.footnote)
         .foregroundStyle(.secondary)
+      #if os(iOS)
+      supportRow
+      #endif
     }
   }
+
+  #if os(iOS)
+  /// 개발자 응원하기(보상형 광고 opt-in). 사용자가 직접 누른 경우에만 광고를 표시하고,
+  /// 시청을 끝까지 마쳐 보상 콜백을 받으면 누적 응원 횟수가 올라간다. 어떤 기능도 잠그지
+  /// 않는 상징적 응원이다. 광고가 준비되지 않았으면 버튼을 비활성화한다(흐름 차단 없음).
+  private var supportRow: some View {
+    let supportCount = adService.developerSupportCount
+    return VStack(alignment: .leading, spacing: 6) {
+      Button {
+        presentSupportAd()
+      } label: {
+        Label("Support the developer", systemImage: "heart")
+      }
+      .disabled(!adService.isRewardedReady || isPresentingSupportAd)
+
+      if supportCount > 0 {
+        Text("thanks.support.\(supportCount)")
+          .font(.footnote)
+          .foregroundStyle(.secondary)
+      } else {
+        Text("Watch a short ad to cheer on the developer. It doesn't unlock anything — it's just a thank-you.")
+          .font(.footnote)
+          .foregroundStyle(.secondary)
+      }
+    }
+    .alert("Thanks for your support!", isPresented: $showingSupportThanks) {
+      Button("OK", role: .cancel) {}
+    } message: {
+      Text("Your support means a lot. Thank you for cheering on the developer.")
+    }
+  }
+
+  /// opt-in 보상형 광고 표시. 보상 콜백을 받으면 감사 안내를 띄운다.
+  private func presentSupportAd() {
+    guard !isPresentingSupportAd else { return }
+    isPresentingSupportAd = true
+    Task {
+      let earned = await adService.presentRewarded()
+      isPresentingSupportAd = false
+      if earned {
+        showingSupportThanks = true
+      }
+    }
+  }
+  #endif
 
   // MARK: - 액션 / 파생
 

@@ -3183,6 +3183,96 @@
           }
         }
       }
+    },
+    "OK" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "확인"
+          }
+        }
+      }
+    },
+    "Support the developer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "개발자 응원하기"
+          }
+        }
+      }
+    },
+    "Thanks for your support!" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "응원해 주셔서 감사합니다!"
+          }
+        }
+      }
+    },
+    "Watch a short ad to cheer on the developer. It doesn't unlock anything — it's just a thank-you." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "짧은 광고를 보고 개발자를 응원할 수 있어요. 잠금 해제되는 기능은 없으며, 그저 감사의 표시예요."
+          }
+        }
+      }
+    },
+    "Your support means a lot. Thank you for cheering on the developer." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "응원은 큰 힘이 됩니다. 개발자를 응원해 주셔서 고맙습니다."
+          }
+        }
+      }
+    },
+    "thanks.support.%lld" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Thanks for cheering on the developer %lld time!"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Thanks for cheering on the developer %lld times!"
+                }
+              }
+            }
+          }
+        },
+        "ko" : {
+          "variations" : {
+            "plural" : {
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld번 응원해 주셔서 감사합니다!"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "version" : "1.1"

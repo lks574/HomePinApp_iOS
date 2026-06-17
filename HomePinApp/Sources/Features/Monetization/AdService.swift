@@ -56,6 +56,14 @@ final class AdService {
   /// 출처: developers.google.com/admob/ios/test-ads
   private static let interstitialTestUnitID = "ca-app-pub-3940256099942544/4411468910"
 
+  /// 구글 테스트 보상형 광고 단위 ID(iOS). 실 ID 는 하드코딩하지 않는다.
+  /// 출처: developers.google.com/admob/ios/test-ads
+  private static let rewardedTestUnitID = "ca-app-pub-3940256099942544/1712485313"
+
+  /// 누적 "개발자 응원"(보상형 시청 완료) 횟수 저장 키. 어떤 기능도 잠그지 않는
+  /// 상징적 카운터이므로 비영속 UI 상태로 `UserDefaults` 에 둔다(SwiftData 아님).
+  static let supportCountKey = "ad.developerSupportCount"
+
   #if canImport(GoogleMobileAds)
   /// 미리 로드해 둔 전면 광고. 표시되면 nil 로 비우고 다음 것을 다시 로드한다.
   @ObservationIgnored private var loadedInterstitial: InterstitialAd?
@@ -63,7 +71,29 @@ final class AdService {
   @ObservationIgnored private var isLoadingInterstitial = false
   /// 전면 닫힘 콜백을 메인 액터로 hop 시켜 받는 delegate(self 직접 캡처 회피).
   @ObservationIgnored private var interstitialDelegate: InterstitialDelegate?
+
+  /// 미리 로드해 둔 보상형 광고. 표시되면 nil 로 비우고 다음 것을 다시 로드한다.
+  @ObservationIgnored private var loadedRewarded: RewardedAd?
+  /// 보상형을 로드 중인지(중복 로드 방지).
+  @ObservationIgnored private var isLoadingRewarded = false
+  /// 보상형 풀스크린 닫힘 콜백을 메인 액터로 hop 시켜 받는 delegate(self 직접 캡처 회피).
+  @ObservationIgnored private var rewardedDelegate: RewardedDelegate?
   #endif
+
+  /// 보상형 광고가 표시 가능한지(미리 로드되어 있는지). 진입점 버튼 활성/비활성에 쓴다.
+  /// SDK 미지원 플랫폼(macOS)에서는 항상 `false`.
+  var isRewardedReady: Bool {
+    #if canImport(GoogleMobileAds)
+    loadedRewarded != nil
+    #else
+    false
+    #endif
+  }
+
+  /// 누적 개발자 응원 횟수(보상형 시청 완료 누적). 감사 표시에 쓴다.
+  var developerSupportCount: Int {
+    UserDefaults.standard.integer(forKey: Self.supportCountKey)
+  }
 
   init() {}
 
@@ -82,8 +112,9 @@ final class AdService {
     await requestTrackingAuthorizationIfNeeded()
     await startMobileAdsSDK()
 
-    // SDK 가동 후 첫 전면을 미리 로드해 둔다(표시 시점에 준비되어 있게).
+    // SDK 가동 후 첫 전면·보상형을 미리 로드해 둔다(표시 시점에 준비되어 있게).
     preloadInterstitial()
+    preloadRewarded()
   }
 
   // MARK: - Ad presentation
@@ -133,12 +164,67 @@ final class AdService {
     #endif
   }
 
-  /// 보상형 광고를 표시하고 보상 적립 여부를 돌려준다. **P1 에서는 표시하지 않는다**(no-op).
-  /// `GADRewardedAd` 로드·표시·보상 콜백은 P3 에서 채운다.
-  /// - Returns: 보상을 적립해야 하면 `true`. P1 에서는 항상 `false`.
+  /// 보상형 광고를 미리 로드한다. SDK 미지원 플랫폼(macOS)·이미 로드 보유/로드 중이면 no-op.
+  func preloadRewarded() {
+    #if canImport(GoogleMobileAds)
+    guard loadedRewarded == nil, !isLoadingRewarded else { return }
+    isLoadingRewarded = true
+    Task { [weak self] in
+      let ad = try? await RewardedAd.load(
+        with: Self.rewardedTestUnitID,
+        request: Request()
+      )
+      self?.didFinishLoadingRewarded(ad)
+    }
+    #endif
+  }
+
+  /// 사용자가 직접 누른 경우에만 호출하는 **opt-in 전용** 보상형 광고 표시.
+  /// 자동·강제 노출은 절대 없다(R8). 시청을 끝까지 마쳐 보상 콜백을 받으면 "개발자 응원"
+  /// 누적 카운터를 1 올린다. 보상은 상징적이며 어떤 기능도 잠그거나 해제하지 않는다(R10).
+  ///
+  /// 시청 중단·취소·실패·미로드 시에는 보상을 적용하지 않는다(R9). 표시 후 다음 보상형을
+  /// 다시 preload 한다. macOS 등 SDK 미지원 플랫폼에서는 no-op 이며 항상 `false`.
+  /// - Returns: 보상(응원)을 적립했으면 `true`, 아니면 `false`.
   func presentRewarded() async -> Bool {
-    // P1: 광고 미표시. P3 에서 구현.
-    false
+    #if canImport(GoogleMobileAds) && canImport(UIKit)
+    guard let ad = loadedRewarded, let rootViewController = Self.activeRootViewController() else {
+      return false
+    }
+    loadedRewarded = nil
+
+    let earnedReward = await withCheckedContinuation { (continuation: CheckedContinuation<Bool, Never>) in
+      // 보상 여부 플래그를 메인 액터 참조 타입에 담아 두 콜백(present 핸들러·닫힘 delegate)이
+      // 공유하게 한다. 둘 다 메인 액터에서 실행되므로 경쟁 없이 안전하다(mutable var 캡처 회피).
+      let rewardFlag = RewardFlag()
+      // 풀스크린 닫힘 시점에 최종 보상 여부로 한 번만 resume 한다.
+      let delegate = RewardedDelegate { [weak self] in
+        self?.rewardedDelegate = nil
+        self?.preloadRewarded()
+        continuation.resume(returning: rewardFlag.didEarn)
+      }
+      ad.fullScreenContentDelegate = delegate
+      rewardedDelegate = delegate
+      // present 핸들러는 메인 액터(NS_SWIFT_UI_ACTOR)에서 호출된다. self 를 직접 캡처하지 않고
+      // 보상 플래그만 갱신해 닫힘 시점에 반영한다(보상 콜백 수신 시에만 적립).
+      ad.present(from: rootViewController) {
+        rewardFlag.didEarn = true
+      }
+    }
+
+    if earnedReward {
+      recordDeveloperSupport()
+    }
+    return earnedReward
+    #else
+    return false
+    #endif
+  }
+
+  /// 개발자 응원 누적 횟수를 1 올린다(보상형 시청 완료 시에만 호출). 상징적 카운터.
+  private func recordDeveloperSupport() {
+    let next = UserDefaults.standard.integer(forKey: Self.supportCountKey) + 1
+    UserDefaults.standard.set(next, forKey: Self.supportCountKey)
   }
 }
 
@@ -226,6 +312,15 @@ extension AdService {
     preloadInterstitial()
   }
 
+  // MARK: - Rewarded load (iOS)
+
+  /// 보상형 로드 완료 처리. 성공 시 보관해 둔다(표시 가능 상태). 실패면 보관 없음
+  /// (다음 preload 에서 다시 시도). delegate 는 표시 시점에 연결한다.
+  fileprivate func didFinishLoadingRewarded(_ ad: RewardedAd?) {
+    isLoadingRewarded = false
+    loadedRewarded = ad
+  }
+
   /// 활성 foreground scene 의 keyWindow rootViewController 를 찾는다. 없으면 nil.
   private static func activeRootViewController() -> UIViewController? {
     let scenes = UIApplication.shared.connectedScenes
@@ -240,6 +335,35 @@ extension AdService {
 /// 호출될 수 있어 `@MainActor` 인 `AdService` 를 직접 캡처하면 격리 트랩에 걸린다. 이
 /// `NSObject` delegate 가 콜백을 받아 `Task { @MainActor in }` 으로 hop 시킨다.
 private final class InterstitialDelegate: NSObject, FullScreenContentDelegate {
+  private let onDismiss: @MainActor () -> Void
+
+  init(onDismiss: @escaping @MainActor () -> Void) {
+    self.onDismiss = onDismiss
+  }
+
+  func adDidDismissFullScreenContent(_ ad: FullScreenPresentingAd) {
+    let handler = onDismiss
+    Task { @MainActor in handler() }
+  }
+
+  func ad(_ ad: FullScreenPresentingAd, didFailToPresentFullScreenContentWithError error: Error) {
+    let handler = onDismiss
+    Task { @MainActor in handler() }
+  }
+}
+
+/// 보상 적립 여부를 present 핸들러와 닫힘 delegate 가 공유하기 위한 메인 액터 참조 박스.
+/// 두 콜백 모두 메인 액터에서 실행되므로 격리 위반 없이 안전하게 읽고 쓴다.
+@MainActor
+private final class RewardFlag {
+  var didEarn = false
+}
+
+/// 보상형 광고 풀스크린 닫힘 콜백 수신. 전면과 동일하게 `FullScreenContentDelegate` 메서드는
+/// nonisolated 로 호출될 수 있어 `@MainActor` 인 `AdService` 를 직접 캡처하지 않고, 이 delegate 가
+/// 콜백을 받아 `Task { @MainActor in }` 으로 hop 시킨다. 정상 닫힘·표시 실패 모두 닫힘으로 본다
+/// (continuation 을 한 번 resume 시켜 멈추지 않게 한다). 보상 적립 여부는 present 핸들러가 결정한다.
+private final class RewardedDelegate: NSObject, FullScreenContentDelegate {
   private let onDismiss: @MainActor () -> Void
 
   init(onDismiss: @escaping @MainActor () -> Void) {

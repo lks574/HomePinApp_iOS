@@ -25,11 +25,18 @@ UI 우선 1차(시안 C 화면 골격: 5탭·장소·레시피·홈·추가 시�
 > 최소노출과 병렬). `AppRootView` 가 `AdService` 소유·`.environment` 주입. UMP 완료
 > 핸들러 nonisolated 콜백은 `nonisolated static` 헬퍼+`withCheckedContinuation` 으로
 > 받아 메인 액터 hop(격리 트랩 회피). iOS·macOS 빌드 둘 다 green, 동시성 경고 0.
-> **P1 광고 미표시**(표시 메서드는 시그니처만, 본문 no-op). 결정:
-> `docs/wiki/Decision/2026-06-17-AdMob-광고-수익화-도입.md`. 잔여: **P2 전면 광고**
-> (`showInterstitialIfEligible(trigger:)` 로드·빈도·쿨다운·표시), **P3 보상형**
-> (`presentRewarded()` 로드·표시·보상 콜백), 출시 전 실광고 앱/단위 ID 교체,
-> ATT/동의 실기 런타임 검증.
+> **P2 전면 광고 완료**: 장보기 세션 완료(`shoppingSessionCompleted`) 트리거에서만
+> best-effort 표시, 하루 1회+최소 간격 빈도 캡(`UserDefaults`), 사전 로드·닫힘 후
+> 재로드, rootVC present, 닫힘 delegate 는 `Task { @MainActor in }` hop. **P3 보상형
+> 완료**: opt-in 전용(Settings "개발자 응원하기" 버튼 직접 탭 시에만, 강제 노출 0).
+> 테스트 보상형 단위 ID(`.../1712485313`), `presentRewarded()` 사전 로드→present,
+> `userDidEarnRewardHandler` 수신 시에만 누적 응원 카운터(`UserDefaults`
+> `ad.developerSupportCount`) +1. **보상거리 = 상징적 "개발자 응원"으로 어떤 기능도
+> 잠그지 않음**(R10). 보상 플래그는 `@MainActor` 참조 박스로 present 핸들러·닫힘
+> delegate 가 공유(mutable var 캡처 회피), 시청 중단·취소·실패 시 미적용(R9). Settings
+> 진입점은 `#if os(iOS)` 로 macOS 비노출(AdService no-op). 결정:
+> `docs/wiki/Decision/2026-06-17-AdMob-광고-수익화-도입.md`. 잔여: 출시 전 실광고
+> 앱/단위 ID 교체, ATT/동의·전면·보상형 실기 런타임 검증.
 > 이전 완료: **macOS 플랫폼 지원 횡단(screen-17)** — 네이티브 macOS 앱 타깃 추가
 > (화면 추가 아님, 플랫폼 확장). `Project.swift` 에 `HomePinApp-macOS`(`.macOS("26.0")`,
 > bundleId `com.sro.homepinappmac`, entitlements app-sandbox·files.user-selected.read-write·
