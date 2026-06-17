@@ -331,49 +331,69 @@ struct CaptureSheet: View {
     query.trimmingCharacters(in: .whitespacesAndNewlines)
   }
 
-  /// 정규화 키로 부분 일치한 물건(이름순, `@Query` 정렬 유지).
+  /// 매칭 물건을 정확>접두>부분 등급, 동등급은 상태 가중치(임박 우선·위치없음 후순),
+  /// 그 다음 이름순으로 정렬한다. `@Query` 가 이름순이라 동점은 안정적으로 이름순이 된다.
   private var itemResults: [Item] {
     let search = CaptureSearchQuery(trimmedQuery)
     guard search.hasSearchText else { return [] }
-    return allItems.filter { itemMatches($0, search: search) }
+    return allItems
+      .compactMap { item in itemRank(item, search: search).map { (item, $0) } }
+      .sorted { lhs, rhs in lhs.1 < rhs.1 }
+      .map(\.0)
   }
 
-  /// 제목·요약·분류·태그·재료명이 부분 일치한 레시피(제목순, `@Query` 정렬 유지).
+  /// 매칭 레시피를 같은 규칙(등급 → 상태 가중치 → 제목순)으로 정렬한다.
   private var recipeResults: [Recipe] {
     let search = CaptureSearchQuery(trimmedQuery)
     guard search.hasSearchText else { return [] }
-    return allRecipes.filter { recipeMatches($0, search: search) }
+    return allRecipes
+      .compactMap { recipe in recipeRank(recipe, search: search).map { (recipe, $0) } }
+      .sorted { lhs, rhs in lhs.1 < rhs.1 }
+      .map(\.0)
   }
 
   /// 물건 검색은 이름 외에 위치·분류·태그·메모·수량 단위까지 같은 부분 일치로 본다.
-  private func itemMatches(_ item: Item, search: CaptureSearchQuery) -> Bool {
-    let fields = searchableItemFields(item)
-    if fields.contains(where: { Item.normalize($0).contains(search.fullKey) }) {
-      return true
-    }
-    // 토큰·의미 플래그가 전혀 없으면(불용어/조사만 남은 질의) `fullKey` 부분 일치 외에는
-    // 구체적 신호가 없으므로, 빈 토큰 `allSatisfy` 의 vacuous truth 로 전체가 매칭되지
-    // 않도록 막는다.
-    guard search.hasConcreteSignal else { return false }
-    guard itemMatchesSemanticFilters(item, search: search) else { return false }
-    return search.tokens.allSatisfy { token in
-      fields.contains { Item.normalize($0).contains(token) }
-    }
+  /// 매칭이면 등급·상태 가중치를 담은 `SearchRank` 를, 아니면 nil 을 반환한다.
+  private func itemRank(_ item: Item, search: CaptureSearchQuery) -> SearchRank? {
+    let fields = searchableItemFields(item).map(Item.normalize)
+    guard let tier = matchTier(
+      fields: fields,
+      search: search,
+      semanticFiltersPass: { itemMatchesSemanticFilters(item, search: search) }
+    ) else { return nil }
+    return SearchRank(tier: tier, statusWeight: itemStatusWeight(item))
   }
 
   /// 레시피 검색은 제목 외에 요약·분류·태그·재료 세부 텍스트까지 같은 부분 일치로 본다.
-  private func recipeMatches(_ recipe: Recipe, search: CaptureSearchQuery) -> Bool {
-    let fields = searchableRecipeFields(recipe)
-    if fields.contains(where: { Item.normalize($0).contains(search.fullKey) }) {
-      return true
+  private func recipeRank(_ recipe: Recipe, search: CaptureSearchQuery) -> SearchRank? {
+    let fields = searchableRecipeFields(recipe).map(Item.normalize)
+    guard let tier = matchTier(
+      fields: fields,
+      search: search,
+      semanticFiltersPass: { recipeMatchesSemanticFilters(recipe, search: search) }
+    ) else { return nil }
+    return SearchRank(tier: tier, statusWeight: recipeStatusWeight(recipe))
+  }
+
+  /// 정규화한 필드들에 대한 매칭 등급을 계산한다(매칭 없으면 nil). `fullKey` 직접 매칭이
+  /// 가장 강한 신호이고(정확>접두>부분), 없으면 의미 플래그 가드 통과 시 토큰 전체 일치를
+  /// 부분 일치로 본다. `hasConcreteSignal` 가드를 유지해 불용어/조사만 남은 빈 토큰 질의가
+  /// 전체를 매칭하지 못하게 한다. 의미 플래그(임박/만료 등)는 토큰 경로에만 적용한다(기존 동작).
+  private func matchTier(
+    fields: [String],
+    search: CaptureSearchQuery,
+    semanticFiltersPass: () -> Bool
+  ) -> MatchTier? {
+    if let tier = SearchRanking.bestTier(fields: fields, query: search.fullKey) {
+      return tier
     }
-    // 토큰·의미 플래그가 전혀 없으면 `fullKey` 부분 일치 외에 구체적 신호가 없으므로
-    // 전체 카탈로그가 매칭되지 않게 막는다.
-    guard search.hasConcreteSignal else { return false }
-    guard recipeMatchesSemanticFilters(recipe, search: search) else { return false }
-    return search.tokens.allSatisfy { token in
-      fields.contains { Item.normalize($0).contains(token) }
+    // `fullKey` 직접 매칭이 없으면 토큰 경로. 구체적 신호가 없으면(빈 토큰) 매칭하지 않는다.
+    guard search.hasConcreteSignal else { return nil }
+    guard semanticFiltersPass() else { return nil }
+    let allTokensMatch = search.tokens.allSatisfy { token in
+      fields.contains { $0.contains(token) }
     }
+    return allTokensMatch ? .contains : nil
   }
 
   private func searchableItemFields(_ item: Item) -> [String] {
@@ -417,6 +437,22 @@ struct CaptureSheet: View {
       ingredient.item?.name,
       ingredient.isOptional ? String(localized: "Optional ingredients") : nil,
     ].compactMap { $0 }.filter { !$0.isEmpty }
+  }
+
+  /// 물건 동등급 정렬 가중치. 임박은 위로(-1), 위치 미지정은 아래로(+1) 보낸다.
+  private func itemStatusWeight(_ item: Item) -> Int {
+    var weight = 0
+    if item.isExpiringSoon { weight -= 1 }
+    if item.area == nil, item.spot == nil { weight += 1 }
+    return weight
+  }
+
+  /// 레시피 동등급 정렬 가중치. 지금 만들 수 있는 레시피·임박 재료 활용을 위로 보낸다.
+  private func recipeStatusWeight(_ recipe: Recipe) -> Int {
+    var weight = 0
+    if recipe.isReadyToCook { weight -= 1 }
+    if recipe.usesExpiringIngredient { weight -= 1 }
+    return weight
   }
 
   private func itemMatchesSemanticFilters(_ item: Item, search: CaptureSearchQuery) -> Bool {
