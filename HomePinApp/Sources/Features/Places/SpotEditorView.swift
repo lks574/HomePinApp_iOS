@@ -75,7 +75,7 @@ struct SpotEditorView: View {
     case let .create(area):
       let spot = Spot(
         name: trimmedName,
-        sortOrder: area.spots.count,
+        sortOrder: (area.spots ?? []).count,
         area: area
       )
       modelContext.insert(spot)

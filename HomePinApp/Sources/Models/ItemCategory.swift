@@ -14,7 +14,7 @@ final class ItemCategory {
   var updatedAt: Date
 
   @Relationship(deleteRule: .nullify, inverse: \Item.category)
-  var items: [Item]
+  var items: [Item]?
 
   init(
     id: UUID = UUID(),

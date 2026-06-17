@@ -67,7 +67,7 @@ struct PlacesListView: View {
         Button("Delete", role: .destructive) { delete(area) }
         Button("Cancel", role: .cancel) {}
       } message: { area in
-        Text("place.delete.message.\(area.spots.count)")
+        Text("place.delete.message.\((area.spots ?? []).count)")
       }
     }
   }
@@ -102,7 +102,7 @@ struct PlacesListView: View {
   }
 
   private func placeCard(_ area: Area) -> some View {
-    let preview = (area.items + area.spots.flatMap(\.items)).map(\.name).prefix(4).joined(separator: " · ")
+    let preview = ((area.items ?? []) + (area.spots ?? []).flatMap { $0.items ?? [] }).map(\.name).prefix(4).joined(separator: " · ")
     return VStack(alignment: .leading, spacing: 0) {
       HStack {
         AppInitialBadge(text: area.name)

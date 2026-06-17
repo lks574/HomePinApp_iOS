@@ -22,7 +22,7 @@ status: in-progress
 
 ## 관계
 
-- → [[Area]] : `areas: [Area]` `@Relationship(.cascade)` (공간 삭제 시 구역까지 삭제)
+- → [[Area]] : `areas: [Area]?` `@Relationship(.cascade)` (공간 삭제 시 구역까지 삭제)
 
 ## 사용 화면
 

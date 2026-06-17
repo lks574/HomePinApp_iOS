@@ -20,8 +20,8 @@ status: in-progress
 
 ## 관계
 
-- ↔ [[Item]] : `items: [Item]` (N:N, inverse 는 `Item.tags` 에 선언)
-- ↔ [[Recipe]] : `recipes: [Recipe]` (N:N, inverse 는 `Recipe.tags` 에 선언)
+- ↔ [[Item]] : `items: [Item]?` (N:N, inverse 는 `Item.tags` 에 선언)
+- ↔ [[Recipe]] : `recipes: [Recipe]?` (N:N, inverse 는 `Recipe.tags` 에 선언)
 
 ## 메모
 

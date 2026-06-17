@@ -77,7 +77,7 @@ final class RecipeEditorModel {
       servings = recipe.servings.map(String.init) ?? ""
       totalMinutes = recipe.totalMinutes.map(String.init) ?? ""
       summary = recipe.summary ?? ""
-      let sorted = recipe.ingredients.sorted { $0.sortOrder < $1.sortOrder }
+      let sorted = (recipe.ingredients ?? []).sorted { $0.sortOrder < $1.sortOrder }
       let mainDrafts = sorted.filter { !$0.isOptional }.map(Self.draft(from:))
       mainIngredients = mainDrafts.isEmpty ? [IngredientDraft()] : mainDrafts
       optionalIngredients = sorted.filter(\.isOptional).map(Self.draft(from:))
@@ -190,7 +190,7 @@ final class RecipeEditorModel {
     recipe.updatedAt = .now
 
     // 재료 재구성: 기존 라인은 cascade 삭제 후 draft 로 새로 만든다.
-    for old in recipe.ingredients {
+    for old in recipe.ingredients ?? [] {
       modelContext.delete(old)
     }
     recipe.ingredients = []

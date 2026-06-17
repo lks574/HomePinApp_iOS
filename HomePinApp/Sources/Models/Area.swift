@@ -15,11 +15,11 @@ final class Area {
   var space: Space?
 
   @Relationship(deleteRule: .cascade, inverse: \Spot.area)
-  var spots: [Spot]
+  var spots: [Spot]?
 
   /// 이 구역에 직접 속한 물건(세부위치 미지정). 구역 삭제 시 nullify 로 보존된다.
   @Relationship(deleteRule: .nullify, inverse: \Item.area)
-  var items: [Item]
+  var items: [Item]?
 
   init(
     id: UUID = UUID(),
@@ -43,6 +43,6 @@ final class Area {
 
   /// 이 구역의 물건 수 = 직속 + 하위 세부위치(Spot)의 물건.
   var itemCount: Int {
-    items.count + spots.reduce(0) { $0 + $1.items.count }
+    (items ?? []).count + (spots ?? []).reduce(0) { $0 + ($1.items ?? []).count }
   }
 }

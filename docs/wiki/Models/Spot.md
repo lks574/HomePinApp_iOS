@@ -22,7 +22,7 @@ status: in-progress
 ## 관계
 
 - ← [[Area]] : `area: Area?` (부모)
-- → [[Item]] : `items: [Item]` `@Relationship(.nullify)` — 세부위치 삭제 시 물건은
+- → [[Item]] : `items: [Item]?` `@Relationship(.nullify)` — 세부위치 삭제 시 물건은
   보존(구역엔 남음).
 
 ## 사용 화면

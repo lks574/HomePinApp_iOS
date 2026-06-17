@@ -24,7 +24,7 @@ status: in-progress
 
 ## 관계
 
-- → [[Item]] : `items: [Item]` `@Relationship(.nullify, inverse: \Item.category)`
+- → [[Item]] : `items: [Item]?` `@Relationship(.nullify, inverse: \Item.category)`
 
 ## 메모
 

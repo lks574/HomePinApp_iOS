@@ -26,9 +26,9 @@ struct ItemCategoryPickerSheet: View {
           ForEach(categories) { category in
             TaxonomyPickerRow(
               title: category.name,
-              subtitle: category.items.isEmpty
+              subtitle: (category.items ?? []).isEmpty
                 ? String(localized: "No items")
-                : String(localized: "picker.itemCount.\(category.items.count)"),
+                : String(localized: "picker.itemCount.\((category.items ?? []).count)"),
               isSelected: selectedCategory?.id == category.id
             ) {
               selectedCategory = category
@@ -92,9 +92,9 @@ struct ItemTagPickerSheet: View {
           ForEach(tags) { tag in
             TaxonomyPickerRow(
               title: tag.name,
-              subtitle: tag.items.isEmpty
+              subtitle: (tag.items ?? []).isEmpty
                 ? String(localized: "No items")
-                : String(localized: "picker.itemCount.\(tag.items.count)"),
+                : String(localized: "picker.itemCount.\((tag.items ?? []).count)"),
               isSelected: selectedTags.contains { $0.id == tag.id }
             ) {
               toggle(tag)

@@ -14,7 +14,7 @@ final class Spot {
 
   /// 이 세부위치에 속한 물건. 세부위치 삭제 시 nullify 로 보존된다(구역엔 남음).
   @Relationship(deleteRule: .nullify, inverse: \Item.spot)
-  var items: [Item]
+  var items: [Item]?
 
   init(
     id: UUID = UUID(),

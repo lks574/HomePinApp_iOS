@@ -24,8 +24,8 @@ status: in-progress
 ## 관계
 
 - ← [[Space]] : `space: Space?` (부모)
-- → [[Spot]] : `spots: [Spot]` `@Relationship(.cascade)`
-- → [[Item]] : `items: [Item]` `@Relationship(.nullify)` — 세부위치 없는 물건. 구역
+- → [[Spot]] : `spots: [Spot]?` `@Relationship(.cascade)`
+- → [[Item]] : `items: [Item]?` `@Relationship(.nullify)` — 세부위치 없는 물건. 구역
   삭제 시 물건은 보존("위치 미지정").
 
 ## 사용 화면

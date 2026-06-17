@@ -10,8 +10,8 @@ final class Tag {
   var createdAt: Date
   var updatedAt: Date
 
-  var items: [Item]
-  var recipes: [Recipe]
+  var items: [Item]?
+  var recipes: [Recipe]?
 
   init(
     id: UUID = UUID(),

@@ -12,7 +12,7 @@ final class Space {
   var updatedAt: Date
 
   @Relationship(deleteRule: .cascade, inverse: \Area.space)
-  var areas: [Area]
+  var areas: [Area]?
 
   init(
     id: UUID = UUID(),

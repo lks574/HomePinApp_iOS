@@ -26,11 +26,11 @@ final class Item {
   var category: ItemCategory?
 
   @Relationship(inverse: \Tag.items)
-  var tags: [Tag]
+  var tags: [Tag]?
 
   /// 이 물건을 재료로 쓰는 레시피 재료 라인(레시피 역참조·임박 추천용).
   @Relationship(deleteRule: .nullify, inverse: \RecipeIngredient.item)
-  var usedInIngredients: [RecipeIngredient]
+  var usedInIngredients: [RecipeIngredient]?
 
   #Index<Item>([\.name], [\.normalizedName], [\.expiresAt])
 

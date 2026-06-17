@@ -33,7 +33,7 @@ status: in-progress
 
 ## 관계
 
-- → [[RecipeIngredient]] : `ingredients` `@Relationship(.cascade)`
+- → [[RecipeIngredient]] : `ingredients: [RecipeIngredient]?` `@Relationship(.cascade)`
 - ↔ [[Tag]] : `tags` **N:N**(inverse 를 `Recipe.tags` 에 선언)
 
 ## 동작

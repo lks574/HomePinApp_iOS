@@ -43,14 +43,14 @@ struct RecipeDetailView: View {
       Button("Delete", role: .destructive) { deleteRecipe() }
       Button("Cancel", role: .cancel) {}
     } message: {
-      Text("recipe.delete.message.\(recipe.ingredients.count)")
+      Text("recipe.delete.message.\((recipe.ingredients ?? []).count)")
     }
   }
 
   // MARK: 파생
 
   private var sortedIngredients: [RecipeIngredient] {
-    recipe.ingredients.sorted { $0.sortOrder < $1.sortOrder }
+    (recipe.ingredients ?? []).sorted { $0.sortOrder < $1.sortOrder }
   }
 
   /// 주재료(부재료 제외) — 상세 재료 목록의 기본 섹션.
