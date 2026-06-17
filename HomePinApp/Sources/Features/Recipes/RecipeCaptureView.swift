@@ -24,9 +24,14 @@ struct RecipeCaptureView: View {
   @State private var confirmRoute: RecipeConfirmRoute?
   @FocusState private var inputFocused: Bool
 
-  /// 카메라 사용 가능 여부(시뮬레이터는 미지원이라 사진 라이브러리만 노출).
+  /// 카메라 사용 가능 여부. iOS 에서만 즉석 촬영을 노출하고(시뮬레이터는 미지원이라 제외),
+  /// macOS 는 카메라 진입점을 두지 않는다(사진 라이브러리·파일 OCR 경로 유지).
   private var cameraAvailable: Bool {
-    UIImagePickerController.isSourceTypeAvailable(.camera)
+    #if os(iOS)
+    return UIImagePickerController.isSourceTypeAvailable(.camera)
+    #else
+    return false
+    #endif
   }
 
   var body: some View {
@@ -56,10 +61,7 @@ struct RecipeCaptureView: View {
       .sheet(item: $manualRoute) { _ in
         RecipeEditorView(mode: .create) { dismiss() }
       }
-      .fullScreenCover(isPresented: $showingCamera) {
-        CameraImagePicker { image in ocr.recognize(image) }
-          .ignoresSafeArea()
-      }
+      .cameraCaptureCover(isPresented: $showingCamera) { image in ocr.recognize(image) }
       .photosPicker(isPresented: $showingPhotoLibrary, selection: $photoItem, matching: .images)
       .onAppear { inputFocused = true }
       .onChange(of: dictation.transcript) { _, newTranscript in

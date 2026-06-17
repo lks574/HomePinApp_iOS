@@ -1,4 +1,6 @@
 import SwiftUI
+
+#if os(iOS)
 import UIKit
 
 /// 카메라 즉석 촬영용 `UIImagePickerController` 래퍼. 요리책·메모를 그 자리에서 찍어 OCR 에 넘긴다.
@@ -56,5 +58,26 @@ struct CameraImagePicker: UIViewControllerRepresentable {
       let finish = onFinish
       Task { @MainActor in finish() }
     }
+  }
+}
+#endif
+
+extension View {
+  /// 카메라 즉석 촬영 시트를 띄운다(촬영 완료 시 이미지 전달). iOS 에서만 카메라 picker 를
+  /// 풀스크린으로 띄우고, macOS 에서는 카메라 진입점이 없으므로 no-op 이다(호출 측이 카메라
+  /// 버튼 자체를 `cameraAvailable` 로 숨기므로 macOS 에서 트리거되지 않는다).
+  @ViewBuilder
+  func cameraCaptureCover(
+    isPresented: Binding<Bool>,
+    onCapture: @escaping (PlatformImage) -> Void,
+  ) -> some View {
+    #if os(iOS)
+    fullScreenCover(isPresented: isPresented) {
+      CameraImagePicker(onCapture: onCapture)
+        .ignoresSafeArea()
+    }
+    #else
+    self
+    #endif
   }
 }
