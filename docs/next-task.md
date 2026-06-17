@@ -11,7 +11,25 @@ status: draft
 UI 우선 1차(시안 C 화면 골격: 5탭·장소·레시피·홈·추가 시트) 완료 후의 다음 후보.
 보류 상세는 `docs/follow-ups.md`.
 
-> 최근 완료: **데이터 백업/가져오기 + CSV 대량 입력(screen-15)** — `Settings > Data >
+> 최근 완료: **검색·추가 정교화 횡단(screen-16)** — 중앙 검색([[Capture]],
+> `CaptureSheet`)·물건 추가 경로의 횡단 정교화(새 화면 아님, `Shared/Search/`).
+> (1) 자연어 규칙 외부화 — 조사·불용어·의미단어 3개를 `Resources/SearchRules.json` +
+> `SearchRules.swift`(번들 1회 로드, 누락 시 `preconditionFailure`)로 분리(토큰화/`Item.normalize`
+> 순서 동일, 회귀 0). (2) 랭킹 정렬 — `SearchRanking`·`MatchTier`(exact/prefix/contains/
+> choseong/fuzzy)·`SearchRank`, 매칭 함수 Bool→`SearchRank?` → `compactMap`+`sorted`(등급→
+> 상태가중치(임박↑·위치없음↓ / 지금가능·임박재료↑)→이름순). (3) 초성 검색 — `Hangul`(완성형
+> 음절→초성, 유니코드 산술), 질의 전부 초성일 때만 활성(`.choseong`, 회귀 0). (4) 편집거리
+> fallback — `Levenshtein`(음절 단위 2행 DP), 결과 0 + `hasConcreteSignal` 일 때만 토큰별
+> 임계(≤3→1/그외 2) 근사 매칭(`.fuzzy`). (5) 추천 칩 — 빈 입력 시 최근 검색어
+> (`@AppStorage("recentSearches")` JSON, `RecentSearches`)+임박 물건, 칩 탭=입력 채우기만. (6)
+> 중복 가드 — 같은 `normalizedName` 추가 시 합치기/새로 추가 `confirmationDialog` 제안(자동
+> 저장 없음, 합치기→`ItemEditor` edit). (7) 직전 위치 prefill — `@AppStorage` lastArea/SpotID,
+> 저장 시 기록·create 진입 시 미지정이면 fetch prefill(삭제된 위치 nil→무시). 모든 경로가
+> `hasConcreteSignal` 가드·`normalizedName` 단일 매칭키·위치 불변식 우회 없음. 새 `@Model`·
+> 외부 의존성 없음. 결정: `docs/wiki/Decision/2026-06-17-자연어-규칙-외부화.md`,
+> `docs/wiki/Decision/2026-06-17-검색-랭킹-초성-편집거리.md`. 잔여: 편집거리 자모 정밀화·
+> 의미플래그 후보 외부화(`docs/follow-ups.md`).
+> 이전: **데이터 백업/가져오기 + CSV 대량 입력(screen-15)** — `Settings > Data >
 > Backup & Import`(`DataTransferView`) 진입. **전체 백업** = 디렉터리 패키지
 > (`.homepinbackup`, exported UTType `com.sro.homepinappios.backup`/`com.apple.package`) —
 > `data.json`(schemaVersion 메타 + 9 엔티티 Codable DTO, 관계 전부 UUID 참조,

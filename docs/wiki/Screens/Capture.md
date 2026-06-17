@@ -5,6 +5,7 @@ created: 2026-06-12
 updated: 2026-06-17
 status: in-progress
 screen-id: screen-01
+related-tasks: [screen-01, screen-04, screen-09, screen-12, screen-16]
 ---
 
 # Capture (검색-우선 통합 시트)
@@ -15,7 +16,14 @@ screen-id: screen-01
 
 - 단일 입력 필드(타이핑·음성 받아쓰기 공용)를 제공한다. 음성은 같은 입력 필드를 채우는 입력기일 뿐, 텍스트 경로는 항상 살아 있어 음성 불가용 시 폴백된다.
 - 검색(항상): 물건은 이름·위치 경로·장소·세부위치·분류·태그·메모·수량을, 레시피는 제목·요약·cuisine/dishType 라벨·태그·재료명/단위/메모를 정규화 부분 일치로 필터해 입력 즉시 결과를 **물건/레시피 섹션**으로 구분 표시. 자연어 문장은 로컬 규칙(`CaptureSearchQuery`)으로 조사·불용어를 제거한 토큰 전체 일치 + 속성 플래그(임박/만료/위치 없음/지금 만들 수 있음/부족 재료)로 보강한다. 물건 결과 탭 시 [[ItemEditor]] `edit` 모드로 진입하고, 레시피 결과 탭 시 시트를 닫고 레시피 탭 상세([[RecipeDetail]])로 push(`AppRouter.openRecipe`).
+- 검색 정교화(`screen-16`, `Shared/Search/`):
+  - **랭킹 정렬**(`SearchRanking`·`MatchTier`): 결과를 정확>접두>부분 등급으로, 동등급은 상태 가중치(물건=임박 우선·위치없음 후순, 레시피=지금 가능·임박 재료 우선), 그 다음 이름순으로 정렬한다(`@Query` 이름순이 안정 정렬로 동점을 가른다).
+  - **초성 검색**(`Hangul`): 질의가 전부 호환 자모 초성 자음일 때만 활성. 필드 초성열에 부분 일치하면 최하위 `.choseong` 등급으로 매칭한다(일반 텍스트 질의는 기존 경로, 회귀 0).
+  - **편집거리 fallback**(`Levenshtein`): 정상 매칭 결과가 **하나도 없을 때만**, 전체 물건에 대해 토큰별 음절 편집거리 임계(길이≤3→1, 그 외 2) 이내 근사 매칭으로 `.fuzzy` 등급 폴백. `hasConcreteSignal` 가드를 유지해 빈 토큰 질의에서는 작동하지 않는다.
+  - **추천 칩**(빈 입력): 최근 검색어(`@AppStorage("recentSearches")` JSON, 최대 8·최신우선·정규화 중복제거) + 임박 물건 상위. 칩 탭은 입력 필드만 채우고(자동 검색/추가 없음), 기록은 결과 탭·추가 진입 등 검색의도 확정 시점에 적재.
+  - 위 모든 경로는 `hasConcreteSignal` 가드와 `normalizedName` 단일 매칭키를 우회하지 않는다.
 - 추가(명시적): 결과 목록 아래 항상 노출되는 `+ "{입력어}" 추가하기` 행을 눌러야만 추가가 일어난다. 입력 텍스트(타이핑·받아쓰기 공용)를 가용 시 AI 파서(`NLParseViewModel`)로 구조화 드래프트로 바꿔 [[DraftReview]] 로 push, 미가용·실패·취소·빈 결과면 이름 draft 로 [[ItemEditor]] `create` 단건 스텁 폴백. 텍스트·음성 공용 단일 파서 경로. 파서 추론 중에는 추가 행이 진행 표시로 바뀐다.
+- 중복 추가 가드(`screen-16`): 추가 진입 시 같은 `normalizedName` 의 기존 물건이 있으면 "수량 합치기 / 새로 추가 / 취소" 를 `confirmationDialog` 로 **제안**한다(자동 합치기·자동 저장 없음). "합치기"는 그 기존 물건의 [[ItemEditor]] `edit` 로 진입(수량 가산은 에디터에서 사용자가 직접 저장), "새로 추가"는 기존 파서/스텁 경로로 진행. 동등 비교는 `normalizedName` 동등만(부분일치 아님).
 
 ## 연결된 화면
 
@@ -78,12 +86,19 @@ screen-id: screen-01
 
 ## 관련 태스크 / 결정
 
-- `[screen-01]`, `[screen-04]`, `[screen-09]`, `[screen-12]` (docs/screen-implementation-tasks.md)
-- 관련 결정: [[2026-06-12-네비게이션-UI구조]], [[2026-06-15-음성입력-STT-아키텍처]], [[2026-06-15-NL-추가-파서-FoundationModels]], [[2026-06-16-레시피-NL파서-ParsedRecipe]]
+- `[screen-01]`, `[screen-04]`, `[screen-09]`, `[screen-12]`, `[screen-16]` (docs/screen-implementation-tasks.md)
+- 관련 결정: [[2026-06-12-네비게이션-UI구조]], [[2026-06-15-음성입력-STT-아키텍처]], [[2026-06-15-NL-추가-파서-FoundationModels]], [[2026-06-16-레시피-NL파서-ParsedRecipe]], [[2026-06-17-검색-랭킹-초성-편집거리]], [[2026-06-17-자연어-규칙-외부화]]
 
 ## 메모
 
 - 코드: `HomePinApp/Sources/Features/Capture/CaptureSheet.swift`
+- 검색 정교화(`screen-16`, `HomePinApp/Sources/Shared/Search/`):
+  - `SearchRules.swift` — 조사·불용어·의미단어 규칙을 번들 `HomePinApp/Resources/SearchRules.json` 에서 1회 로드(누락 시 `preconditionFailure`).
+  - `SearchRanking.swift` — `MatchTier`(exact/prefix/contains/choseong/fuzzy)·`SearchRank`·필드별 등급 계산.
+  - `Hangul.swift` — 완성형 음절→초성 변환(유니코드 산술)·초성 질의 판별.
+  - `Levenshtein.swift` — 음절 단위 2행 DP 편집거리·길이별 임계.
+  - `RecentSearches.swift` — 최근 검색어 JSON 코덱(최신우선·중복제거·최대 8).
+  - 직전 추가 위치 prefill 은 [[ItemEditor]](`@AppStorage("lastAreaID"/"lastSpotID")`)에서 처리.
 - AI 자연어 추가:
   - 파서 엔진(추출만, 비-MainActor): `HomePinApp/Sources/Shared/AI/NLItemParser.swift`
   - 파싱 상태/세션 소유: `HomePinApp/Sources/Features/Capture/NLParseViewModel.swift`

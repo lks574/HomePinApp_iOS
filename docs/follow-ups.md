@@ -116,6 +116,26 @@ i18n·검색·장보기 1차(중앙 AI 버튼·레시피 검색·장보기 CRUD)
   아니라 위치·분류·태그·메모·레시피 메타데이터까지 확장 완료.
 - [ ] **자연어 검색 고도화(`#Predicate`/AI 변환)** — 현재 1차는 in-memory 규칙 기반.
   데이터가 커지거나 "주방 말고 냉동실" 같은 부정/비교 조건이 필요해지면 술어 변환으로 확장.
+- [x] **검색 결과 랭킹·초성·편집거리 fallback·추천 칩·중복 가드·직전 위치 prefill 완료(screen-16)**
+  — `Shared/Search/`(`SearchRules`·`SearchRanking`·`Hangul`·`Levenshtein`·`RecentSearches`).
+  결과를 정확>접두>부분 등급 + 상태 가중치 + 이름순 정렬, 초성 전용 질의 매칭(유니코드 산술),
+  결과 0 + `hasConcreteSignal` 일 때만 음절 편집거리 근사 폴백, 빈 입력 추천 칩(최근 검색어
+  `@AppStorage`+임박 물건), 같은 `normalizedName` 추가 시 합치기/새로 추가 제안, 직전 추가
+  위치 prefill(`@AppStorage` lastArea/SpotID). 모든 경로가 `hasConcreteSignal` 가드·
+  `normalizedName` 단일 매칭키·위치 불변식을 우회하지 않음. 새 `@Model`·외부 의존성 없음.
+  결정: `docs/wiki/Decision/2026-06-17-자연어-규칙-외부화.md`,
+  `docs/wiki/Decision/2026-06-17-검색-랭킹-초성-편집거리.md`.
+- [ ] **편집거리 자모 정밀화** — `Levenshtein` 은 현재 **음절 단위**(한 음절=한 단위)라
+  "사과"↔"사가"는 거리 1 이지만 "사과"↔"삭과"(받침 차이)도 1 음절 치환으로 본다. 받침 한
+  글자만 다른 오타를 더 가깝게 보려면 자모(초·중·종성) 단위 분해 후 거리 계산이 필요하다.
+  (모듈: `Shared/Search/Levenshtein.swift`, 결정:
+  `docs/wiki/Decision/2026-06-17-검색-랭킹-초성-편집거리.md`)
+- [ ] **의미 플래그 후보 배열 외부화** — `screen-16` S1 은 조사·불용어·의미단어 3개만
+  `SearchRules.json` 으로 외부화했다. `CaptureSearchQuery` init 의 의미 플래그 후보 배열
+  (`wantsExpiringSoon`/`wantsExpired`/`wantsNoLocation`/`wantsReadyRecipe`/`wantsMissingRecipe`
+  의 `containsAny` 후보)은 아직 코드 상수다. 사전 보강을 코드 변경 없이 하려면 같은 리소스로
+  외부화해야 한다. (모듈: `Features/Capture/CaptureSheet.swift`,
+  `Resources/SearchRules.json`, 결정: `docs/wiki/Decision/2026-06-17-자연어-규칙-외부화.md`)
 - [x] **find/add 의도 자동 판별 — 검색-우선 통합으로 대체(불필요)** — [추가|검색]
   모드 토글을 없애고 단일 입력 필드로 통합했다. 검색은 입력 즉시 항상 일어나고, 추가는
   사용자가 결과 아래 `+ "{입력어}" 추가하기` 행을 명시적으로 누를 때만 일어난다. AI 가
