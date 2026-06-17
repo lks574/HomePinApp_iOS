@@ -143,7 +143,7 @@ struct RecipeEditorView: View {
       TextField(placeholder, text: text)
         .font(.appFieldText)
         .foregroundStyle(AppColor.textPrimary)
-        .keyboardType(.numberPad)
+        .numericKeyboard()
         .focused($focusedField, equals: field)
     }
     .frame(maxWidth: .infinity, alignment: .leading)
@@ -244,7 +244,7 @@ struct RecipeEditorView: View {
       TextField("Qty", text: ingredient.quantity)
         .font(.appFieldText)
         .foregroundStyle(AppColor.textPrimary)
-        .keyboardType(.decimalPad)
+        .numericKeyboard(decimal: true)
         .multilineTextAlignment(.trailing)
         .frame(width: 44)
 
@@ -295,7 +295,7 @@ struct RecipeEditorView: View {
           TextField("Optional", text: step.minutes)
             .font(.appFootnote)
             .foregroundStyle(AppColor.textPrimary)
-            .keyboardType(.numberPad)
+            .numericKeyboard()
             .frame(width: 56)
         }
       }
