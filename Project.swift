@@ -68,8 +68,11 @@ let macOSInfoPlist: [String: Plist.Value] = sharedInfoPlist.merging([
 let project = Project(
   name: "HomePinApp",
   options: .options(
+    // 타깃별로 스킴을 따로 생성한다(.notGrouped). .singleScheme 은 iOS·macOS 두 타깃을 한
+    // 스킴에 묶어, macOS 데스티네이션 빌드 시 iOS 타깃까지 끌려와 프로비저닝 서명 오류가 났다.
+    // 분리하면 `HomePinApp`(iOS) / `HomePinApp-macOS`(macOS) 스킴이 각각 노출된다.
     automaticSchemesOptions: .enabled(
-      targetSchemesGrouping: .singleScheme,
+      targetSchemesGrouping: .notGrouped,
       codeCoverageEnabled: false,
       testingOptions: [],
     ),
