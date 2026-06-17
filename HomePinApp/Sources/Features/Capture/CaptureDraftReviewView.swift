@@ -60,10 +60,8 @@ struct CaptureDraftReviewView: View {
       areaRow(draft)
       Divider().padding(.leading, 16)
       spotRow(draft)
-      if draft.categoryMatch != nil || !draft.tagMatches.isEmpty {
-        Divider().padding(.leading, 16)
-        classificationRow(draft)
-      }
+      Divider().padding(.leading, 16)
+      classificationRow(draft)
     }
     .appCard(radius: 18)
   }
@@ -139,28 +137,53 @@ struct CaptureDraftReviewView: View {
     }
   }
 
+  /// 분류·태그 인라인 편집 영역. 값이 비어도 항상 노출해 편집 진입(시트)을 열 수 있게 한다.
   private func classificationRow(_ draft: AddDraft) -> some View {
-    VStack(alignment: .leading, spacing: 8) {
-      if let category = draft.categoryMatch {
-        HStack(spacing: 6) {
-          Text("Category").font(.appCaptionStrong).foregroundStyle(AppColor.textTertiary)
-          matchChip(name: matchName(category, fallback: ""), isNew: category.isNew)
-        }
-      }
-      if !draft.tagMatches.isEmpty {
-        HStack(alignment: .top, spacing: 6) {
-          Text("Tags").font(.appCaptionStrong).foregroundStyle(AppColor.textTertiary)
-            .padding(.top, 3)
-          FlowLayout(spacing: 6) {
-            ForEach(draft.tagMatches) { tag in
-              matchChip(name: matchName(tag, fallback: ""), isNew: tag.isNew)
-            }
-          }
-        }
-      }
+    VStack(alignment: .leading, spacing: 10) {
+      categorySection(draft)
+      tagSection(draft)
     }
     .frame(maxWidth: .infinity, alignment: .leading)
     .padding(16)
+  }
+
+  /// 분류(단일). 칩 탭 또는 빈 값 플레이스홀더 탭으로 분류 선택 시트를 연다.
+  private func categorySection(_ draft: AddDraft) -> some View {
+    HStack(spacing: 6) {
+      Text("Category").font(.appCaptionStrong).foregroundStyle(AppColor.textTertiary)
+      Button {
+        pickerTarget = .category(draft)
+      } label: {
+        if let category = draft.categoryMatch {
+          matchChip(name: matchName(category, fallback: ""), isNew: category.isNew)
+        } else {
+          addChip(title: "Add")
+        }
+      }
+      .buttonStyle(.plain)
+      Spacer(minLength: 0)
+    }
+  }
+
+  /// 태그(다중). 각 칩에 제거(x) 어포던스, 끝에 "+ Tag" 추가 칩으로 시트를 연다.
+  private func tagSection(_ draft: AddDraft) -> some View {
+    HStack(alignment: .top, spacing: 6) {
+      Text("Tags").font(.appCaptionStrong).foregroundStyle(AppColor.textTertiary)
+        .padding(.top, 6)
+      FlowLayout(spacing: 6) {
+        ForEach(draft.tagMatches) { tag in
+          removableTagChip(name: matchName(tag, fallback: ""), isNew: tag.isNew) {
+            removeTag(tag, from: draft)
+          }
+        }
+        Button {
+          pickerTarget = .tags(draft)
+        } label: {
+          addChip(title: "+ Tag")
+        }
+        .buttonStyle(.plain)
+      }
+    }
   }
 
   // MARK: - 매칭 행/칩 공용
@@ -206,6 +229,42 @@ struct CaptureDraftReviewView: View {
     )
   }
 
+  /// 제거(x) 어포던스가 붙은 태그 칩. 시각 규약은 `matchChip` 과 동일(신규=테라코타).
+  private func removableTagChip(name: String, isNew: Bool, onRemove: @escaping () -> Void) -> some View {
+    HStack(spacing: 4) {
+      if isNew {
+        Text("New").font(.appTag).foregroundStyle(AppColor.chipSoonText)
+      }
+      Text(verbatim: name).font(.appTag).foregroundStyle(isNew ? AppColor.chipSoonText : AppColor.chipHaveText)
+      Button(action: onRemove) {
+        Image(systemName: "xmark")
+          .font(.appTag)
+          .foregroundStyle(isNew ? AppColor.chipSoonText : AppColor.chipHaveText)
+      }
+      .buttonStyle(.plain)
+    }
+    .padding(.horizontal, 10)
+    .frame(height: 26)
+    .background(
+      isNew ? AppColor.chipSoonBackground : AppColor.chipHaveBackground,
+      in: Capsule(),
+    )
+  }
+
+  /// 빈 값/추가 진입용 점선 느낌의 중립 칩(편집 시트를 여는 버튼 라벨).
+  private func addChip(title: LocalizedStringKey) -> some View {
+    Text(title)
+      .font(.appTag)
+      .foregroundStyle(AppColor.textMuted)
+      .padding(.horizontal, 10)
+      .frame(height: 26)
+      .background(AppColor.chipHaveBackground, in: Capsule())
+  }
+
+  private func removeTag(_ tag: NameMatch<Tag>, from draft: AddDraft) {
+    draft.tagMatches.removeAll { $0.id == tag.id }
+  }
+
   // MARK: - 피커 시트
 
   @ViewBuilder
@@ -223,6 +282,10 @@ struct CaptureDraftReviewView: View {
         selectedSpot: bindingSpot(draft),
         selectedArea: bindingArea(draft),
       )
+    case let .category(draft):
+      DraftCategoryPickerSheet(draft: draft)
+    case let .tags(draft):
+      DraftTagPickerSheet(draft: draft)
     }
   }
 
@@ -310,11 +373,15 @@ struct CaptureDraftReviewView: View {
 private enum PickerTarget: Identifiable {
   case area(AddDraft)
   case spot(AddDraft)
+  case category(AddDraft)
+  case tags(AddDraft)
 
   var id: String {
     switch self {
     case let .area(draft): "area-\(draft.id)"
     case let .spot(draft): "spot-\(draft.id)"
+    case let .category(draft): "category-\(draft.id)"
+    case let .tags(draft): "tags-\(draft.id)"
     }
   }
 }

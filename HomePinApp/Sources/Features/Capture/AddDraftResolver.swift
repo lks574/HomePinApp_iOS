@@ -87,7 +87,9 @@ enum AddDraftResolver {
   // MARK: - 매칭
 
   /// 정규화 키 일치로 기존 엔티티를 찾는다. 빈 이름이면 매칭 없음(nil).
-  private static func match<Model: NameMatchable>(_ raw: String, in candidates: [Model]) -> NameMatch<Model>? {
+  /// 드래프트 전용 인라인 편집 시트가 자유 입력을 `.existing`/`.new` 로 판정할 때도
+  /// 같은 로직을 쓰도록 `internal` 로 노출한다(매칭 규칙 단일화).
+  static func match<Model: NameMatchable>(_ raw: String, in candidates: [Model]) -> NameMatch<Model>? {
     let key = Item.normalize(raw)
     guard !key.isEmpty else { return nil }
     if let found = candidates.first(where: { Item.normalize($0.name) == key }) {
@@ -96,7 +98,7 @@ enum AddDraftResolver {
     return .new(raw.trimmingCharacters(in: .whitespacesAndNewlines))
   }
 
-  private static func newMatch<Model: NameMatchable>(_ raw: String) -> NameMatch<Model>? {
+  static func newMatch<Model: NameMatchable>(_ raw: String) -> NameMatch<Model>? {
     let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
     guard !trimmed.isEmpty else { return nil }
     return .new(trimmed)

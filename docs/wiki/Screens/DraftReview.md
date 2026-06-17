@@ -2,7 +2,7 @@
 aliases: [DraftReview, 확인 드래프트, AI 추가 확인]
 tags: [screen, screen/item]
 created: 2026-06-15
-updated: 2026-06-15
+updated: 2026-06-17
 status: in-progress
 screen-id: screen-09
 ---
@@ -45,5 +45,6 @@ AI 자연어 파서([[Capture]] 의 `NLParseViewModel`)가 뽑은 추가 물건 
 
 - 코드: `HomePinApp/Sources/Features/Capture/CaptureDraftReviewView.swift`
 - 드래프트 상태: `AddDraft.swift` (`NameMatch` 포함)
-- 매칭/저장: `AddDraftResolver.swift`
-- 잔여: 분류·태그 인라인 편집(현재는 파서 결과 표시 + 삭제만), 유통기한·메모.
+- 매칭/저장: `AddDraftResolver.swift` (`match`/`newMatch` 는 인라인 편집 시트가 재사용하도록 `internal`)
+- 분류·태그 인라인 편집: `DraftTaxonomyPickerSheets.swift`(`DraftCategoryPickerSheet`·`DraftTagPickerSheet`). insert 없이 `NameMatch` 만 갱신 — 생성·연결은 저장 시 `AddDraftResolver.save` 전담. 값이 비어도 분류·태그 행을 항상 노출(편집 진입), 태그 칩별 제거(x)·“+ Tag” 추가 칩. 자유 입력이 grounding 과 정규화 일치하면 `.existing`(일반칩), 불일치면 `.new`(테라코타 ‘New’ 칩).
+- 잔여: 유통기한·메모, 실기기 추론·한국어 품질 검증.
