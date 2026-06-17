@@ -193,9 +193,13 @@ final class SpeechDictationEngine: @unchecked Sendable {
     continuation: AsyncStream<AnalyzerInput>.Continuation,
     analysisFormat: AVAudioFormat?,
   ) throws {
+    // macOS 는 `AVAudioSession` 개념이 없다(앱이 시스템 오디오 라우팅을 점유하지 않는다).
+    // iOS 만 녹음 카테고리·활성화를 설정하고, macOS 는 `AVAudioEngine` 입력 노드를 바로 쓴다.
+    #if os(iOS)
     let session = AVAudioSession.sharedInstance()
     try session.setCategory(.record, mode: .measurement, options: .duckOthers)
     try session.setActive(true, options: .notifyOthersOnDeactivation)
+    #endif
 
     let inputNode = audioEngine.inputNode
     installAnalyzerInputTap(
@@ -248,7 +252,9 @@ final class SpeechDictationEngine: @unchecked Sendable {
       Task { await analyzer.cancelAndFinishNow() }
     }
 
+    #if os(iOS)
     try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+    #endif
   }
 }
 
@@ -256,7 +262,11 @@ final class SpeechDictationEngine: @unchecked Sendable {
 
 /// TCC 권한 콜백은 main queue 에서 실행된다는 보장이 없다. 콜백 클로저가 actor 격리를
 /// 상속하지 않게 타입 밖 nonisolated 함수로 둔다.
+///
+/// iOS 는 `AVAudioApplication` 의 녹음 권한 API 를 쓰고, macOS 는 그 API 가 없어
+/// `AVCaptureDevice` 의 오디오 캡처 권한(`.audio`)으로 마이크 접근을 확인·요청한다.
 private func requestMicrophonePermissionStatus() async -> Bool {
+  #if os(iOS)
   switch AVAudioApplication.shared.recordPermission {
   case .granted:
     return true
@@ -271,6 +281,18 @@ private func requestMicrophonePermissionStatus() async -> Bool {
   @unknown default:
     return false
   }
+  #else
+  switch AVCaptureDevice.authorizationStatus(for: .audio) {
+  case .authorized:
+    return true
+  case .denied, .restricted:
+    return false
+  case .notDetermined:
+    return await AVCaptureDevice.requestAccess(for: .audio)
+  @unknown default:
+    return false
+  }
+  #endif
 }
 
 /// `SFSpeechRecognizer.requestAuthorization` 의 handler 는 임의의 큐에서 호출될 수 있다.
@@ -305,6 +327,18 @@ private func requestSpeechPermissionStatus() async -> Bool {
 private func monitorInterruptions(
   finishingInputWith inputContinuation: AsyncStream<AnalyzerInput>.Continuation,
 ) async {
+  // macOS 는 `AVAudioSession` 인터럽션 개념이 없다(앱이 시스템 오디오 라우팅을 점유하지
+  // 않는다). 감시할 대상이 없으므로 취소될 때까지 대기만 한다 — task group 의 다른 자식
+  // (결과 소비)이 먼저 끝나면 그룹이 이 자식을 cancel 해 깨운다(고아 Task 없음).
+  #if os(macOS)
+  while !Task.isCancelled {
+    do {
+      try await Task.sleep(for: .seconds(3600))
+    } catch {
+      return
+    }
+  }
+  #else
   let notifications = NotificationCenter.default.notifications(
     named: AVAudioSession.interruptionNotification
   )
@@ -320,6 +354,7 @@ private func monitorInterruptions(
     }
     // `.ended` 등은 자동 재개하지 않고 계속 감시(취소되면 for-await 가 빠져나간다).
   }
+  #endif
 }
 
 /// 시뮬레이터 capability 분기. 엔진이 직접 들고 `unavailable` 이벤트로 내려보낸다.
