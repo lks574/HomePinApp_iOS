@@ -3,13 +3,14 @@ aliases: [CloudKit 동기화·가족공유 검토, iCloud 동기화, 가족공�
 tags: [research, decision/data]
 created: 2026-06-17
 updated: 2026-06-17
-status: draft
+status: active
 ---
 
 # CloudKit 동기화·가족공유 도입 검토
 
-> 추후 작업용 검토 문서. **현재 구현하지 않는다.** 유료 Apple Developer Program 가입 후
-> [[index|hpi:plan]] 으로 정식 기획·Decision 승격 후 착수한다.
+> `feat/icloud-sync` 브랜치에서 착수 검토 중. 실제 CloudKit capability 적용 전에는
+> 데이터 모델 호환화와 iCloud container 확정이 먼저 필요하다. 동기화·공유는
+> persistence 구조를 바꾸는 비가역 결정이므로 Decision 노트 승격 후 구현한다.
 
 ## 요약
 
@@ -23,6 +24,25 @@ status: draft
 - **선행 필수: 데이터 모델 개편.** 현재 10개 `@Model` 전부가 CloudKit 동기화 제약을
   위반(`@Attribute(.unique)`)한다. "CloudKit 켜기"가 아니라 **스키마 마이그레이션이
   본체**다.
+
+## 2026-06-17 착수 메모
+
+- 작업 브랜치: `feat/icloud-sync` (`feat/admob` HEAD 에서 분기).
+- 사용자 목표:
+  1. Settings 에서 iCloud 동기화를 켤 수 있게 한다.
+  2. iCloud 공유를 통해 가족에게 데이터를 공유할 수 있게 한다.
+- 구현 해석:
+  - Settings 의 버튼은 "즉시 한 번 동기화"가 아니라 **iCloud sync 활성화/상태/안내**
+    진입점으로 설계한다. SwiftData + CloudKit 은 `ModelContainer` 구성이 동기화 경로를
+    결정하고, 실제 sync 는 시스템이 자동 수행한다.
+  - 가족 공유는 Apple 가족 그룹 자동 연동이 아니라 **CloudKit `CKShare` 초대 기반 공유**
+    로 다룬다.
+- 현재 코드 확인:
+  - `AppModelContainer` 는 로컬 `ModelConfiguration(schema:isStoredInMemoryOnly:)` 만 사용한다.
+  - iOS 타깃에는 entitlements 파일이 없고, macOS entitlements 는 sandbox/file/audio 권한만
+    있다.
+  - 모든 영속 모델의 `id` 가 `@Attribute(.unique)` 이므로 CloudKit 호환 마이그레이션이
+    첫 작업이다.
 
 ## 범위 (2단계로 분리)
 

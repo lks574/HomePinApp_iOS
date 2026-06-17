@@ -154,7 +154,20 @@ UI 우선 1차(시안 C 화면 골격: 5탭·장소·레시피·홈·추가 시�
 
 ## 다음 후보 (우선순위순 제안)
 
-0. **macOS 실기 런타임 검증(screen-17 후속)** — iOS·macOS 빌드는 green 이나 macOS 는
+0. **CloudKit 동기화 + 가족공유 착수** — `feat/icloud-sync` 브랜치에서 시작. 목표는
+   Settings 에서 iCloud 동기화를 켜고, 이후 CloudKit 공유 초대로 가족에게 데이터를 공유할 수
+   있게 하는 것. 단, 현재 모델/프로젝트 상태상 버튼부터 추가하지 않고 아래 순서로 진행한다.
+   - **Phase 0 스키마 호환화**: 전 `@Model` 의 `@Attribute(.unique)` 제거, `#Index<Item>`
+     재검토, 비옵셔널 속성 기본값/optional 감사, 관계 optional+inverse 보장 점검,
+     `Item.photoData` 동기화 비용 정책 결정.
+   - **Phase A Private 동기화**: iCloud container 확정 후 iOS/macOS entitlements 확장,
+     `AppModelContainer` 를 CloudKit private DB 구성으로 전환, Settings 에 sync 상태/안내
+     진입점 추가.
+   - **Phase B 가족공유**: Private 동기화 안정화 뒤 `CKShare` 초대 기반 공유 UI와 참여자
+     관리 설계. Apple 가족 그룹 자동 연동이 아니라 초대 기반 공유로 다룬다.
+   - 전제: 유료 Apple Developer Program 및 사용할 iCloud container ID 확정.
+   - 검토 문서: `docs/wiki/Research/CloudKit-동기화-가족공유-도입검토.md`.
+1. **macOS 실기 런타임 검증(screen-17 후속)** — iOS·macOS 빌드는 green 이나 macOS 는
    실기 런타임 검증이 남았다(시뮬레이터/CI 빌드만으로는 못 보는 권한·파일·디바이스 경로).
    - **AC-004 PhotosPicker OCR** — macOS 에서 사진 라이브러리 선택 → Vision OCR →
      [[RecipeCapture]] 입력 채우기. sandbox 에서 사진 접근/읽기 정상 여부.
@@ -165,7 +178,7 @@ UI 우선 1차(시안 C 화면 골격: 5탭·장소·레시피·홈·추가 시�
    - 검증 중 sandbox 사진 entitlement(예: `files.photos`/PhotosPicker 접근) 보정이
      필요하면 entitlements 에 추가. macOS 데스크톱 UX 최적화(메뉴/창/사이드바)는 별도
      후속. 결정: [[2026-06-17-macOS-네이티브-타깃-추가]].
-1. **AI 자연어 추가** — 1차 구현 완료(screen-09). Foundation Models `@Generable`
+2. **AI 자연어 추가** — 1차 구현 완료(screen-09). Foundation Models `@Generable`
    (`NLItemParser`, 추출만·비-MainActor) → `NLParseViewModel`(@MainActor, 가용성
    게이트·단일 세션 Task) → 확인 드래프트(`CaptureDraftReviewView`) → `AddDraftResolver`
    다건 저장(grounding·없으면생성/있으면매핑·`Item.normalize` 매칭). `CaptureSheet.add()`
@@ -173,7 +186,7 @@ UI 우선 1차(시안 C 화면 골격: 5탭·장소·레시피·홈·추가 시�
    잔여: 실기기 추론·한국어 품질 검증(시뮬레이터 미가용), 모델 다운로드 유도 UX(#5),
    유통기한·메모·find/add 의도판별은 후속. (제품 방향: [[제품-방향-재고-레시피-AI]],
    결정: [[2026-06-15-NL-추가-파서-FoundationModels]])
-2. **검색 동작** — 중앙 버튼 시트 **검색-우선 통합** 완료(`screen-04`): [추가|검색]
+3. **검색 동작** — 중앙 버튼 시트 **검색-우선 통합** 완료(`screen-04`): [추가|검색]
    모드 토글 제거, 단일 입력 필드 하나(타이핑·음성 공용). 입력 즉시 물건
    (이름·위치·분류·태그·메모 부분 일치) + 레시피(제목·요약·분류·태그·재료 세부 텍스트
    부분 일치) 실시간 검색 → 물건/레시피 섹션, 결과 아래 항상 `+ "{입력어}" 추가하기` 행(명시적 추가만,
@@ -182,14 +195,14 @@ UI 우선 1차(시안 C 화면 골격: 5탭·장소·레시피·홈·추가 시�
    제거한 토큰 전체 일치 + 임박/만료/위치 없음/지금 만들 수 있음/부족 재료 속성 플래그로
    보강. 홈/장소의 정적 검색바는 제거.
    (find/add 의도판별은 검색-우선 통합으로 대체·불필요.)
-3. **음성 입력(STT)** — 입력기 완료 + actor 경계 분리 리팩터 완료
+4. **음성 입력(STT)** — 입력기 완료 + actor 경계 분리 리팩터 완료
    (`SpeechDictationViewModel`(UI 상태/단일 세션 Task) + `SpeechDictationEngine`
    (비-MainActor 권한/오디오/모델) ↔ `DictationEvent` 스트림 경계. iOS 26
    `SpeechAnalyzer` + `SpeechTranscriber` 온디바이스 받아쓰기 → 활성 모드 필드,
    권한·불가용·거부 폴백, tap 버퍼 복사·고아 자원 누수 버그 해소). 잔여: 1번 AI 파서
    경로 재사용(받아쓰기 텍스트 → 구조화), 기기/모델 게이팅·한국어 모델 다운로드 UX,
    실기기 인식 정확도 검증(시뮬레이터 불가).
-4. **물건/레시피 고급 편집** — 물건 추가/편집/삭제는 `ItemEditor` 로 연결됨. 사진 선택/제거,
+5. **물건/레시피 고급 편집** — 물건 추가/편집/삭제는 `ItemEditor` 로 연결됨. 사진 선택/제거,
    분류 선택/신규 생성, 태그 다중 선택/신규 생성까지 완료. 수량 1에서
    `-` 탭 시 삭제 확인, 장소 상세 물건 행 "다 썼어요" 빠른 정리까지 완료.
    레시피 상세(`screen-03`)·CRUD(`screen-07`)·시드 10개 완료 — 카드 → `RecipeDetail`,
@@ -201,18 +214,10 @@ UI 우선 1차(시안 C 화면 골격: 5탭·장소·레시피·홈·추가 시�
    남은 범위는 사진 downsampling/압축 정책.
    (장소 CRUD `screen-05`·세부위치 CRUD `screen-06` 완료 — 추가/편집은 `PlaceEditor`/`SpotEditor`, 삭제는 확인 다이얼로그.)
    장소/세부위치 에디터 확장(아이콘·Space 선택), 정렬 변경(drag) 이 후속.
-5. **기기 게이팅 + 한국어/폴백** — AI 미지원 환경 처리. NL 추가 파서의 가용성 게이트
+6. **기기 게이팅 + 한국어/폴백** — AI 미지원 환경 처리. NL 추가 파서의 가용성 게이트
    (`SystemLanguageModel.default.availability`)·단건 스텁 폴백은 #1 에서 구현됨. 잔여는
    한국어 모델 다운로드/Apple Intelligence 미설치 유도 UX(진행률·동의), 시작 전 사전
    게이팅(마이크/추가 진입 시 미가용 사전 안내), 실기기 한국어 인식·추론 정확도 검증.
-
-## 추후 (보류)
-
-- **CloudKit 동기화 + 가족공유** — 같은 사용자 아이폰↔맥 동일 데이터(Private DB) +
-  가족 구성원 데이터 공유(Shared DB/CKShare). **현재 미착수.** 전제: 유료 Apple
-  Developer Program 가입. 선행: 전 `@Model` 의 `@Attribute(.unique)` 제거 등 CloudKit
-  호환 마이그레이션. 검토 문서:
-  `docs/wiki/Research/CloudKit-동기화-가족공유-도입검토.md`.
 
 ## 진행 메모
 
