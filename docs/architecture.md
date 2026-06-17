@@ -2,7 +2,7 @@
 aliases: [architecture, 아키텍처]
 tags: [doc/code, architecture]
 created: 2026-06-12
-updated: 2026-06-17
+updated: 2026-06-18
 status: draft
 ---
 
@@ -26,7 +26,9 @@ status: draft
   `ModelConfiguration.cloudKitDatabase = .private("iCloud.com.sro.homepinapp")` 로
   적용한다. 토글을 켤 때 iCloud 계정 상태를 먼저 확인하고, 앱 시작 시 CloudKit store
   생성이 실패하면 설정을 끄고 로컬 SwiftData store로 fallback한다. 가족공유는 private
-  동기화 검증 뒤 `CKShare` 초대 흐름으로 분리한다.
+  동기화 설정 위에 `CKShare` 초대 흐름으로 얹는다. 1차 가족공유는 root record 에 현재
+  `BackupBundle` JSON 스냅샷을 저장해 공유하는 방식이며, shared DB 병합·실시간 공동 편집은
+  후속 범위다.
 
 ### SwiftData 매크로 적극 사용
 

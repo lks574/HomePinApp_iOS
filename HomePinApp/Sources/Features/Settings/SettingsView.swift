@@ -16,7 +16,11 @@ struct SettingsView: View {
   @State private var showingClearConfirm = false
   @State private var showingCloudSyncRestartAlert = false
   @State private var showingCloudSyncUnavailableAlert = false
+  @State private var showingHomeShareErrorAlert = false
   @State private var isChangingCloudSync = false
+  @State private var isPreparingHomeShare = false
+  @State private var homeShareErrorMessage = ""
+  @State private var homeSharePresentation: HomeSharePresentation?
   @State private var cloudSyncStatus = CloudSyncStatusModel()
 
   #if os(iOS)
@@ -54,6 +58,16 @@ struct SettingsView: View {
       } message: {
         Text(cloudSyncStatus.state.title)
       }
+      .alert("Family Sharing Unavailable", isPresented: $showingHomeShareErrorAlert) {
+        Button("OK", role: .cancel) {}
+      } message: {
+        Text(homeShareErrorMessage)
+      }
+      #if os(iOS)
+      .sheet(item: $homeSharePresentation) { presentation in
+        HomeShareSheet(presentation: presentation)
+      }
+      #endif
     }
   }
 
@@ -107,7 +121,8 @@ struct SettingsView: View {
       } label: {
         Label("Check iCloud Account", systemImage: "icloud")
       }
-      Text("Sync uses CloudKit private database for this iCloud account. Family sharing will use a separate invite flow after private sync is verified.")
+      familySharingRow
+      Text("Sync uses CloudKit private database for this iCloud account. Family sharing sends an invite with the current home data snapshot.")
         .font(.footnote)
         .foregroundStyle(.secondary)
       if !cloudSyncFallbackReason.isEmpty {
@@ -116,6 +131,20 @@ struct SettingsView: View {
           .foregroundStyle(.orange)
       }
     }
+  }
+
+  private var familySharingRow: some View {
+    #if os(iOS)
+    Button {
+      prepareHomeShare()
+    } label: {
+      Label("Share Home Data", systemImage: "person.2")
+    }
+    .disabled(!cloudSyncEnabled || isPreparingHomeShare)
+    #else
+    Label("Share Home Data is available on iOS", systemImage: "person.2.slash")
+      .foregroundStyle(.secondary)
+    #endif
   }
 
   private var cloudSyncBinding: Binding<Bool> {
@@ -147,6 +176,25 @@ struct SettingsView: View {
       cloudSyncFallbackReason = ""
       cloudSyncEnabled = true
       showingCloudSyncRestartAlert = true
+    }
+  }
+
+  private func prepareHomeShare() {
+    guard cloudSyncEnabled else {
+      homeShareErrorMessage = "Turn on iCloud Sync before sharing home data."
+      showingHomeShareErrorAlert = true
+      return
+    }
+    guard !isPreparingHomeShare else { return }
+    isPreparingHomeShare = true
+    Task {
+      do {
+        homeSharePresentation = try await HomeShareService.prepareShare(from: modelContext)
+      } catch {
+        homeShareErrorMessage = error.localizedDescription
+        showingHomeShareErrorAlert = true
+      }
+      isPreparingHomeShare = false
     }
   }
 

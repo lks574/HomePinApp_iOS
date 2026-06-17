@@ -2,7 +2,7 @@
 aliases: [Settings, 설정]
 tags: [screen, screen/settings]
 created: 2026-06-12
-updated: 2026-06-17
+updated: 2026-06-18
 status: in-progress
 screen-id: screen-08
 ---
@@ -18,7 +18,8 @@ screen-id: screen-08
   선택. `AppLanguagePreference` `@AppStorage` 로 저장, 루트에서 `.environment(\.locale)`
   적용 → 앱 재시작 없이 즉시 전환(시스템 따름이면 환경 locale 강제 안 함).
 - **데이터**: 저장 현황(물건·장소·레시피 개수) 표시 + **iCloud Sync** 토글/계정
-  상태 확인(사용 가능할 때만 켜기 허용, startup fallback 사유 표시) +
+  상태 확인(사용 가능할 때만 켜기 허용, startup fallback 사유 표시) + iOS 전용
+  **Share Home Data**(CloudKit `CKShare` 초대 UI, 1차는 JSON 스냅샷 공유) +
   **백업/가져오기·CSV**([[DataTransfer]] push) + **전체 데이터 정리**(확인 다이얼로그 후
   전 모델 일괄 삭제, 앱 동작 위해 기본 [[Space]] "우리집" 복구).
 - **정보**: 버전(번들)·저장 위치·앱 소개 + 로컬 저장 안내.
@@ -39,7 +40,7 @@ screen-id: screen-08
 
 - 직결(View ↔ SwiftData) + 테마·언어·iCloud Sync 설정/fallback 사유는 `@AppStorage`.
 - 비영속 UI 상태: 전체 정리 확인 `showingClearConfirm`, iCloud 계정 상태 확인용
-  `CloudSyncStatusModel`, iCloud 토글 처리 중/불가 alert 상태.
+  `CloudSyncStatusModel`, iCloud 토글 처리 중/불가 alert 상태, 가족공유 준비/sheet/error 상태.
 
 ## 관련 태스크 / 결정
 
@@ -47,12 +48,14 @@ screen-id: screen-08
 - 테마/다크: [[2026-06-12-네비게이션-UI구조]] §3(디자인 토큰).
 - 언어 선택: [[2026-06-16-i18n-다국어화-방침]] (시스템 추종 기본 + 설정 수동 오버라이드).
 - 백업/CSV: [[2026-06-17-데이터-백업-번들포맷]], [[2026-06-17-CSV-대량입력-스키마]] (`[screen-15]`).
-- CloudKit: [[2026-06-17-CloudKit-private-동기화-골격]] (`[screen-19]`).
+- CloudKit: [[2026-06-17-CloudKit-private-동기화-골격]],
+  [[2026-06-18-CloudKit-가족공유-1차-스냅샷]] (`[screen-19]`).
 
 ## 메모
 
 - 코드: `HomePinApp/Sources/Features/Settings/SettingsView.swift`,
   `App/AppRootView.swift`(테마·언어 적용), `Shared/DesignSystem/AppThemePreference.swift`,
   `Shared/DesignSystem/AppLanguagePreference.swift`,
-  `Features/Sync/CloudSyncPreference.swift`
-- 후속: CloudKit 실기기 동기화 검증, 가족공유 초대 UI, 유통기한 알림, AI/입력 토글.
+  `Features/Sync/CloudSyncPreference.swift`, `Features/Sync/HomeShareService.swift`,
+  `Features/Sync/HomeShareSheet.swift`
+- 후속: CloudKit 실기기 동기화/공유 검증, 참가자 shared DB 병합, 유통기한 알림, AI/입력 토글.

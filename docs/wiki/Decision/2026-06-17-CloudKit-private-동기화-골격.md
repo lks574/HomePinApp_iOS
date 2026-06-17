@@ -2,7 +2,7 @@
 aliases: [CloudKit private 동기화 골격, iCloud Sync]
 tags: [decision, decision/data]
 created: 2026-06-17
-updated: 2026-06-17
+updated: 2026-06-18
 status: accepted
 ---
 
@@ -41,8 +41,10 @@ status: accepted
 
 ## 가족 공유
 
-가족 공유는 Phase A 안정화 후 별도 구현한다. Apple 가족 그룹 자동 연동이 아니라 CloudKit
-`CKShare` 초대 기반 공유로 다룬다.
+가족 공유는 Apple 가족 그룹 자동 연동이 아니라 CloudKit `CKShare` 초대 기반 공유로 다룬다.
+1차는 Settings 의 `Share Home Data` 버튼에서 현재 데이터를 JSON 스냅샷으로 root record 에
+저장하고 `UICloudSharingController` 를 띄우는 초대 골격까지 구현했다. 참가자 shared DB 병합과
+실시간 공동 편집은 후속이다.
 
 ## 검증
 
@@ -55,5 +57,6 @@ status: accepted
 ## 관련
 
 - [[CloudKit-동기화-가족공유-도입검토]]
+- [[2026-06-18-CloudKit-가족공유-1차-스냅샷]]
 - [[2026-06-12-swiftdata-마이그레이션-방침]]
 - [[2026-06-17-macOS-네이티브-타깃-추가]]

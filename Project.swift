@@ -24,6 +24,7 @@ let baseSettings: SettingsDictionary = [
 let sharedInfoPlist: [String: Plist.Value] = [
   "CFBundleDevelopmentRegion": "en",
   "CFBundleLocalizations": ["en", "ko"],
+  "CKSharingSupported": true,
   // 마이크·음성인식은 양 플랫폼 공통(STT). 카메라·사진은 iOS 전용이라 iOS Info.plist 에만 둔다.
   "NSMicrophoneUsageDescription": "Used to quickly add and search items by voice.",
   "NSSpeechRecognitionUsageDescription": "Used to transcribe what you say into text.",
