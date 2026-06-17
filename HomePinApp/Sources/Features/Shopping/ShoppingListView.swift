@@ -6,10 +6,14 @@ import SwiftUI
 /// 홈의 요약 섹션(`HomeView.shoppingSection`)에서 `ShoppingDestination` push 로 진입한다.
 struct ShoppingListView: View {
   @Environment(\.modelContext) private var modelContext
+  @Environment(AdService.self) private var adService
   @Query(sort: \Item.name) private var items: [Item]
   @Query(sort: \ShoppingItem.createdAt, order: .reverse) private var shoppingItems: [ShoppingItem]
   @State private var newItemName = ""
   @State private var stockRoute: ShoppingStockRoute?
+  /// 이번 화면 표시(세션) 동안 사용자가 새로 완료(체크)한 항목 수. 화면 재진입 시 0 으로
+  /// 리셋된다(`onAppear`). 세션 완료 전면 트리거의 임계(≥1) 판정에 쓰는 비영속 로컬 상태.
+  @State private var newlyCompletedThisSession = 0
   @FocusState private var addFieldFocused: Bool
 
   var body: some View {
@@ -37,9 +41,18 @@ struct ShoppingListView: View {
         // 신규 재고 항목을 만들어 재고에 반영했으므로 가산 완료로 표시한다(재체크 이중 가산 방지).
         route.shoppingItem.isChecked = true
         route.shoppingItem.stockCredited = true
+        newlyCompletedThisSession += 1
       }, onSavedItem: { item in
         route.shoppingItem.sourceIngredient?.item = item
       })
+    }
+    .onAppear { newlyCompletedThisSession = 0 }
+    .onDisappear {
+      // 장보기 "세션 완료" 암묵 트리거: 이번 세션에 신규 완료(체크)가 1개 이상 있었고
+      // 화면을 벗어날 때만 전면 광고를 적격 시도한다(0개 완료 후 단순 이탈은 트리거 금지).
+      // best-effort — 미로드/캡 미통과면 AdService 가 조용히 skip 한다.
+      guard newlyCompletedThisSession >= 1 else { return }
+      adService.showInterstitialIfEligible(trigger: .shoppingSessionCompleted)
     }
   }
 
@@ -141,6 +154,7 @@ struct ShoppingListView: View {
     // 이미 한 번 재고에 반영된 항목은 재체크 시 가산하지 않고 상태만 되돌린다.
     if shoppingItem.stockCredited {
       shoppingItem.isChecked = true
+      newlyCompletedThisSession += 1
       return
     }
     if let item = matchingItem(for: shoppingItem) {
@@ -149,7 +163,9 @@ struct ShoppingListView: View {
       shoppingItem.sourceIngredient?.item = item
       shoppingItem.isChecked = true
       shoppingItem.stockCredited = true
+      newlyCompletedThisSession += 1
     } else {
+      // 재고 항목 생성 시트로 진입. 실제 완료 카운트는 시트의 onSaved 에서 가산한다.
       stockRoute = ShoppingStockRoute(shoppingItem: shoppingItem)
     }
   }
