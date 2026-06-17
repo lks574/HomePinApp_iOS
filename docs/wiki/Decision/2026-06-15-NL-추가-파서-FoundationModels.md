@@ -2,7 +2,7 @@
 aliases: [NL 추가 파서, Foundation Models 채택, 자연어 파싱 아키텍처]
 tags: [decision, decision/data]
 created: 2026-06-15
-updated: 2026-06-15
+updated: 2026-06-17
 status: accepted
 ---
 
@@ -54,6 +54,10 @@ status: accepted
    둔다(엔진=추출, 도메인=매칭/생성 분리). 강한 enum 강제 대신 후보 주입 + 사후 매칭을
    기본으로 하되, 한국어 품질에 따라 `@Guide(.anyOf(후보))` 약한 grounding 을 구현
    단계에서 택1.
+   - **자동추론 억제(2026-06-17 보강)**: 분류·태그는 문장에 그 단어가 명시될 때만
+     채우고 용도·성격 추론으로 지어내지 않는다. grounding 후보도 문장에 일치 단서가
+     있을 때만 매칭에 쓰고, 단서가 없으면 후보가 있어도 비운다(기존 "가능한 한 그 이름을
+     그대로 쓴다"가 과추론을 유도해 조건 부가). 이 규칙은 입력 언어와 무관하게 적용한다.
 4. **가용성 게이팅 + 폴백**: `SystemLanguageModel.default.availability` 가 `.available`
    이면 파서 경로, 그 외(미지원 기기·OS·모델 미설치)면 **즉시 현 단건 스텁**(텍스트 →
    `ItemEditor` 이름 prefill)으로 폴백한다. 추론 실패·취소도 동일 폴백. **텍스트 입력
