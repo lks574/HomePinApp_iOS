@@ -27,11 +27,6 @@ let sharedInfoPlist: [String: Plist.Value] = [
   "CKSharingSupported": true,
   "NSMicrophoneUsageDescription": "Used to quickly add and search items by voice.",
   "NSSpeechRecognitionUsageDescription": "Used to transcribe what you say into text.",
-  // 영수증 스캔(screen-22) — 카메라로 영수증을 찍고, 사진 보관함에서 영수증 이미지를 골라
-  // 글자를 읽어 품목으로 적재한다. 영수증 이미지 자체는 저장하지 않는다. 현지화는
-  // InfoPlist.xcstrings(en/ko), 여기엔 영문 source 만 둔다.
-  "NSCameraUsageDescription": "Used to scan a receipt and read item names from it.",
-  "NSPhotoLibraryUsageDescription": "Used to read item names from a receipt photo you choose.",
 ]
 
 // AdMob(SKAdNetwork) 광고 어트리뷰션용 네트워크 식별자. Google 권장 목록(iOS).

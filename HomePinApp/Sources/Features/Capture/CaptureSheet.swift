@@ -11,14 +11,12 @@ import SwiftUI
 /// - 음성(🎤): 받아쓰기(`SpeechDictationViewModel`) 결과가 같은 입력 필드로 들어가고,
 ///   `추가하기` 를 누르면 동일한 에디터 경로로 합류한다(단일 경로 원칙).
 struct CaptureSheet: View {
-  /// 시트를 여는 초기 모드. 진입점(중앙 ✨ 버튼·홈 빈 상태·새 구역 제안·영수증 스캔)이
+  /// 시트를 여는 초기 모드. 진입점(중앙 ✨ 버튼·홈 빈 상태·새 구역 제안)이
   /// 같은 시트를 다른 입력 어댑터로 연다. nil(기본) 이면 검색-우선 단일 입력으로 연다.
   enum InitialMode {
     /// 스타터 템플릿으로 시작 — bulk 모드로 열고 템플릿 선택 시트를 띄운다.
     /// `area` 가 있으면 그 구역을 세션 Area 로, `suggestKind` 가 있으면 그 종류를 추천 강조한다.
     case starterTemplate(area: Area? = nil, suggestKind: StarterTemplate.Kind? = nil)
-    /// 영수증 스캔으로 시작 — bulk 모드로 열고 영수증 스캔 시트를 띄운다.
-    case receiptScan
   }
 
   @Environment(\.dismiss) private var dismiss
@@ -41,8 +39,6 @@ struct CaptureSheet: View {
   @State private var ignoredSpot: Spot?
   /// 스타터 템플릿 선택 시트 표시 여부.
   @State private var showingTemplatePicker = false
-  /// 영수증 스캔 어댑터 시트 표시 여부.
-  @State private var showingReceiptScan = false
   @AppStorage(RecentSearches.storageKey) private var recentSearchesJSON = "[]"
   @FocusState private var inputFocused: Bool
 
@@ -98,11 +94,6 @@ struct CaptureSheet: View {
       .sheet(isPresented: $showingTemplatePicker) {
         StarterTemplatePickerSheet(suggested: suggestedTemplate) { template in
           bulkModel.appendChips(from: template)
-        }
-      }
-      .sheet(isPresented: $showingReceiptScan) {
-        ReceiptScanSheet { lines in
-          applyReceiptLines(lines)
         }
       }
       .confirmationDialog(
@@ -176,7 +167,7 @@ struct CaptureSheet: View {
   // MARK: - 초기 모드 (진입점별 어댑터)
 
   /// 진입점이 지정한 초기 모드를 적용한다. 기본(nil)이면 단일 입력 필드에 포커스만 둔다.
-  /// 템플릿·영수증 모드는 bulk 모드로 열어 결과 칩이 같은 staging UI 로 합류하게 한다.
+  /// 템플릿 모드는 bulk 모드로 열어 결과 칩이 같은 staging UI 로 합류하게 한다.
   private func applyInitialMode() {
     switch initialMode {
     case nil:
@@ -185,9 +176,6 @@ struct CaptureSheet: View {
       isBulkMode = true
       if let area { bulkModel.sessionArea = area }
       showingTemplatePicker = true
-    case .receiptScan:
-      isBulkMode = true
-      showingReceiptScan = true
     }
   }
 
@@ -197,13 +185,6 @@ struct CaptureSheet: View {
     if let suggestKind { return StarterTemplate.template(for: suggestKind) }
     if let area { return StarterTemplate.match(areaName: area.name) }
     return nil
-  }
-
-  /// 영수증 OCR 에서 추출한 품목 라인들을 칩으로 적재한다. 라인 한 줄 = 멀티 파서 한 조각.
-  /// 빈 결과면 빈 staging 으로 두고 호출부 안내(빈 상태 문구)에 맡긴다(자동 저장 없음).
-  private func applyReceiptLines(_ lines: [String]) {
-    guard !lines.isEmpty else { return }
-    bulkModel.appendChips(from: lines.joined(separator: "\n"), areas: allAreas, spots: allSpots)
   }
 
   // MARK: - 연속 입력 (여러 개 추가)
@@ -237,7 +218,7 @@ struct CaptureSheet: View {
   }
 
   /// 칩들을 실제 재고로 반영한다(명시적 "추가"). 빈 staging 이면 no-op. 합치기 룩업을 위해
-  /// 현재 전체 재고(`allItems`)를 모델에 넘긴다 — 템플릿·영수증·연속입력 진입이 모두 이 한
+  /// 현재 전체 재고(`allItems`)를 모델에 넘긴다 — 템플릿·연속입력 진입이 모두 이 한
   /// 경로로 합류하므로 1곳만 정리하면 된다. 추가 후 시트를 닫는다(결과 요약은 후속 항목).
   private func commitBulkInsert() {
     commitBulkDraft()
@@ -294,18 +275,13 @@ struct CaptureSheet: View {
     .buttonStyle(.plain)
   }
 
-  /// bulk 모드의 입력 어댑터 진입 행 — 스타터 템플릿(양 플랫폼) + 영수증 스캔(iOS).
-  /// 두 어댑터 모두 결과를 같은 칩 staging 으로 합류시킨다(insert 는 "추가" 버튼에서만).
+  /// bulk 모드의 입력 어댑터 진입 행 — 스타터 템플릿(양 플랫폼).
+  /// 어댑터 결과는 같은 칩 staging 으로 합류시킨다(insert 는 "추가" 버튼에서만).
   private var adapterRow: some View {
     HStack(spacing: 10) {
       adapterButton(title: "Starter templates", icon: "square.grid.2x2") {
         showingTemplatePicker = true
       }
-      #if os(iOS)
-      adapterButton(title: "Scan receipt", icon: "doc.text.viewfinder") {
-        showingReceiptScan = true
-      }
-      #endif
     }
   }
 

@@ -3,10 +3,13 @@ aliases: [영수증 OCR, 영수증 스캔, receipt OCR, Vision 영수증, 영수
 tags: [decision, decision/data, decision/screen]
 created: 2026-06-18
 updated: 2026-06-18
-status: accepted
+status: removed
 ---
 
 # 2026-06-18 영수증 OCR — 카메라 권한 재추가 + Vision OCR + 규칙 필터 (screen-22)
+
+> [!warning] 영수증 스캔 기능 제거됨(규칙 포맷 한계·LLM OCR 깨짐/게이팅 비용) — 2026-06-18.
+> 아래 결정은 이력 보존용이며 더 이상 코드에 반영되지 않는다. screen-22 코드·권한·UI 키는 전부 제거됐다(screen-21 스타터 템플릿·칩 staging 코어는 유지).
 
 > [[Capture]] 물건 추가에 **영수증 스캔 입력 어댑터**를 더한다. 카메라/사진으로 받은
 > 영수증 이미지를 온디바이스 Vision 으로 읽고, **보수적 규칙 필터**로 품목명 후보만
