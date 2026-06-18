@@ -11,7 +11,20 @@ status: draft
 UI 우선 1차(시안 C 화면 골격: 5탭·장소·레시피·홈·추가 시트) 완료 후의 다음 후보.
 보류 상세는 `docs/follow-ups.md`.
 
-> 최근 완료: **스타터 템플릿(screen-21) + 영수증 OCR(screen-22) 입력 어댑터** — 둘 다
+> 최근 완료: **칩 중복 합치기(screen-20 확장)** — 연속 입력 칩이 기존 재고 Item 과
+> `normalizedName` 충돌 시, 경고에 더해 **칩별 인라인 합치기 토글**("Merge into stock")을
+> 노출(기존 재고 충돌 칩에만; staging 자기중복만인 칩은 경고만). 켠 칩은 `bulkInsert` 가
+> 새 Item 대신 기존 Item 수량에 가산(`quantity += max(1, qty)`, `updatedAt=.now`),
+> **area/spot 은 기존 위치 유지**(칩 area 로 안 덮음). 같은 키 기존 Item 이 여럿이면
+> **최근 수정(`updatedAt`) 대표 하나**에만 가산(결정적). 미선택·비충돌 칩은 전부 새
+> insert(회귀 0, 자동 합치기·자동 저장 없음·다이얼로그 비연쇄 유지). 시그니처
+> `bulkInsert(into:existingItems:) -> (inserted:, merged:)`(룩업은 모델 책임), 호출부는
+> `commitBulkInsert` 단 1곳이 `allItems` 전달. 신규 문자열 en/ko("Merge into stock").
+> iOS·macOS 빌드 green. 결정:
+> `docs/wiki/Decision/2026-06-18-area-생략-캡처-허용-및-멀티-추가.md`. 잔여(후속 분리,
+> `docs/follow-ups.md`): 복수 매칭 대상 선택 UI·"모두 합치기" 일괄 버튼·결과 요약
+> 토스트("N개 추가, M개 합침"; 반환 시그니처는 구현, 표시 UI 는 인프라 부재로 후속).
+> 이전 완료: **스타터 템플릿(screen-21) + 영수증 OCR(screen-22) 입력 어댑터** — 둘 다
 > screen-20 칩 staging 코어(`ItemBulkAddModel`+`bulkInsert`+CaptureSheet bulk UI)를
 > 재사용하는 입력 어댑터(새 화면 아님). 출력은 칩 staging 으로 합류, insert 는 "추가"
 > 버튼에서만(자동 저장 없음), 신규 `@Model` 없음. **④ 스타터 템플릿**: 구역 종류별

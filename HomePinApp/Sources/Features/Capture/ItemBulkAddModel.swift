@@ -19,6 +19,10 @@ final class ItemBulkAddModel {
     var quantity: Int
     /// 칩 텍스트에서 파서가 인식한 구역(있으면 세션 Area 보다 우선한다).
     var parsedArea: Area?
+    /// 기존 재고 Item 과 normalizedName 이 충돌할 때, 새 Item 을 만들지 않고 그 기존
+    /// Item 수량에 합칠지의 사용자 의도. 기본 false(= 기존대로 새 insert + 경고만).
+    /// 기존 재고와 충돌하는 칩에서만 의미가 있다(staging 자기중복은 합치기 대상 아님).
+    var mergeIntoExisting = false
   }
 
   /// 모든 칩에 기본 적용할 세션 구역(선택 안 하면 nil = 위치 미지정으로 저장).
@@ -64,6 +68,14 @@ final class ItemBulkAddModel {
     chips.removeAll { $0.id == id }
   }
 
+  /// "기존 재고에 합치기" 의도를 토글한다. 기존 재고와 충돌하는 칩에서만 호출부가 노출하므로
+  /// 여기서 충돌 여부를 재검사하지 않는다(UI 가 게이트). 비충돌 칩에 켜져도 `bulkInsert` 의
+  /// 룩업이 대표 Item 을 못 찾으면 자연히 새 insert 로 떨어진다(안전 폴백).
+  func toggleMerge(_ id: Chip.ID) {
+    guard let index = chips.firstIndex(where: { $0.id == id }) else { return }
+    chips[index].mergeIntoExisting.toggle()
+  }
+
   /// insert 가능한(이름이 빈 칸이 아닌) 칩이 하나라도 있는지. "추가" 버튼 활성화와
   /// `bulkInsert` no-op 가드가 같은 기준을 쓰도록 단일 소스로 둔다.
   var hasInsertableChips: Bool {
@@ -82,28 +94,74 @@ final class ItemBulkAddModel {
     return stagingCount > 1
   }
 
+  /// 칩이 **기존 재고 Item** 과만 충돌하는지(staging 자기중복은 제외). 합치기 토글은
+  /// 기존 재고에 가산하는 의도라, staging 칩끼리 겹침에는 의미가 없어 이 경로로만 노출한다.
+  func conflictsWithExistingStock(_ chip: Chip, existingNormalizedNames: Set<String>) -> Bool {
+    let key = Item.normalize(chip.name)
+    guard !key.isEmpty else { return false }
+    return existingNormalizedNames.contains(key)
+  }
+
   // MARK: - 다건 쓰기
 
-  /// 모든 칩을 새 `Item` 으로 insert 한다. 각 insert 에 normalizedName 동기화와
-  /// `spot?.area ?? area` 위치 불변식을 적용한다(bulk 는 spot 을 수집하지 않으므로 area 만).
-  /// 빈 이름 칩은 건너뛴다. 중복은 차단하지 않는다(경고만).
+  /// 칩들을 재고로 반영한다. 칩이 합치기 의도(`mergeIntoExisting`)이고 같은 normalizedName
+  /// 기존 Item 이 있으면 새 Item 을 만들지 않고 그 기존 Item 의 수량에 가산한다. 그 외에는
+  /// 기존대로 새 `Item` 을 insert 한다. 각 insert 에 normalizedName 동기화와 위치 불변식
+  /// (`spot?.area ?? area`, bulk 는 spot 미수집이라 area 만)을 적용한다. 빈 이름 칩은 건너뛴다.
+  /// 충돌하지 않거나 합치기 미선택이면 전부 새 insert 라 회귀가 없다.
+  ///
+  /// - 룩업 책임은 모델에 둔다. `existingItems` 를 normalizedName 으로 그루핑하고,
+  ///   같은 키가 여럿이면 **최근 수정(`updatedAt` 최신)** 대표 하나에만 가산한다(결정적).
+  /// - area/spot 은 가산 대상 기존 Item 의 위치를 유지한다(칩 area 로 덮지 않음). 가산 시
+  ///   `quantity += max(1, chip.quantity)` 와 `updatedAt = .now` 만 갱신한다.
+  /// - 반환: 새로 만든 Item 목록과 합쳐 가산한 기존 Item 목록(호출부 결과 요약용).
   @discardableResult
-  func bulkInsert(into modelContext: ModelContext) -> [Item] {
+  func bulkInsert(
+    into modelContext: ModelContext,
+    existingItems: [Item]
+  ) -> (inserted: [Item], merged: [Item]) {
+    let representatives = Self.representativesByNormalizedName(existingItems)
     var inserted: [Item] = []
+    var merged: [Item] = []
     for chip in chips {
       let trimmed = chip.name.trimmingCharacters(in: .whitespacesAndNewlines)
       guard !trimmed.isEmpty else { continue }
-      let area = chip.parsedArea ?? sessionArea
+      let key = Item.normalize(trimmed)
+      let amount = max(1, chip.quantity)
+      if chip.mergeIntoExisting, let existing = representatives[key] {
+        // 기존 재고에 가산 — 위치(area/spot)는 기존 Item 그대로 유지한다.
+        // 같은 normalizedName 칩이 여러 개 모두 합치기로 켜지면 이 대표 Item 에 순차
+        // 누적 가산된다(스냅샷 대표는 고정 → 수량 합산은 정확, 데이터 손상 아님). 결정
+        // 문서의 "staging 자기중복은 합치기 대상 아님" 은 자기중복 칩에 토글을 노출하지
+        // 않는다는 UI 게이트를 뜻하며, 사용자가 의도적으로 켠 동일키 가산까지 막지는 않는다.
+        existing.quantity += amount
+        existing.updatedAt = .now
+        merged.append(existing)
+        continue
+      }
       let item = Item(
         name: trimmed,
-        normalizedName: Item.normalize(trimmed),
-        quantity: max(1, chip.quantity),
-        area: area,
+        normalizedName: key,
+        quantity: amount,
+        area: chip.parsedArea ?? sessionArea,
         spot: nil
       )
       modelContext.insert(item)
       inserted.append(item)
     }
-    return inserted
+    return (inserted, merged)
+  }
+
+  /// 기존 Item 들을 normalizedName 키로 묶어, 키마다 **최근 수정(`updatedAt` 최신)** 대표를
+  /// 고른다. 같은 키가 여럿일 때 가산 대상이 결정적이고 중복 가산이 없게 한다(빈 키 제외).
+  private static func representativesByNormalizedName(_ items: [Item]) -> [String: Item] {
+    var result: [String: Item] = [:]
+    for item in items {
+      let key = item.normalizedName
+      guard !key.isEmpty else { continue }
+      if let current = result[key], current.updatedAt >= item.updatedAt { continue }
+      result[key] = item
+    }
+    return result
   }
 }

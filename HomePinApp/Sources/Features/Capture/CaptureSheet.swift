@@ -236,11 +236,15 @@ struct CaptureSheet: View {
     bulkModel.appendChips(from: raw, areas: allAreas, spots: allSpots)
   }
 
-  /// 칩들을 실제 재고로 insert 한다(명시적 "추가"). 빈 staging 이면 no-op. 추가 후 시트를 닫는다.
+  /// 칩들을 실제 재고로 반영한다(명시적 "추가"). 빈 staging 이면 no-op. 합치기 룩업을 위해
+  /// 현재 전체 재고(`allItems`)를 모델에 넘긴다 — 템플릿·영수증·연속입력 진입이 모두 이 한
+  /// 경로로 합류하므로 1곳만 정리하면 된다. 추가 후 시트를 닫는다(결과 요약은 후속 항목).
   private func commitBulkInsert() {
     commitBulkDraft()
     guard bulkModel.hasInsertableChips else { return }
-    bulkModel.bulkInsert(into: modelContext)
+    // 반환 (inserted, merged) 는 결과 요약용 — 시트 dismiss·범용 토스트 인프라 부재로
+    // 표시 UI 는 후속(`docs/follow-ups.md`). 시그니처는 이번에 확정해 둔다.
+    _ = bulkModel.bulkInsert(into: modelContext, existingItems: allItems)
     dismiss()
   }
 
@@ -327,12 +331,23 @@ struct CaptureSheet: View {
     let existingNames = Set(allItems.map(\.normalizedName))
     return VStack(spacing: 10) {
       ForEach(bulkModel.chips) { chip in
-        chipRow(chip, isDuplicate: bulkModel.isDuplicate(chip, existingNormalizedNames: existingNames))
+        chipRow(
+          chip,
+          isDuplicate: bulkModel.isDuplicate(chip, existingNormalizedNames: existingNames),
+          conflictsWithStock: bulkModel.conflictsWithExistingStock(chip, existingNormalizedNames: existingNames)
+        )
       }
     }
   }
 
-  private func chipRow(_ chip: ItemBulkAddModel.Chip, isDuplicate: Bool) -> some View {
+  /// - Parameters:
+  ///   - isDuplicate: staging 자기중복 또는 기존 재고 충돌(둘 다 경고 신호).
+  ///   - conflictsWithStock: 기존 재고 Item 과만 충돌(합치기 토글을 노출할 조건).
+  private func chipRow(
+    _ chip: ItemBulkAddModel.Chip,
+    isDuplicate: Bool,
+    conflictsWithStock: Bool
+  ) -> some View {
     HStack(spacing: 10) {
       VStack(alignment: .leading, spacing: 4) {
         TextField("Item name", text: nameBinding(for: chip.id))
@@ -343,15 +358,12 @@ struct CaptureSheet: View {
           } else {
             Text("Unsorted").font(.appTag).foregroundStyle(AppColor.textFaint)
           }
-          if isDuplicate {
-            HStack(spacing: 3) {
-              Image(systemName: "exclamationmark.triangle.fill")
-              Text("Already in stock")
-            }
-            .font(.appTag)
-            .foregroundStyle(AppColor.chipSoonText)
-            .padding(.horizontal, 8).padding(.vertical, 3)
-            .background(AppColor.chipSoonBackground, in: Capsule())
+          // 기존 재고와 충돌하는 칩만 탭 가능한 합치기 토글로 승격한다(미선택=경고, 선택=합치기).
+          // staging 자기중복만인 칩은 기존 경고 배지 그대로(합치기 의미 없음).
+          if conflictsWithStock {
+            mergeToggle(for: chip)
+          } else if isDuplicate {
+            duplicateWarningBadge
           }
         }
       }
@@ -364,6 +376,33 @@ struct CaptureSheet: View {
     }
     .padding(.horizontal, 14).padding(.vertical, 10)
     .appCard()
+  }
+
+  /// 기존 재고 충돌 칩의 인라인 토글. 미선택=경고 배지 ↔ 선택="기존에 합치기"(accent).
+  /// 탭만으로 의도를 바꾸며 다이얼로그를 연쇄하지 않는다(비차단·비연쇄).
+  private func mergeToggle(for chip: ItemBulkAddModel.Chip) -> some View {
+    Button { bulkModel.toggleMerge(chip.id) } label: {
+      HStack(spacing: 3) {
+        Image(systemName: chip.mergeIntoExisting ? "arrow.merge" : "exclamationmark.triangle.fill")
+        Text(chip.mergeIntoExisting ? "Merge into stock" : "Already in stock")
+      }
+      .font(.appTag)
+      .foregroundStyle(chip.mergeIntoExisting ? Color.white : AppColor.chipSoonText)
+      .padding(.horizontal, 8).padding(.vertical, 3)
+      .background(chip.mergeIntoExisting ? AppColor.accent : AppColor.chipSoonBackground, in: Capsule())
+    }
+    .buttonStyle(.plain)
+  }
+
+  private var duplicateWarningBadge: some View {
+    HStack(spacing: 3) {
+      Image(systemName: "exclamationmark.triangle.fill")
+      Text("Already in stock")
+    }
+    .font(.appTag)
+    .foregroundStyle(AppColor.chipSoonText)
+    .padding(.horizontal, 8).padding(.vertical, 3)
+    .background(AppColor.chipSoonBackground, in: Capsule())
   }
 
   private func stepper(for chip: ItemBulkAddModel.Chip) -> some View {

@@ -41,11 +41,21 @@ status: draft
   **쓰기 로직에서 검증**해야 한다. (모델: [[Space]]/[[Area]]/[[Spot]]/[[ItemCategory]]/[[Tag]],
   결정: `docs/wiki/Decision/2026-06-12-위치-물건-데이터모델.md`)
   - 연계(screen-20, 2026-06-18): **물건 이름 중복은 멀티 추가에서 차단하지 않고
-    경고만** 하기로 결정했다 — 연속 입력(`ItemBulkAddModel`)은 staging 칩끼리·기존
-    재고와 `normalizedName` 충돌 시 인라인 배지로 표시하되 insert 는 막지 않는다(단건
-    합치기 다이얼로그를 멀티에 연쇄하지 않음). 위 "쓰기 로직 검증/유니크 제약" 항목과
-    별개로 유지한다(멀티는 사용자 의도 존중 = 경고 후 통과). 결정:
+    경고 + 사용자 선택 합치기** 로 한다 — 연속 입력(`ItemBulkAddModel`)은 staging
+    칩끼리·기존 재고와 `normalizedName` 충돌 시 인라인 배지로 표시하되 insert 는 막지
+    않고, **기존 재고 충돌 칩에 한해 탭 토글로 "기존에 합치기"(수량 가산)** 를 고를 수
+    있다(자동 아님·비연쇄). 위 "쓰기 로직 검증/유니크 제약" 항목과 별개로 유지한다
+    (멀티는 사용자 의도 존중 = 경고 후 통과 또는 명시적 합치기). 결정:
     `docs/wiki/Decision/2026-06-18-area-생략-캡처-허용-및-멀티-추가.md`.
+  - 후속 후보(screen-20 합치기에서 분리): ① **복수 매칭 기본값** — 같은
+    `normalizedName` 기존 Item 이 여럿이면 현재 최근 수정(`updatedAt` 최신) 대표
+    하나에만 가산한다(어느 것에 합칠지 사용자 선택 UI 는 미구현). ② **"모두 합치기"
+    일괄 토글** 버튼(현재는 칩별 토글만). ③ **결과 요약 토스트("N개 추가, M개 합침")**
+    — `bulkInsert` 가 `(inserted:, merged:)` 를 이미 반환하나, 시트 dismiss·범용 토스트
+    인프라 부재로 표시 UI 는 미구현(시트 외부 비차단 안내 인프라 필요). ④ **동일키 복수
+    칩 합치기 동작 확정** — 같은 `normalizedName` 칩이 여럿 합치기로 켜지면 모두 한 대표
+    Item 에 순차 누적 가산된다(`ItemBulkAddModel.bulkInsert` 주석 참조, 수량 합산은 정확).
+    의도된 동작이나, UX 상 "이미 합치기 켠 동일 품목" 안내가 필요할지 후속 검토.
 - [ ] 첫 릴리스 시 `VersionedSchema`(`SchemaV1`) + `SchemaMigrationPlan` 도입
   (`AppModelContainer` 에 연결). 결정: `docs/wiki/Decision/2026-06-12-swiftdata-마이그레이션-방침.md`
 - [ ] `Item.name` 직접 수정 경로 금지 — `ItemEditor` 는 `name` 변경 시
