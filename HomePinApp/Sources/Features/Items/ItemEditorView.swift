@@ -1,9 +1,8 @@
-import PhotosUI
 import SwiftData
 import SwiftUI
 
 /// 물건 추가/편집 공용 에디터. draft·저장 규칙은 `ItemEditorModel` 이 소유하고,
-/// 이 View 는 레이아웃과 순수 UI 상태(포커스·picker 시트 표시)만 갖는다.
+/// 이 View 는 레이아웃과 순수 UI 상태(포커스·선택 시트 표시)만 갖는다.
 struct ItemEditorView: View {
   @Environment(\.dismiss) private var dismiss
   @Environment(\.modelContext) private var modelContext
@@ -24,9 +23,7 @@ struct ItemEditorView: View {
   @State private var showingSpotPicker = false
   @State private var showingCategoryPicker = false
   @State private var showingTagPicker = false
-  @State private var showingPhotoPicker = false
   @State private var showingDeleteConfirm = false
-  @State private var photoItem: PhotosPickerItem?
   @FocusState private var focusedField: ItemEditorField?
 
   init(mode: ItemEditorModel.Mode, onSaved: (() -> Void)? = nil, onSavedItem: ((Item) -> Void)? = nil) {
@@ -40,7 +37,6 @@ struct ItemEditorView: View {
       ScrollView {
         VStack(spacing: 18) {
           basicInfoCard
-          photoCard
           locationCard
           taxonomyCard
           optionCard
@@ -70,10 +66,6 @@ struct ItemEditorView: View {
       }
       .sheet(isPresented: $showingTagPicker) {
         ItemTagPickerSheet(tags: tags, selectedTags: $model.selectedTags)
-      }
-      .photosPicker(isPresented: $showingPhotoPicker, selection: $photoItem, matching: .images)
-      .onChange(of: photoItem) { _, newItem in
-        loadPickedPhoto(newItem)
       }
       .onAppear {
         prefillLastLocationIfNeeded()
@@ -155,59 +147,6 @@ struct ItemEditorView: View {
     .appEditorCard()
   }
 
-  private var photoCard: some View {
-    VStack(alignment: .leading, spacing: 12) {
-      HStack {
-        Text("Photo")
-          .font(.appRowLabel)
-          .foregroundStyle(AppColor.textPrimary)
-        Spacer()
-        Button(model.photoData == nil ? "Choose Photo" : "Change Photo") {
-          showingPhotoPicker = true
-        }
-        .font(.appRowLabel)
-        .foregroundStyle(AppColor.accent)
-      }
-
-      if let image = selectedImage {
-        Image(platformImage: image)
-          .resizable()
-          .scaledToFill()
-          .frame(maxWidth: .infinity)
-          .frame(height: 170)
-          .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-
-        Button(role: .destructive) {
-          model.photoData = nil
-          photoItem = nil
-        } label: {
-          Text("Remove Photo")
-            .font(.appCaptionStrong)
-            .foregroundStyle(.red)
-        }
-        .buttonStyle(.plain)
-      } else {
-        Button {
-          showingPhotoPicker = true
-        } label: {
-          HStack(spacing: 10) {
-            Image(systemName: "photo")
-              .font(.appItemBody)
-              .foregroundStyle(AppColor.textFaint)
-            Text("No photo")
-              .font(.appItemBody)
-              .foregroundStyle(AppColor.textMuted)
-            Spacer()
-          }
-          .frame(height: 56)
-        }
-        .buttonStyle(.plain)
-      }
-    }
-    .padding(16)
-    .appEditorCard()
-  }
-
   private var locationCard: some View {
     VStack(spacing: 0) {
       AppEditorSelectionRow(
@@ -282,11 +221,6 @@ struct ItemEditorView: View {
     .appEditorCard()
   }
 
-  private var selectedImage: PlatformImage? {
-    guard let data = model.photoData else { return nil }
-    return PlatformImage.from(data: data)
-  }
-
   private var tagSummary: String {
     guard !model.selectedTags.isEmpty else {
       return String(localized: "No tags")
@@ -345,18 +279,6 @@ struct ItemEditorView: View {
     }
   }
 
-  private func loadPickedPhoto(_ item: PhotosPickerItem?) {
-    guard let item else { return }
-    Task {
-      let data = try? await item.loadTransferable(type: Data.self)
-      await MainActor.run {
-        if let data {
-          model.photoData = data
-        }
-        photoItem = nil
-      }
-    }
-  }
 }
 
 struct ItemEditorRoute: Identifiable {

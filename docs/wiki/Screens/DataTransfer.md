@@ -68,5 +68,5 @@ screen-id: screen-15
   entitlement `files.user-selected.read-write` 로 동작(`fileExporter`/`fileImporter`
   공통 코드, 분기 없음). 결정: [[2026-06-17-macOS-네이티브-타깃-추가]]. 실기 검증은
   follow-up(AC-005).
-- 잔여(`docs/follow-ups.md`): 사진 downsampling/압축, `VersionedSchema` 연동,
+- 잔여(`docs/follow-ups.md`): `VersionedSchema` 연동,
   macOS 파일 Import/Export 실기 검증(AC-005).

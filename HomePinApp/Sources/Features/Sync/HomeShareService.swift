@@ -158,12 +158,7 @@ enum HomeShareService {
   }
 
   private static func update(_ record: CKRecord, from modelContext: ModelContext) throws {
-    var bundle = try BackupArchive.makeBundle(from: modelContext)
-    bundle.items = bundle.items.map {
-      var item = $0
-      item.photoFile = nil
-      return item
-    }
+    let bundle = try BackupArchive.makeBundle(from: modelContext)
     let data = try BackupCodec.makeEncoder().encode(bundle)
     record["schemaVersion"] = BackupBundle.currentSchemaVersion as NSNumber
     record["updatedAt"] = Date() as NSDate

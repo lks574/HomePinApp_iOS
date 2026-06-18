@@ -4,13 +4,13 @@ import os
 /// 자연어(텍스트·음성·붙여넣기 공용) → 구조화 레시피 드래프트 추출 엔진. 온디바이스
 /// Foundation Models(`LanguageModelSession`)로 레시피 덩어리 텍스트를 `ParsedRecipe` 로 뽑는다.
 ///
-/// `NLItemParser`(물건 전용) 패턴을 그대로 본떴다 — **추출만** 한다. `Recipe`·SwiftData·
-/// 재고 매칭은 일절 모른다. 출력은 전부 문자열/정수고, cuisine/dishType raw 매핑·재료
-/// Item grounding 은 도메인 측(`RecipeDraftResolver`)이 확인 화면 prefill 직전에 한다.
-/// 추출(엔진)과 매칭(도메인)을 분리해 모델 표류를 도메인 경계에서 흡수한다.
+/// **추출만** 한다 — `Recipe`·SwiftData·재고 매칭은 일절 모른다. 출력은 전부 문자열/정수고,
+/// cuisine/dishType raw 매핑·재료 Item grounding 은 도메인 측(`RecipeDraftResolver`)이
+/// 확인 화면 prefill 직전에 한다. 추출(엔진)과 매칭(도메인)을 분리해 모델 표류를 도메인
+/// 경계에서 흡수한다.
 ///
 /// 동시성: `@MainActor` 가 아니다. 호출 측(`NLRecipeParseViewModel`)이 단일 파싱 Task 안에서만
-/// `parse(...)` 를 호출하고 그 Task 를 cancel 한다 — `NLItemParser`·STT 엔진과 같은
+/// `parse(...)` 를 호출하고 그 Task 를 cancel 한다 — STT 엔진과 같은
 /// "단일 소비 Task" 생명주기. `LanguageModelSession` 은 `parse(...)` 호출마다 새로 만들어
 /// 메서드 스코프를 벗어나지 않으므로 공유 가변 상태가 없다.
 struct NLRecipeParser {

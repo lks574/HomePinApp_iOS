@@ -19,13 +19,12 @@ let baseSettings: SettingsDictionary = [
 ]
 
 // 두 타깃이 공유하는 Info.plist 항목. 권한 설명은 InfoPlist.xcstrings(en/ko) 로 현지화하고
-// 여기에는 영문 source 만 둔다. 플랫폼 전용 항목(iOS 의 씬/카메라, macOS 의 entitlements)은
+// 여기에는 영문 source 만 둔다. 플랫폼 전용 항목(iOS 의 씬, macOS 의 entitlements)은
 // 각 타깃에서 덧붙인다.
 let sharedInfoPlist: [String: Plist.Value] = [
   "CFBundleDevelopmentRegion": "en",
   "CFBundleLocalizations": ["en", "ko"],
   "CKSharingSupported": true,
-  // 마이크·음성인식은 양 플랫폼 공통(STT). 카메라·사진은 iOS 전용이라 iOS Info.plist 에만 둔다.
   "NSMicrophoneUsageDescription": "Used to quickly add and search items by voice.",
   "NSSpeechRecognitionUsageDescription": "Used to transcribe what you say into text.",
 ]
@@ -50,9 +49,6 @@ let iOSInfoPlist: [String: Plist.Value] = sharedInfoPlist.merging([
   "UIApplicationSceneManifest": [
     "UIApplicationSupportsMultipleScenes": false,
   ],
-  // 카메라·사진은 iOS 전용 진입점이라 iOS Info.plist 에만 둔다.
-  "NSCameraUsageDescription": "Used to scan a recipe from a cookbook or note into text.",
-  "NSPhotoLibraryUsageDescription": "Used to read recipe text from a photo or screenshot.",
   // AdMob(P1: SDK 골격, 광고 미표시). 계정 없음 → Google 공식 테스트 앱 ID 만 사용한다.
   // 실광고 앱 ID 는 출시 직전 교체. 결정: docs/wiki/Decision/2026-06-17-AdMob-광고-수익화-도입.md
   "GADApplicationIdentifier": "ca-app-pub-3940256099942544~1458002511",

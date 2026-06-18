@@ -96,15 +96,10 @@ status: draft
   macOS** 다. SwiftUI·SwiftData·Observation 이 cross-platform 이라 코드 한 벌을 공유
   하고, AppKit/UIKit 가 갈리는 지점만 **`#if os(macOS)` / `#if os(iOS)`** 로 흡수한다.
 - **플랫폼 추상화 계층 `Shared/Platform/`**: 갈리는 지점을 한 곳에 모은다 —
-  `PlatformImage`(UIImage/NSImage typealias + `CGImage`/orientation 추출 + SwiftUI
-  `Image` 래퍼), nav/입력 modifier 헬퍼(`compactNavTitle`/`hideNavBar`/
-  `plainTextInput`/`numericKeyboard`/`cameraCaptureCover`, macOS no-op), 동적 색
+  nav/입력 modifier 헬퍼(`compactNavTitle`/`hideNavBar`/
+  `plainTextInput`/`numericKeyboard`, macOS no-op), 동적 색
   provider 분기(`DesignSystem/Color+Hex.swift` UIColor/NSColor). 화면 코드는 분기를
   들지 않는다.
-- **카메라(`UIImagePickerController`)는 macOS 비노출** — 카메라 OCR 진입점이 macOS 에
-  없어 `CameraImagePicker` 를 `#if os(iOS)` 로 감싸고 호출부가 `cameraAvailable`(macOS
-  false)로 버튼을 숨긴다. 사진 라이브러리(`PhotosPicker`) OCR·STT(`SpeechAnalyzer`)·
-  FoundationModels NL 파서는 양 플랫폼 공통(macOS 는 `AVAudioSession` 분기만 건너뜀).
 - **셸은 그대로**: `RootTabView` 등 셸·네비게이션은 macOS 재설계 없이 그대로 동작한다.
   데스크톱 전용 UX 최적화(메뉴/창/사이드바)는 범위 밖(후속).
 

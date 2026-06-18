@@ -9,7 +9,7 @@ import SwiftUI
 @Observable
 final class ItemEditorModel {
   enum Mode {
-    case create(initialName: String = "", area: Area? = nil, spot: Spot? = nil)
+    case create(initialName: String = "", quantity: Int = 1, area: Area? = nil, spot: Spot? = nil)
     case edit(Item)
   }
 
@@ -21,7 +21,6 @@ final class ItemEditorModel {
   var selectedSpot: Spot?
   var selectedCategory: ItemCategory?
   var selectedTags: [Tag]
-  var photoData: Data?
   var hasExpiration: Bool
   var expiresAt: Date
   var memo: String
@@ -29,14 +28,13 @@ final class ItemEditorModel {
   init(mode: Mode) {
     self.mode = mode
     switch mode {
-    case let .create(initialName, area, spot):
+    case let .create(initialName, quantity, area, spot):
       name = initialName
-      quantity = 1
+      self.quantity = max(1, quantity)
       selectedArea = spot?.area ?? area
       selectedSpot = spot
       selectedCategory = nil
       selectedTags = []
-      photoData = nil
       hasExpiration = false
       expiresAt = .now
       memo = ""
@@ -47,7 +45,6 @@ final class ItemEditorModel {
       selectedSpot = item.spot
       selectedCategory = item.category
       selectedTags = (item.tags ?? []).sorted { $0.name < $1.name }
-      photoData = item.photoData
       hasExpiration = item.expiresAt != nil
       expiresAt = item.expiresAt ?? .now
       memo = item.memo ?? ""
@@ -102,7 +99,6 @@ final class ItemEditorModel {
       let item = Item(
         name: trimmedName,
         quantity: quantity,
-        photoData: photoData,
         memo: trimmedMemo,
         expiresAt: hasExpiration ? expiresAt : nil,
         area: area,
@@ -120,7 +116,6 @@ final class ItemEditorModel {
       item.spot = selectedSpot
       item.category = selectedCategory
       item.tags = selectedTags
-      item.photoData = photoData
       item.expiresAt = hasExpiration ? expiresAt : nil
       item.memo = trimmedMemo
       item.updatedAt = .now

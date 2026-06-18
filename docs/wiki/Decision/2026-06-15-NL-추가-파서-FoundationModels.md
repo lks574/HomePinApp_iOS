@@ -2,8 +2,8 @@
 aliases: [NL 추가 파서, Foundation Models 채택, 자연어 파싱 아키텍처]
 tags: [decision, decision/data]
 created: 2026-06-15
-updated: 2026-06-17
-status: accepted
+updated: 2026-06-18
+status: superseded
 ---
 
 # 2026-06-15 NL 추가 파서 — Foundation Models 채택
@@ -13,8 +13,19 @@ status: accepted
 [[제품-방향-재고-레시피-AI]] · 후보 [[AI-적용-후보]] · 음성 경로
 [[2026-06-15-음성입력-STT-아키텍처]] 의 "텍스트·음성 공용 단일 파서로 수렴" 결정을 잇는다.
 
-> [!note] 이 노트는 채택 방향 확정용 ADR 이고 구현은 아직 시작하지 않았다. 단계별
-> 구현은 `docs/screen-implementation-tasks.md`(screen-09)·`docs/next-task.md` 를 따른다.
+> [!warning] Superseded (2026-06-18) — 물건 NL 파서 island 제거
+> 이 ADR 이 정의한 **물건 전용** 온디바이스 NL 파서 플로우(`NLItemParser` → `NLParseViewModel`
+> → `AddDraftResolver` → 확인 드래프트 [[DraftReview]] / screen-09)는 폐기됐다. `screen-04`
+> 검색-우선 통합에서 물건 추가 경로가 규칙 기반 `ItemQuickAddParser → ItemEditor.create(initialName:)`
+> 로 교체되면서 이 플로우는 어떤 live View 에서도 도달되지 않는 self-contained island 로
+> 남았고, 2026-06-18 코드·문서에서 제거됐다(`ParsedItemList`/`ParsedItem`/`NLParseGrounding`·
+> `AddDraft`·`DraftTaxonomyPickerSheets` 포함).
+>
+> 다만 이 노트가 확립한 **"추출(엔진)/매칭(도메인) 분리 + 비-MainActor 엔진 + @MainActor
+> 세션 ViewModel + 가용성 게이팅·폴백" 아키텍처 패턴**은 유효하며, 살아 있는 레시피 NL 파서
+> [[2026-06-16-레시피-NL파서-ParsedRecipe]] 가 이 패턴을 잇는다(`NLRecipeParser` · `ParsedRecipe`).
+> 즉 물건 적용은 superseded, 패턴 자체는 레시피 경로에서 계속 쓰인다. 아래 본문은
+> 패턴·맥락의 historical 기록으로 보존한다.
 
 ## 맥락
 

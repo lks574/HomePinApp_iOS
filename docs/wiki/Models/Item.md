@@ -2,7 +2,7 @@
 aliases: [Item, 물건]
 tags: [model]
 created: 2026-06-12
-updated: 2026-06-17
+updated: 2026-06-18
 status: in-progress
 ---
 
@@ -19,7 +19,6 @@ nullify 로 보존된다.
 | `name` | `String` | `#Index` |
 | `normalizedName` | `String` | `#Index`, 매칭/검색 키(소문자·공백정리). `Item.normalize()` |
 | `quantity` | `Int` | 기본 1 |
-| `photoData` | `Data?` | `@Attribute(.externalStorage)` |
 | `memo` | `String?` | |
 | `expiresAt` | `Date?` | `#Index`, 유통/소비기한 |
 | `createdAt`/`updatedAt` | `Date` | |
@@ -37,7 +36,7 @@ nullify 로 보존된다.
 
 - [[Home]] — 임박/최근 물건 표시, 임박 배너·최근 행 편집 진입.
 - [[PlaceDetail]] — 장소별 물건 목록, 행 편집, "다 썼어요" 빠른 정리.
-- [[ItemEditor]] — 추가/편집/삭제, 사진·분류·태그 수동 편집.
+- [[ItemEditor]] — 추가/편집/삭제, 분류·태그 수동 편집.
 - [[Capture]] — 검색 결과·AI 추가 저장 대상.
 - [[RecipeDetail]]/[[Recipes]] — `RecipeIngredient.item` 연결을 통해 보유/부족 판정.
 

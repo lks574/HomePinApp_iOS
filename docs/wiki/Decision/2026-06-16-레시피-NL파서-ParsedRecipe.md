@@ -2,7 +2,7 @@
 aliases: [레시피 NL 파서, ParsedRecipe, 레시피 자연어 추가 파서]
 tags: [decision, decision/data]
 created: 2026-06-16
-updated: 2026-06-16
+updated: 2026-06-18
 status: accepted
 ---
 
@@ -17,8 +17,10 @@ status: accepted
 ## 맥락
 
 [[RecipeEditor]] 수동 입력은 제목·분류·인분·시간·재료 N·단계 N 으로 필드가 많아 마찰이
-크다. 이미 물건용 `NLItemParser → NLParseViewModel → AddDraftResolver → 확인 드래프트`
-파이프라인이 있고, 레시피는 같은 패턴에 **스키마 한 벌**을 더하면 재사용된다. 최소 사양
+크다. 이 결정 시점에 물건용 `NLItemParser → NLParseViewModel → AddDraftResolver → 확인 드래프트`
+파이프라인이 있었고(이후 2026-06-18 물건 경로는 규칙 기반 `ItemQuickAddParser` 로 교체되며 제거됨 —
+[[2026-06-15-NL-추가-파서-FoundationModels]] 참고), 레시피는 같은 패턴에 **스키마 한 벌**을 더해
+재사용한다. 최소 사양
 iOS 26.5 / Swift 6.2. 출력 스키마·확인 방식·진입점은 되돌리기 어려운 표면이라 확정이
 필요했다. 이번 단계 범위는 텍스트/음성/붙여넣기까지이며 OCR(#3·#4)은 다음 단계다.
 

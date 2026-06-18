@@ -6,20 +6,16 @@ import SwiftUI
 ///   기존 항목을 실시간 검색해 물건/레시피 섹션으로 보여준다.
 /// - 결과 아래 항상 `+ "{입력어}" 추가하기` 행을 둔다. 이 행을 눌러야만 명시적 추가가
 ///   일어난다(AI 가 추가/검색 의도를 자동 추측하지 않음 — 오분류 데이터 오염 방지).
-/// - 추가는 가용 시 온디바이스 AI 파서(`NLParseViewModel`)로 구조화 드래프트로 바꿔
-///   확인 화면(screen-09)으로 push 하고, 미가용·실패·취소·빈 결과면 현 단건 스텁(이름
-///   prefill 로 `ItemEditor` `create`)으로 폴백한다. 텍스트·음성 모두 같은 `add()` 경로.
+/// - 추가는 장보기 재고 생성과 같은 `ItemEditor` `create` 화면으로 보낸다.
+///   텍스트·음성 모두 같은 `add()` 경로에서 이름·수량·위치를 규칙 기반 prefill 한다.
 /// - 음성(🎤): 받아쓰기(`SpeechDictationViewModel`) 결과가 같은 입력 필드로 들어가고,
-///   `추가하기` 를 누르면 동일한 파서 경로로 합류한다(단일 경로 원칙).
+///   `추가하기` 를 누르면 동일한 에디터 경로로 합류한다(단일 경로 원칙).
 struct CaptureSheet: View {
   @Environment(\.dismiss) private var dismiss
-  @Environment(\.modelContext) private var modelContext
   @Environment(AppRouter.self) private var router
   @State private var query = ""
   @State private var dictation = SpeechDictationViewModel()
-  @State private var parser = NLParseViewModel()
   @State private var editorRoute: ItemEditorRoute?
-  @State private var reviewRoute: DraftReviewRoute?
   @State private var showingRecipeCapture = false
   /// 같은 이름 물건 추가 시 합치기/새로 추가를 묻기 위한 후보(있으면 다이얼로그 표시).
   @State private var mergeCandidate: Item?
@@ -32,6 +28,8 @@ struct CaptureSheet: View {
 
   /// 검색 대상 전체 레시피. 제목·재료명을 정규화 키로 in-memory 필터한다.
   @Query(sort: \Recipe.title) private var allRecipes: [Recipe]
+  @Query(sort: \Area.sortOrder) private var allAreas: [Area]
+  @Query(sort: \Spot.name) private var allSpots: [Spot]
 
   var body: some View {
     NavigationStack {
@@ -50,9 +48,6 @@ struct CaptureSheet: View {
       .compactNavTitle()
       .toolbar {
         ToolbarItem(placement: .cancellationAction) { Button("Close") { dismiss() } }
-      }
-      .navigationDestination(item: $reviewRoute) { route in
-        CaptureDraftReviewView(drafts: route.drafts) { dismiss() }
       }
       .sheet(item: $editorRoute) { route in
         ItemEditorView(mode: route.mode) {
@@ -75,12 +70,8 @@ struct CaptureSheet: View {
       .onChange(of: dictation.transcript) { _, newTranscript in
         applyTranscript(newTranscript)
       }
-      .onChange(of: parser.state) { _, newState in
-        applyParseState(newState)
-      }
       .onDisappear {
         dictation.reset()
-        parser.reset()
       }
     }
   }
@@ -105,7 +96,6 @@ struct CaptureSheet: View {
         .font(.appFieldText)
         .focused($inputFocused)
         .submitLabel(.search)
-        .disabled(parser.isParsing)
       if !query.isEmpty {
         Button { query = "" } label: {
           Image(systemName: "xmark.circle.fill").foregroundStyle(AppColor.textFaint)
@@ -243,43 +233,22 @@ struct CaptureSheet: View {
     .buttonStyle(.plain)
   }
 
-  /// 명시적 추가 행. 결과 유무와 무관하게 항상 노출한다. 파서 추론 중에는 진행 표시로 바꾼다.
-  @ViewBuilder
+  /// 명시적 추가 행. 결과 유무와 무관하게 항상 노출한다.
   private var addSection: some View {
-    if parser.isParsing {
-      parsingIndicator
-    } else {
-      Button(action: add) {
-        HStack(spacing: 10) {
-          Image(systemName: "plus.circle.fill")
-            .font(.appItemBody).foregroundStyle(AppColor.accent)
-          Text("add.create.\(trimmedQuery)")
-            .font(.appItemBody).foregroundStyle(AppColor.textPrimary)
-            .frame(maxWidth: .infinity, alignment: .leading)
-          Image(systemName: "chevron.right").font(.appTag).foregroundStyle(AppColor.textFaint)
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 14)
-        .appCard()
+    Button(action: add) {
+      HStack(spacing: 10) {
+        Image(systemName: "plus.circle.fill")
+          .font(.appItemBody).foregroundStyle(AppColor.accent)
+        Text("add.create.\(trimmedQuery)")
+          .font(.appItemBody).foregroundStyle(AppColor.textPrimary)
+          .frame(maxWidth: .infinity, alignment: .leading)
+        Image(systemName: "chevron.right").font(.appTag).foregroundStyle(AppColor.textFaint)
       }
-      .buttonStyle(.plain)
+      .padding(.horizontal, 16)
+      .padding(.vertical, 14)
+      .appCard()
     }
-  }
-
-  /// 추론 중 진행 표시 + 취소. 추론이 끝나면 확인 화면으로 넘어가거나 폴백한다.
-  private var parsingIndicator: some View {
-    HStack(spacing: 12) {
-      ProgressView()
-      Text("Sorting…").font(.appRowLabel).foregroundStyle(AppColor.textSecondary)
-      Spacer()
-      Button("Cancel") { parser.cancel() }
-        .font(.appRowLabel)
-        .foregroundStyle(AppColor.accent)
-    }
-    .padding(.horizontal, 16)
-    .frame(height: 52)
-    .frame(maxWidth: .infinity)
-    .appCard(radius: 14)
+    .buttonStyle(.plain)
   }
 
   // MARK: - 결과 섹션
@@ -372,27 +341,29 @@ struct CaptureSheet: View {
   /// 명시적 추가 진입. 같은 정규화 이름의 기존 물건이 있으면 "수량 합치기/새로 추가" 를
   /// 먼저 제안하고(자동 합치기·자동 저장 없음), 없으면 바로 추가 경로로 진행한다.
   private func add() {
-    let name = trimmedQuery
-    guard !name.isEmpty else { return }
+    let draft = ItemQuickAddParser.parse(trimmedQuery, areas: allAreas, spots: allSpots)
+    let name = draft.name
     recordRecentSearch()
     let key = Item.normalize(name)
     if let duplicate = allItems.first(where: { $0.normalizedName == key }) {
       mergeCandidate = duplicate
       return
     }
-    proceedToAdd(name)
+    openItemEditor(draft)
   }
 
-  /// 실제 추가 경로. 파서 가용 시 자연어 파싱(→ 확인 화면 push), 미가용·실패·취소·빈
-  /// 결과면 현 단건 스텁(이름 prefill)으로 폴백한다. 분기는 `parser.state` 변화를 받아 처리.
-  private func proceedToAdd(_ name: String) {
-    guard !name.isEmpty else { return }
-    guard parser.isAvailable else {
-      fallbackToStub(name)
-      return
-    }
+  /// 실제 추가 경로. 장보기 재고 추가와 같은 `ItemEditor` create 화면으로 보낸다.
+  private func openItemEditor(_ draft: ItemQuickAddDraft) {
+    guard !draft.name.isEmpty else { return }
     inputFocused = false
-    parser.parse(name, in: modelContext)
+    editorRoute = ItemEditorRoute(
+      mode: .create(
+        initialName: draft.name,
+        quantity: draft.quantity,
+        area: draft.area,
+        spot: draft.spot
+      )
+    )
   }
 
   /// 검색 의도가 확정된 시점(결과 탭·추가 진입)에 현재 입력어를 최근 검색어로 적재한다.
@@ -425,30 +396,10 @@ struct CaptureSheet: View {
     editorRoute = ItemEditorRoute(mode: .edit(duplicate))
   }
 
-  /// "새로 추가" — 합치기를 거부하고 기존 추가 경로(파서/스텁)로 진행한다.
+  /// "새로 추가" — 합치기를 거부하고 공용 물건 에디터로 진행한다.
   private func addAsNewFromMerge() {
     mergeCandidate = nil
-    proceedToAdd(trimmedQuery)
-  }
-
-  /// 파서 상태에 따라 분기한다. 성공이면 확인 화면 push, 실패·미가용이면 단건 스텁 폴백.
-  private func applyParseState(_ state: NLParseViewModel.State) {
-    switch state {
-    case let .drafts(drafts):
-      reviewRoute = DraftReviewRoute(drafts: drafts)
-      parser.reset()
-    case .unavailable, .failed:
-      fallbackToStub(trimmedQuery)
-      parser.reset()
-    case .idle, .parsing:
-      break
-    }
-  }
-
-  /// 현 단건 스텁: 이름만 prefill 한 `ItemEditor` create 로 넘긴다(텍스트 경로 보장).
-  private func fallbackToStub(_ name: String) {
-    guard !name.isEmpty else { return }
-    editorRoute = ItemEditorRoute(mode: .create(initialName: name))
+    openItemEditor(ItemQuickAddParser.parse(trimmedQuery, areas: allAreas, spots: allSpots))
   }
 
   // MARK: - 검색 로직
@@ -704,20 +655,5 @@ private struct CaptureSearchQuery {
 
   private static func containsAny(_ text: String, _ candidates: [String]) -> Bool {
     candidates.contains { text.contains($0) }
-  }
-}
-
-/// 확인 드래프트 화면(screen-09) push 라우트. `navigationDestination(item:)` 요건
-/// (`Hashable`)을 위해 안정 id 로 동등성을 정의한다(드래프트 자체는 참조 타입).
-private struct DraftReviewRoute: Identifiable, Hashable {
-  let id = UUID()
-  let drafts: [AddDraft]
-
-  static func == (lhs: DraftReviewRoute, rhs: DraftReviewRoute) -> Bool {
-    lhs.id == rhs.id
-  }
-
-  func hash(into hasher: inout Hasher) {
-    hasher.combine(id)
   }
 }

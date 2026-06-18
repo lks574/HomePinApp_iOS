@@ -51,17 +51,14 @@ UI 우선 1차(시안 C 화면 골격: 5탭·장소·레시피·홈·추가 시�
 > (화면 추가 아님, 플랫폼 확장). `Project.swift` 에 `HomePinApp-macOS`(`.macOS("26.0")`,
 > bundleId `com.sro.homepinappmac`, entitlements app-sandbox·files.user-selected.read-write·
 > device.audio-input) 추가, **소스·리소스 한 벌 공유** + `#if os` 흡수(Mac Catalyst·
-> Designed-for-iPad 아닌 네이티브). 플랫폼 추상화 `Shared/Platform/`(`PlatformImage`
-> UIImage/NSImage typealias·`CGImage`/orientation 추출(macOS `.up`)·`Image(platformImage:)`;
-> nav/입력 modifier 헬퍼 macOS no-op) + 동적 색 provider UIColor/NSColor 분기 +
-> `cameraCaptureCover` no-op. **카메라(`UIImagePickerController`) macOS 비노출**(사진
-> 라이브러리 OCR·STT·FoundationModels 는 공통, macOS 는 `AVAudioSession` 분기만 skip).
+> Designed-for-iPad 아닌 네이티브). 플랫폼 nav/입력 modifier 헬퍼 macOS no-op +
+> 동적 색 provider UIColor/NSColor 분기. STT·FoundationModels 는 공통이고,
+> macOS 는 `AVAudioSession` 분기만 skip.
 > 셸·네비게이션 재설계 없이 동작. **스킴 분리**(`targetSchemesGrouping: .notGrouped`) →
 > `HomePinApp`(iOS)/`HomePinApp-macOS`(macOS) 각각 노출(한 스킴 묶음은 macOS 빌드 시 iOS
 > 타깃 서명 오류라 분리). iOS·macOS 빌드 둘 다 green. 동작 로직 변경 없음(iOS 회귀 0).
-> 결정: `docs/wiki/Decision/2026-06-17-macOS-네이티브-타깃-추가.md`,
-> `docs/wiki/Decision/2026-06-17-플랫폼-이미지-추상화.md`. 잔여(다음 할 일):
-> macOS 실기 런타임 검증(AC-004~006)·sandbox 사진 entitlement 보정 필요 여부.
+> 결정: `docs/wiki/Decision/2026-06-17-macOS-네이티브-타깃-추가.md`. 잔여(다음 할 일):
+> macOS 실기 런타임 검증(AC-005~006).
 > 이전: **검색·추가 정교화 횡단(screen-16)** — 중앙 검색([[Capture]],
 > `CaptureSheet`)·물건 추가 경로의 횡단 정교화(새 화면 아님, `Shared/Search/`).
 > (1) 자연어 규칙 외부화 — 조사·불용어·의미단어 3개를 `Resources/SearchRules.json` +
@@ -84,10 +81,10 @@ UI 우선 1차(시안 C 화면 골격: 5탭·장소·레시피·홈·추가 시�
 > Backup & Import`(`DataTransferView`) 진입. **전체 백업** = 디렉터리 패키지
 > (`.homepinbackup`, exported UTType `com.sro.homepinappios.backup`/`com.apple.package`) —
 > `data.json`(schemaVersion 메타 + 9 엔티티 Codable DTO, 관계 전부 UUID 참조,
-> `RecipeStep` 인라인) + `photos/<itemID>.dat`(사진 원본). 외부 의존성 없이 `FileManager`
-> 만(ZIP 불채택, `dependencies: []` 유지). export = 전체 fetch→DTO→임시 패키지→`fileExporter`,
+> `RecipeStep` 인라인). 외부 의존성 없이 `FileManager`
+> 만(ZIP 불채택, `dependencies: []` 유지). export = 전체 fetch→DTO→`fileExporter`,
 > import = `fileImporter`→디코드→schemaVersion 가드→**2-pass upsert**(`BackupUpsertEngine`:
-> pass-1 id fetch→갱신/insert, pass-2 UUID 참조 관계 재연결)+사진 복원, 엔티티 단위 스킵+요약.
+> pass-1 id fetch→갱신/insert, pass-2 UUID 참조 관계 재연결), 엔티티 단위 스킵+요약.
 > import 정책 = id(UUID) upsert/덮어쓰기. **CSV 대량 입력** = Item·Recipe, 3파일
 > (`items.csv`·`recipes.csv`·`recipe_ingredients.csv`, 재료는 `recipeTitle` 연결), RFC4180
 > 최소 자체 파서/직렬화(`CSV`)+템플릿 export. upsert 키 = id 있으면 id, 없으면
@@ -96,8 +93,8 @@ UI 우선 1차(시안 C 화면 골격: 5탭·장소·레시피·홈·추가 시�
 > 보존. 얇은 `@Observable DataTransferModel`(비영속 UI 상태+다단계 쓰기 오케스트레이션).
 > `SettingsView.clearAllData()` 의 `ShoppingItem` 삭제 누락 수정(export 9종 일치). `@Model`
 > 스키마 변경 없음. 결정: `docs/wiki/Decision/2026-06-17-데이터-백업-번들포맷.md`,
-> `docs/wiki/Decision/2026-06-17-CSV-대량입력-스키마.md`. 잔여: 사진 downsampling/압축,
-> `VersionedSchema` 연동(`docs/follow-ups.md`).
+> `docs/wiki/Decision/2026-06-17-CSV-대량입력-스키마.md`. 잔여: `VersionedSchema`
+> 연동(`docs/follow-ups.md`).
 > 이전: **레시피 부재료(optional) 횡단(screen-14)** — 주재료와 별도로
 > **부재료**(곁들임·취향껏·선택적)를 입력·표시. `RecipeIngredient.isOptional: Bool = false`
 > 가산 필드(마이그레이션 불필요). `Recipe` 의 `missingIngredients`·`isReadyToCook`·
@@ -107,7 +104,7 @@ UI 우선 1차(시안 C 화면 골격: 5탭·장소·레시피·홈·추가 시�
 > 섹션으로 분리(부재료는 비어도 됨), `RecipeEditorModel` 은 `mainIngredients`/
 > `optionalIngredients` 두 draft 배열·섹션별 add/remove·연속 sortOrder. `RecipeDetailView`
 > 주/부 섹션 구분·요약 분모 주재료 기준. AI 파서 `ParsedIngredient.isOptional`+instructions
-> 주/부 안내(자연어·OCR 공용)·확인 화면 교정 친화. 신규 UI 문자열 en/ko. `@Model` 스키마는
+> 주/부 안내·확인 화면 교정 친화. 신규 UI 문자열 en/ko. `@Model` 스키마는
 > 가산 필드만(기존 데이터/시드 주재료로 자연 동작). 이어서 `RecipeDetail` 재고 요약에서
 > 부족 주재료만 장보기에 추가하는 흐름을 완료했다(`ShoppingItem.sourceIngredient` 연동,
 > 중복 방지, 완료된 원본 항목 미완료 복구). 이어서 장보기 완료 체크 시 기존 `Item`
@@ -115,19 +112,6 @@ UI 우선 1차(시안 C 화면 골격: 5탭·장소·레시피·홈·추가 시�
 > 체크 해제 시 재고 자동 차감 없음). 결정:
 > `docs/wiki/Decision/2026-06-16-레시피-NL파서-ParsedRecipe.md`(ParsedIngredient 갱신). 잔여:
 > 실기기 AI 주/부 추출 품질.
-> 이전: **레시피 자연어 추가 단계 2 — 사진/스크린샷 OCR(screen-13)** —
-> `RecipeCaptureView` 에 OCR 입력 소스 추가. 온디바이스 Apple Vision
-> (`VNRecognizeTextRequest`, `.accurate`, `usesLanguageCorrection`, 한국어+영어)으로
-> 이미지→텍스트 추출. 카메라(`UIImagePickerController`)+사진 라이브러리(`PhotosPicker`)
-> 둘 다 진입(카메라는 시뮬레이터 미지원이라 가용 시만). 추출 텍스트는 입력 필드에 **채우기**
-> (자동 파싱 안 함 — 확인 단계 유지) → "Sort with AI" 로 단계 1 텍스트 경로 합류.
-> `TextRecognizer`(비-MainActor `Sendable`, `Task.detached` 추론) + `RecipeOCRViewModel`
-> (@MainActor 단일 세션 Task) + `CameraImagePicker`(Coordinator nonisolated — 시스템 콜백
-> 격리 트랩 방지). 권한 신규(비가역): `NSCameraUsageDescription`·`NSPhotoLibraryUsageDescription`
-> (`Project.swift` infoPlist + `InfoPlist.xcstrings` en/ko), `tuist generate` 재실행. 권한
-> 거부·OCR 실패·빈 결과 모두 현지화 안내 + 텍스트 입력 폴백. `@Model` 스키마 변경 없음.
-> 결정: `docs/wiki/Decision/2026-06-16-레시피-OCR-VisionKit.md`. 잔여: 실기기 카메라·한국어/
-> 손글씨 OCR 품질(시뮬레이터 미지원).
 > 이전: **레시피 자연어 추가 단계 1(screen-12)** — 중앙 ✨ 시트(`CaptureSheet`)에
 > 명시적 "Add a recipe" 행 추가(검색-우선 통합 UX 유지, 의도 자동추측 없음) →
 > 레시피 전용 입력 화면 `RecipeCaptureView`(여러 줄 텍스트·붙여넣기·음성, 단일 경로).
@@ -137,12 +121,11 @@ UI 우선 1차(시안 C 화면 골격: 5탭·장소·레시피·홈·추가 시�
 > `RecipeEditorModel(prefill:)` 로 재사용(AI prefill 배너·빈 행 추가로 교정 친화). 저장은
 > 수동 create 와 동일(재료 이름→보유 `Item` 정규화 매칭). 미가용·실패·취소·빈 결과면 수동
 > 에디터 폴백. `@Model` 스키마 변경 없음. 결정:
-> `docs/wiki/Decision/2026-06-16-레시피-NL파서-ParsedRecipe.md`. 잔여: 단계 2(사진/스크린샷
-> OCR), 실기기 한국어 추출 품질.
+> `docs/wiki/Decision/2026-06-16-레시피-NL파서-ParsedRecipe.md`. 잔여: 실기기 한국어 추출 품질.
 > 이전: **캡처 시트 검색-우선 통합(screen-04)** — [추가|검색] 모드 토글 제거,
 > 단일 입력 필드 하나로 통합. 입력 즉시 실시간 검색(물건+레시피 섹션), 결과 아래 항상
 > `+ "{입력어}" 추가하기` 행으로 **명시적 추가만**(AI 가 추가/검색 의도 자동추측 안 함 →
-> 오분류 데이터 오염 방지). 음성은 단일 입력 필드를 채우고 같은 `add()` 파서 경로로 합류.
+> 오분류 데이터 오염 방지). 음성은 단일 입력 필드를 채우고 같은 `add()` 에디터 경로로 합류.
 > `CaptureMode`·`modePicker`·이중 입력(`text`/`searchText`) dead code 제거. find/add 의도
 > 자동판별 후속은 본 통합으로 대체·불필요 처리.
 > 이전: **중앙 AI 버튼 + 레시피 검색 + 장보기(screen-04/09/11)** — 중앙 버튼
@@ -169,7 +152,7 @@ UI 우선 1차(시안 C 화면 골격: 5탭·장소·레시피·홈·추가 시�
    있게 하는 것. 단, 현재 모델/프로젝트 상태상 버튼부터 추가하지 않고 아래 순서로 진행한다.
    - **Phase 0 스키마 호환화**: 전 `@Model` 의 `id` `.unique` 제거, `#Index<Item>`
      재검토, 비옵셔널 속성 기본값/optional 감사, 관계 optional+inverse 보장 점검,
-     `Item.photoData` 동기화 비용 정책 결정.
+     물건 사진 저장은 제거했으므로 CloudKit 동기화 대상에서 제외.
    - **Phase A Private 동기화**: iCloud container 확정 후 iOS/macOS entitlements 확장,
      `AppModelContainer` 를 CloudKit private DB 구성으로 전환, Settings 에 sync 상태/안내
      진입점 추가. 골격 구현 완료: container ID `iCloud.com.sro.homepinapp`, Settings
@@ -181,31 +164,25 @@ UI 우선 1차(시안 C 화면 골격: 5탭·장소·레시피·홈·추가 시�
      검증(`docs/follow-ups.md` "iCloud 동기화 / CloudKit").
    - **Phase B 가족공유**: 1차 초대 골격과 2차 가져오기 골격 구현 완료. Settings `Share Home Data` 가 iOS
      `UICloudSharingController` 를 띄우고, custom zone root record 에 현재 데이터를
-     `BackupBundle` JSON 스냅샷(사진 제외)으로 저장해 `CKShare` 한다. 초대 수락 후
+     `BackupBundle` JSON 스냅샷으로 저장해 `CKShare` 한다. 초대 수락 후
      `Import Shared Home Data` 는 `sharedCloudDatabase` 의 root snapshot 을 로컬 SwiftData 로
      upsert 한다. Apple 가족 그룹 자동 연동이 아니라 초대 기반 공유로 다룬다. 잔여는
-     참가자 push, 충돌 처리, 사진 공유, 실기기/실계정 초대·가져오기 검증.
+     참가자 push, 충돌 처리, 실기기/실계정 초대·가져오기 검증.
    - 전제: 유료 Apple Developer Program 및 사용할 iCloud container ID 확정.
    - 검토 문서: `docs/wiki/Research/CloudKit-동기화-가족공유-도입검토.md`.
 1. **macOS 실기 런타임 검증(screen-17 후속)** — iOS·macOS 빌드는 green 이나 macOS 는
    실기 런타임 검증이 남았다(시뮬레이터/CI 빌드만으로는 못 보는 권한·파일·디바이스 경로).
-   - **AC-004 PhotosPicker OCR** — macOS 에서 사진 라이브러리 선택 → Vision OCR →
-     [[RecipeCapture]] 입력 채우기. sandbox 에서 사진 접근/읽기 정상 여부.
    - **AC-005 파일 Import/Export** — [[DataTransfer]] 백업 `.homepinbackup` 패키지
      export/import 가 sandbox(`files.user-selected.read-write`)에서 정상 동작하는지.
    - **AC-006 STT 권한/받아쓰기** — 마이크(`device.audio-input`)·음성인식 권한 시트와
      온디바이스 받아쓰기가 macOS 에서 정상인지(`AVAudioSession` 없이).
-   - 검증 중 sandbox 사진 entitlement(예: `files.photos`/PhotosPicker 접근) 보정이
-     필요하면 entitlements 에 추가. macOS 데스크톱 UX 최적화(메뉴/창/사이드바)는 별도
+   - macOS 데스크톱 UX 최적화(메뉴/창/사이드바)는 별도
      후속. 결정: [[2026-06-17-macOS-네이티브-타깃-추가]].
-2. **AI 자연어 추가** — 1차 구현 완료(screen-09). Foundation Models `@Generable`
-   (`NLItemParser`, 추출만·비-MainActor) → `NLParseViewModel`(@MainActor, 가용성
-   게이트·단일 세션 Task) → 확인 드래프트(`CaptureDraftReviewView`) → `AddDraftResolver`
-   다건 저장(grounding·없으면생성/있으면매핑·`Item.normalize` 매칭). `CaptureSheet.add()`
-   가 가용 시 파싱→확인, 미가용·실패·취소 시 단건 스텁 폴백. 텍스트·음성 공용 단일 경로.
-   잔여: 실기기 추론·한국어 품질 검증(시뮬레이터 미가용), 모델 다운로드 유도 UX(#5),
-   유통기한·메모·find/add 의도판별은 후속. (제품 방향: [[제품-방향-재고-레시피-AI]],
-   결정: [[2026-06-15-NL-추가-파서-FoundationModels]])
+2. **물건 추가 흐름 통일** — 중앙 검색 시트의 `+ "{입력어}" 추가하기`와 장보기 미등록
+   항목 체크 후 재고 생성이 같은 `ItemEditor` `create(initialName:)` 화면을 사용한다.
+   입력어는 규칙 기반 `ItemQuickAddParser` 로 이름·수량·위치를 prefill 한다. 과거 물건
+   AI 드래프트 경로(screen-09: `NLItemParser`/`CaptureDraftReviewView`/`AddDraftResolver`)는
+   dead island 가 되어 2026-06-18 제거했다.
 3. **검색 동작** — 중앙 버튼 시트 **검색-우선 통합** 완료(`screen-04`): [추가|검색]
    모드 토글 제거, 단일 입력 필드 하나(타이핑·음성 공용). 입력 즉시 물건
    (이름·위치·분류·태그·메모 부분 일치) + 레시피(제목·요약·분류·태그·재료 세부 텍스트
@@ -219,25 +196,25 @@ UI 우선 1차(시안 C 화면 골격: 5탭·장소·레시피·홈·추가 시�
    (`SpeechDictationViewModel`(UI 상태/단일 세션 Task) + `SpeechDictationEngine`
    (비-MainActor 권한/오디오/모델) ↔ `DictationEvent` 스트림 경계. iOS 26
    `SpeechAnalyzer` + `SpeechTranscriber` 온디바이스 받아쓰기 → 활성 모드 필드,
-   권한·불가용·거부 폴백, tap 버퍼 복사·고아 자원 누수 버그 해소). 잔여: 1번 AI 파서
-   경로 재사용(받아쓰기 텍스트 → 구조화), 기기/모델 게이팅·한국어 모델 다운로드 UX,
+   권한·불가용·거부 폴백, tap 버퍼 복사·고아 자원 누수 버그 해소). 잔여: 기기/모델 게이팅·한국어 모델 다운로드 UX,
    실기기 인식 정확도 검증(시뮬레이터 불가).
-5. **물건/레시피 고급 편집** — 물건 추가/편집/삭제는 `ItemEditor` 로 연결됨. 사진 선택/제거,
+5. **물건/레시피 고급 편집** — 물건 추가/편집/삭제는 `ItemEditor` 로 연결됨. 물건 사진 선택/저장은 제거했고,
    분류 선택/신규 생성, 태그 다중 선택/신규 생성까지 완료. 수량 1에서
    `-` 탭 시 삭제 확인, 장소 상세 물건 행 "다 썼어요" 빠른 정리까지 완료.
    레시피 상세(`screen-03`)·CRUD(`screen-07`)·시드 10개 완료 — 카드 → `RecipeDetail`,
    "레시피 추가" → `RecipeEditor`, 재료/단계 동적 편집 + 재료 이름→보유 물건 매칭.
    레시피 목록은 검색어 + cuisine + dishType AND 필터로 실제 필터링.
-   **레시피 자연어 추가(screen-12/13) 단계 1·2 완료** — 중앙 ✨ → "Add a recipe" → NL 입력
-   (텍스트·음성·사진/카메라 OCR) → AI 파싱 → `RecipeEditor` prefill 확인. 부족분→장보기
+   **레시피 자연어 추가(screen-12) 완료** — 중앙 ✨ → "Add a recipe" → NL 입력
+   (텍스트·음성) → AI 파싱 → `RecipeEditor` prefill 확인. 부족분→장보기
    자동 생성과 장보기 완료→재고 반영은 완료.
-   남은 범위는 사진 downsampling/압축 정책.
    (장소 CRUD `screen-05`·세부위치 CRUD `screen-06` 완료 — 추가/편집은 `PlaceEditor`/`SpotEditor`, 삭제는 확인 다이얼로그.)
    장소/세부위치 에디터 확장(아이콘·Space 선택), 정렬 변경(drag) 이 후속.
-6. **기기 게이팅 + 한국어/폴백** — AI 미지원 환경 처리. NL 추가 파서의 가용성 게이트
-   (`SystemLanguageModel.default.availability`)·단건 스텁 폴백은 #1 에서 구현됨. 잔여는
-   한국어 모델 다운로드/Apple Intelligence 미설치 유도 UX(진행률·동의), 시작 전 사전
-   게이팅(마이크/추가 진입 시 미가용 사전 안내), 실기기 한국어 인식·추론 정확도 검증.
+6. **기기 게이팅 + 한국어/폴백** — AI 미지원 환경 처리. 레시피 NL 파서(screen-12,
+   `NLRecipeParser`)의 가용성 게이트(`SystemLanguageModel.default.availability`)·수동
+   에디터 폴백은 구현됨(물건 추가는 규칙 기반 `ItemQuickAddParser` 라 AI 게이팅 불필요).
+   잔여는 한국어 모델 다운로드/Apple Intelligence 미설치 유도 UX(진행률·동의), 시작 전
+   사전 게이팅(마이크/레시피 파싱 진입 시 미가용 사전 안내), 실기기 한국어 인식·추론
+   정확도 검증.
 
 ## 진행 메모
 

@@ -12,7 +12,6 @@ final class Item {
   /// 매칭/검색용 정규화 키(소문자·공백 정리). `name` 변경 시 함께 갱신한다.
   var normalizedName: String
   var quantity: Int
-  @Attribute(.externalStorage) var photoData: Data?
   var memo: String?
   var expiresAt: Date?
   var createdAt: Date
@@ -39,7 +38,6 @@ final class Item {
     name: String,
     normalizedName: String? = nil,
     quantity: Int = 1,
-    photoData: Data? = nil,
     memo: String? = nil,
     expiresAt: Date? = nil,
     area: Area? = nil,
@@ -52,7 +50,6 @@ final class Item {
     self.name = name
     self.normalizedName = normalizedName ?? Self.normalize(name)
     self.quantity = quantity
-    self.photoData = photoData
     self.memo = memo
     self.expiresAt = expiresAt
     self.area = area

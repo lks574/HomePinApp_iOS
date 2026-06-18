@@ -75,7 +75,6 @@ enum BackupCodec {
     )
   }
 
-  /// `photoFile` 경로는 사진 데이터가 있을 때만 부여한다(번들에 파일이 실제로 써질 때).
   static func makeDTO(_ item: Item) -> ItemDTO {
     ItemDTO(
       id: item.id,
@@ -90,7 +89,6 @@ enum BackupCodec {
       spotID: item.spot?.id,
       categoryID: item.category?.id,
       tagIDs: (item.tags ?? []).map(\.id),
-      photoFile: item.photoData == nil ? nil : BackupBundleLayout.photoFile(for: item.id),
     )
   }
 
@@ -140,17 +138,10 @@ enum BackupCodec {
 }
 
 /// 백업 디렉터리 패키지의 내부 레이아웃 상수.
-/// `.homepinbackup` 패키지 = `data.json` + `photos/<id>.dat` 들.
+/// `.homepinbackup` 패키지 = `data.json`.
 enum BackupBundleLayout {
   /// 패키지 확장자(exported UTType `com.sro.homepinappios.backup`).
   static let fileExtension = "homepinbackup"
   /// 메타 + 엔티티 JSON 파일명.
   static let dataFileName = "data.json"
-  /// 사진 디렉터리명.
-  static let photosDirectoryName = "photos"
-
-  /// 아이템 사진의 패키지 내 상대 경로(`photos/<id>.dat`).
-  static func photoFile(for itemID: UUID) -> String {
-    "\(photosDirectoryName)/\(itemID.uuidString).dat"
-  }
 }
