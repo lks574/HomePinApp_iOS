@@ -22,7 +22,7 @@ related-tasks: [screen-01, screen-04, screen-09, screen-12, screen-16]
   - **편집거리 fallback**(`Levenshtein`): 정상 매칭 결과가 **하나도 없을 때만**, 전체 물건에 대해 토큰별 음절 편집거리 임계(길이≤3→1, 그 외 2) 이내 근사 매칭으로 `.fuzzy` 등급 폴백. `hasConcreteSignal` 가드를 유지해 빈 토큰 질의에서는 작동하지 않는다.
   - **추천 칩**(빈 입력): 최근 검색어(`@AppStorage("recentSearches")` JSON, 최대 8·최신우선·정규화 중복제거) + 임박 물건 상위. 칩 탭은 입력 필드만 채우고(자동 검색/추가 없음), 기록은 결과 탭·추가 진입 등 검색의도 확정 시점에 적재.
   - 위 모든 경로는 `hasConcreteSignal` 가드와 `normalizedName` 단일 매칭키를 우회하지 않는다.
-- 추가(명시적): 결과 목록 아래 항상 노출되는 `+ "{입력어}" 추가하기` 행을 눌러야만 추가가 일어난다. 입력 텍스트(타이핑·받아쓰기 공용)는 [[ItemEditor]] `create(initialName:)` 로 전달한다. 장보기 미등록 항목 체크 시 뜨는 재고 생성 화면과 같은 화면이다.
+- 추가(명시적): 결과 목록 아래 항상 노출되는 `+ "{입력어}" 추가하기` 행을 눌러야만 추가가 일어난다. 입력 텍스트(타이핑·받아쓰기 공용)는 규칙 기반 `ItemQuickAddParser` 로 이름·수량·위치 prefill 을 만든 뒤 [[ItemEditor]] `create` 로 전달한다. 장보기 미등록 항목 체크 시 뜨는 재고 생성 화면과 같은 화면이다.
 - 중복 추가 가드(`screen-16`): 추가 진입 시 같은 `normalizedName` 의 기존 물건이 있으면 "수량 합치기 / 새로 추가 / 취소" 를 `confirmationDialog` 로 **제안**한다(자동 합치기·자동 저장 없음). "합치기"는 그 기존 물건의 [[ItemEditor]] `edit` 로 진입(수량 가산은 에디터에서 사용자가 직접 저장), "새로 추가"는 [[ItemEditor]] `create` 로 진행. 동등 비교는 `normalizedName` 동등만(부분일치 아님).
 
 ## 연결된 화면
@@ -41,7 +41,8 @@ related-tasks: [screen-01, screen-04, screen-09, screen-12, screen-16]
 ## 물건 추가 경로
 
 - `CaptureSheet.add()` 는 현재 입력어를 최근 검색어에 기록하고, 중복 이름이 있으면 합치기 다이얼로그를 먼저 띄운다.
-- 중복이 없거나 "새로 추가"를 고르면 `ItemEditorRoute(mode: .create(initialName: 입력어))` 로 이동한다.
+- 중복이 없거나 "새로 추가"를 고르면 `ItemEditorRoute(mode: .create(initialName: 이름, quantity: 수량, area: 장소, spot: 세부위치))` 로 이동한다.
+- `ItemQuickAddParser` 는 순서 비의존으로 수량(`2개`, `두 개` 등)과 기존 [[Area]]/[[Spot]] 이름을 먼저 뽑고, 남은 토큰을 물건 이름으로 사용한다. `Spot.area` 와 명시된 `Area` 가 맞지 않거나 Spot 후보가 중복이면 확신 낮은 후보는 적용하지 않고 이름에 남긴다.
 - 받아쓰기 결과도 단일 입력 필드를 채운 뒤 `추가하기` 행을 누르면 같은 에디터 경로로 합류한다.
 
 ## 상태 관리
@@ -98,6 +99,7 @@ related-tasks: [screen-01, screen-04, screen-09, screen-12, screen-16]
   - 직전 추가 위치 prefill 은 [[ItemEditor]](`@AppStorage("lastAreaID"/"lastSpotID")`)에서 처리.
 - 물건 추가 저장은 `HomePinApp/Sources/Features/Items/ItemEditorView.swift` 와
   `ItemEditorModel.swift` 로 위임한다.
+  - 빠른 추가 prefill: `HomePinApp/Sources/Features/Capture/ItemQuickAddParser.swift`
 - 음성 입력기(actor 경계 분리, `HomePinApp/Sources/Shared/Speech/`):
   - UI 상태/세션 소유: `SpeechDictationViewModel.swift`
   - 권한/오디오/모델/변환: `SpeechDictationEngine.swift`

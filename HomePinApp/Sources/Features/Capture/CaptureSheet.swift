@@ -7,7 +7,7 @@ import SwiftUI
 /// - 결과 아래 항상 `+ "{입력어}" 추가하기` 행을 둔다. 이 행을 눌러야만 명시적 추가가
 ///   일어난다(AI 가 추가/검색 의도를 자동 추측하지 않음 — 오분류 데이터 오염 방지).
 /// - 추가는 장보기 재고 생성과 같은 `ItemEditor` `create` 화면으로 보낸다.
-///   텍스트·음성 모두 같은 `add()` 경로에서 이름을 prefill 한다.
+///   텍스트·음성 모두 같은 `add()` 경로에서 이름·수량·위치를 규칙 기반 prefill 한다.
 /// - 음성(🎤): 받아쓰기(`SpeechDictationViewModel`) 결과가 같은 입력 필드로 들어가고,
 ///   `추가하기` 를 누르면 동일한 에디터 경로로 합류한다(단일 경로 원칙).
 struct CaptureSheet: View {
@@ -28,6 +28,8 @@ struct CaptureSheet: View {
 
   /// 검색 대상 전체 레시피. 제목·재료명을 정규화 키로 in-memory 필터한다.
   @Query(sort: \Recipe.title) private var allRecipes: [Recipe]
+  @Query(sort: \Area.sortOrder) private var allAreas: [Area]
+  @Query(sort: \Spot.name) private var allSpots: [Spot]
 
   var body: some View {
     NavigationStack {
@@ -339,22 +341,29 @@ struct CaptureSheet: View {
   /// 명시적 추가 진입. 같은 정규화 이름의 기존 물건이 있으면 "수량 합치기/새로 추가" 를
   /// 먼저 제안하고(자동 합치기·자동 저장 없음), 없으면 바로 추가 경로로 진행한다.
   private func add() {
-    let name = trimmedQuery
-    guard !name.isEmpty else { return }
+    let draft = ItemQuickAddParser.parse(trimmedQuery, areas: allAreas, spots: allSpots)
+    let name = draft.name
     recordRecentSearch()
     let key = Item.normalize(name)
     if let duplicate = allItems.first(where: { $0.normalizedName == key }) {
       mergeCandidate = duplicate
       return
     }
-    openItemEditor(name)
+    openItemEditor(draft)
   }
 
   /// 실제 추가 경로. 장보기 재고 추가와 같은 `ItemEditor` create 화면으로 보낸다.
-  private func openItemEditor(_ name: String) {
-    guard !name.isEmpty else { return }
+  private func openItemEditor(_ draft: ItemQuickAddDraft) {
+    guard !draft.name.isEmpty else { return }
     inputFocused = false
-    editorRoute = ItemEditorRoute(mode: .create(initialName: name))
+    editorRoute = ItemEditorRoute(
+      mode: .create(
+        initialName: draft.name,
+        quantity: draft.quantity,
+        area: draft.area,
+        spot: draft.spot
+      )
+    )
   }
 
   /// 검색 의도가 확정된 시점(결과 탭·추가 진입)에 현재 입력어를 최근 검색어로 적재한다.
@@ -390,7 +399,7 @@ struct CaptureSheet: View {
   /// "새로 추가" — 합치기를 거부하고 공용 물건 에디터로 진행한다.
   private func addAsNewFromMerge() {
     mergeCandidate = nil
-    openItemEditor(trimmedQuery)
+    openItemEditor(ItemQuickAddParser.parse(trimmedQuery, areas: allAreas, spots: allSpots))
   }
 
   // MARK: - 검색 로직

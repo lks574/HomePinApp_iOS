@@ -9,7 +9,7 @@ import SwiftUI
 @Observable
 final class ItemEditorModel {
   enum Mode {
-    case create(initialName: String = "", area: Area? = nil, spot: Spot? = nil)
+    case create(initialName: String = "", quantity: Int = 1, area: Area? = nil, spot: Spot? = nil)
     case edit(Item)
   }
 
@@ -28,9 +28,9 @@ final class ItemEditorModel {
   init(mode: Mode) {
     self.mode = mode
     switch mode {
-    case let .create(initialName, area, spot):
+    case let .create(initialName, quantity, area, spot):
       name = initialName
-      quantity = 1
+      self.quantity = max(1, quantity)
       selectedArea = spot?.area ?? area
       selectedSpot = spot
       selectedCategory = nil
