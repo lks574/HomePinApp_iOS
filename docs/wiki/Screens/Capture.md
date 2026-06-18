@@ -5,7 +5,7 @@ created: 2026-06-12
 updated: 2026-06-18
 status: in-progress
 screen-id: screen-01
-related-tasks: [screen-01, screen-04, screen-12, screen-16]
+related-tasks: [screen-01, screen-04, screen-12, screen-16, screen-20]
 ---
 
 # Capture (검색-우선 통합 시트)
@@ -24,6 +24,7 @@ related-tasks: [screen-01, screen-04, screen-12, screen-16]
   - 위 모든 경로는 `hasConcreteSignal` 가드와 `normalizedName` 단일 매칭키를 우회하지 않는다.
 - 추가(명시적): 결과 목록 아래 항상 노출되는 `+ "{입력어}" 추가하기` 행을 눌러야만 추가가 일어난다. 입력 텍스트(타이핑·받아쓰기 공용)는 규칙 기반 `ItemQuickAddParser` 로 이름·수량·위치 prefill 을 만든 뒤 [[ItemEditor]] `create` 로 전달한다. 장보기 미등록 항목 체크 시 뜨는 재고 생성 화면과 같은 화면이다.
 - 중복 추가 가드(`screen-16`): 추가 진입 시 같은 `normalizedName` 의 기존 물건이 있으면 "수량 합치기 / 새로 추가 / 취소" 를 `confirmationDialog` 로 **제안**한다(자동 합치기·자동 저장 없음). "합치기"는 그 기존 물건의 [[ItemEditor]] `edit` 로 진입(수량 가산은 에디터에서 사용자가 직접 저장), "새로 추가"는 [[ItemEditor]] `create` 로 진행. 동등 비교는 `normalizedName` 동등만(부분일치 아님).
+- **연속 입력 모드(여러 개 추가, `screen-20`)**: 같은 시트 안에서 단일 입력 ↔ 칩 staging 으로 전환(별도 화면·[추가\|검색] 토글 부활 아님). 입력 텍스트에 **쉼표(`,`·`、`)·줄바꿈**이 들어오면(공백 분절 없음 — "유기농 우유" 보존) 멀티 파서가 조각마다 단건 `ItemQuickAddParser.parse` 를 호출해 칩(이름·수량·인식한 area)을 만든다. 칩은 인라인으로 이름 편집·수량 stepper·삭제 가능. 세션 Area picker(생략 가능)를 모든 칩 기본 구역으로 적용하되, 칩 텍스트에서 파서가 기존 Area 를 인식하면 그 칩만 override(Spot 은 bulk 에서 수집 안 함). "추가" 버튼을 눌러야만 `ItemBulkAddModel.bulkInsert` 가 각 Item 을 insert 한다(name→normalizedName 동기화 + `spot?.area ?? area` 불변식). 빈 staging 이면 no-op. **중복은 차단 없는 인라인 경고 배지만**(단건 합치기 다이얼로그를 멀티에 연쇄하지 않음 — staging 칩끼리·기존 재고와 `normalizedName` 충돌 시 배지 표시, 추가는 막지 않음). 음성은 bulk 모드에서 무음 자동 종료(`.recording→.idle`)를 칩 경계로 사용 — transcript→칩→reset, **자동 재시작 OFF**(칩 1개 만들고 멈춤, 사용자가 mic 재탭). 자동 저장 없음. 결정: [[2026-06-18-area-생략-캡처-허용-및-멀티-추가]].
 
 ## 연결된 화면
 
@@ -84,8 +85,8 @@ related-tasks: [screen-01, screen-04, screen-12, screen-16]
 
 ## 관련 태스크 / 결정
 
-- `[screen-01]`, `[screen-04]`, `[screen-12]`, `[screen-16]` (docs/screen-implementation-tasks.md)
-- 관련 결정: [[2026-06-12-네비게이션-UI구조]], [[2026-06-15-음성입력-STT-아키텍처]], [[2026-06-16-레시피-NL파서-ParsedRecipe]], [[2026-06-17-검색-랭킹-초성-편집거리]], [[2026-06-17-자연어-규칙-외부화]]
+- `[screen-01]`, `[screen-04]`, `[screen-12]`, `[screen-16]`, `[screen-20]` (docs/screen-implementation-tasks.md)
+- 관련 결정: [[2026-06-12-네비게이션-UI구조]], [[2026-06-15-음성입력-STT-아키텍처]], [[2026-06-16-레시피-NL파서-ParsedRecipe]], [[2026-06-17-검색-랭킹-초성-편집거리]], [[2026-06-17-자연어-규칙-외부화]], [[2026-06-18-area-생략-캡처-허용-및-멀티-추가]]
 
 ## 메모
 
@@ -100,6 +101,7 @@ related-tasks: [screen-01, screen-04, screen-12, screen-16]
 - 물건 추가 저장은 `HomePinApp/Sources/Features/Items/ItemEditorView.swift` 와
   `ItemEditorModel.swift` 로 위임한다.
   - 빠른 추가 prefill: `HomePinApp/Sources/Features/Capture/ItemQuickAddParser.swift`
+  - 연속 입력(여러 개 추가, `screen-20`): 멀티 파서 `ItemQuickAddParser.parse(multiline:)` + 칩 staging 모델 `HomePinApp/Sources/Features/Capture/ItemBulkAddModel.swift`(`@Observable`, 칩·세션 Area·중복 검사·`bulkInsert`). bulk UI 는 같은 `CaptureSheet` 안의 `bulkContent`/`chipRow`. area=nil 캡처 허용은 [[ItemEditor]] `ItemEditorModel.canSave` 의 area 강제 완화.
 - 음성 입력기(actor 경계 분리, `HomePinApp/Sources/Shared/Speech/`):
   - UI 상태/세션 소유: `SpeechDictationViewModel.swift`
   - 권한/오디오/모델/변환: `SpeechDictationEngine.swift`

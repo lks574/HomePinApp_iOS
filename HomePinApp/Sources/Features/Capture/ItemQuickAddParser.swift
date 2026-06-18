@@ -15,6 +15,31 @@ enum ItemQuickAddParser {
     let range: Range<Int>
   }
 
+  /// 연속 입력(여러 개 추가)용 멀티 파서. 자유 텍스트를 분절자(쉼표·줄바꿈)로만 쪼개고
+  /// 조각마다 단건 `parse` 를 호출해 칩 후보(`ItemQuickAddDraft`)들을 만든다.
+  /// 공백은 분절자가 아니다("유기농 우유" 같은 다어절 이름 보존). 빈 조각은 버린다.
+  /// 단건 동작은 건드리지 않는다 — 이름·수량·위치 규칙은 단건 `parse` 와 완전히 동일하다.
+  static func parse(multiline raw: String, areas: [Area], spots: [Spot]) -> [ItemQuickAddDraft] {
+    segments(from: raw).compactMap { segment in
+      let draft = parse(segment, areas: areas, spots: spots)
+      return draft.name.isEmpty ? nil : draft
+    }
+  }
+
+  /// 쉼표(`,`·`、`)와 줄바꿈만 분절자로 본다. 공백은 분절하지 않는다.
+  private static func segments(from raw: String) -> [String] {
+    raw
+      .components(separatedBy: segmentSeparators)
+      .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+      .filter { !$0.isEmpty }
+  }
+
+  private static let segmentSeparators: CharacterSet = {
+    var set = CharacterSet.newlines
+    set.insert(charactersIn: ",、")
+    return set
+  }()
+
   static func parse(_ raw: String, areas: [Area], spots: [Spot]) -> ItemQuickAddDraft {
     let tokens = raw
       .components(separatedBy: .whitespacesAndNewlines)

@@ -11,7 +11,19 @@ status: draft
 UI 우선 1차(시안 C 화면 골격: 5탭·장소·레시피·홈·추가 시트) 완료 후의 다음 후보.
 보류 상세는 `docs/follow-ups.md`.
 
-> 최근 완료: **전면 광고 트리거 재설계(광고 고도화)** — 장보기 완료 단일 트리거가
+> 최근 완료: **연속 입력 모드 + 미정리함 캡처(screen-20)** — 물건 추가 두 마찰 완화.
+> ① 연속 입력: `CaptureSheet` 안에서 단일 입력 ↔ 칩 staging 모드 전환("Add several"
+> 토글). 쉼표·줄바꿈만 분절(공백 분절 없음)해 `ItemQuickAddParser.parse(multiline:)`
+> 로 칩 생성, 세션 Area(생략 가능)·칩별 area override, 인라인 이름/수량/삭제, "추가"
+> 버튼 → 신규 `ItemBulkAddModel.bulkInsert`(name→normalizedName 동기화 +
+> `spot?.area ?? area` 불변식). 음성은 무음 종료를 칩 경계로 사용(자동 재시작 OFF).
+> 자동 저장 없음. ② 미정리함: `ItemEditorModel.canSave` 의 area 강제만 완화(스키마·
+> 모델·신규 @Model 무변경) → 단건/멀티 모두 area=nil 저장 가능, 기존 캡처 검색
+> "위치미지정" 필터로 노출. 중복은 차단 없는 인라인 경고 배지만(단건 합치기
+> 다이얼로그 미연쇄). iOS·macOS 빌드 green. 결정:
+> `docs/wiki/Decision/2026-06-18-area-생략-캡처-허용-및-멀티-추가.md`. 잔여: 실기기
+> 음성 칩 경계·세션 Area override UX 검증.
+> 이전 완료: **전면 광고 트리거 재설계(광고 고도화)** — 장보기 완료 단일 트리거가
 > 저빈도라 노출이 0 에 수렴하던 문제 해소. 포맷(전면+보상형)은 유지하고 트리거를
 > **마일스톤 완료 경계 2개**로 둠: `recipeAdded`(신규 레시피 생성 후 닫힘),
 > `shoppingSessionCompleted`(유지). **핵심 고빈도 루프(물건 추가)는 UX 부담이 커

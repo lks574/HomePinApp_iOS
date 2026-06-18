@@ -40,6 +40,12 @@ status: draft
   이름엔 안 씀. 한 공간 내 구역명·한 구역 내 세부위치명·전역 카테고리/태그명 중복을
   **쓰기 로직에서 검증**해야 한다. (모델: [[Space]]/[[Area]]/[[Spot]]/[[ItemCategory]]/[[Tag]],
   결정: `docs/wiki/Decision/2026-06-12-위치-물건-데이터모델.md`)
+  - 연계(screen-20, 2026-06-18): **물건 이름 중복은 멀티 추가에서 차단하지 않고
+    경고만** 하기로 결정했다 — 연속 입력(`ItemBulkAddModel`)은 staging 칩끼리·기존
+    재고와 `normalizedName` 충돌 시 인라인 배지로 표시하되 insert 는 막지 않는다(단건
+    합치기 다이얼로그를 멀티에 연쇄하지 않음). 위 "쓰기 로직 검증/유니크 제약" 항목과
+    별개로 유지한다(멀티는 사용자 의도 존중 = 경고 후 통과). 결정:
+    `docs/wiki/Decision/2026-06-18-area-생략-캡처-허용-및-멀티-추가.md`.
 - [ ] 첫 릴리스 시 `VersionedSchema`(`SchemaV1`) + `SchemaMigrationPlan` 도입
   (`AppModelContainer` 에 연결). 결정: `docs/wiki/Decision/2026-06-12-swiftdata-마이그레이션-방침.md`
 - [ ] `Item.name` 직접 수정 경로 금지 — `ItemEditor` 는 `name` 변경 시
