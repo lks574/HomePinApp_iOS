@@ -35,22 +35,37 @@ final class AdService {
   /// 전면 광고 트리거 지점. 표시 정책(빈도·쿨다운)은 이 enum 기준으로 정한다.
   ///
   /// R6 정책: 앱 시작·콜드 스타트·작업 무관 탭 전환에서는 전면을 띄우지 않는다. 오직
-  /// 사용자가 의미 있는 작업을 끝낸 자연스러운 경계에서만 트리거를 둔다. 현재는 장보기
-  /// 세션 완료(`shoppingSessionCompleted`)만 정의한다.
+  /// 사용자가 **의미 있는 작업을 끝낸 자연스러운 경계**에서만 트리거를 둔다. 단, 핵심
+  /// 고빈도 행동(물건 추가)은 짧은 호흡의 핵심 루프라 전면을 끼우면 방해가 크므로
+  /// **트리거에서 제외**한다. 상대적으로 저빈도인 "마일스톤" 완료 경계만 둔다. 모든
+  /// 트리거는 동일한 빈도 캡을 공유한다.
   enum InterstitialTrigger {
+    /// 새 레시피를 1개 저장(생성)하고 에디터를 닫는 시점(편집·삭제 제외).
+    case recipeAdded
     /// 장보기 화면에서 이번 세션 신규 완료(체크) ≥1 후 화면을 벗어나는 시점.
     case shoppingSessionCompleted
   }
 
-  /// 전면 광고 빈도 캡: 하루 1회 + 마지막 노출 이후 최소 간격.
+  /// 전면 광고 빈도 캡: 마지막 노출 이후 최소 간격 + 하루 최대 노출 횟수.
+  ///
+  /// "하루 1회" 같은 과한 제약 대신 연속 노출만 막고(최소 간격) 하루 총량을
+  /// 상한(`dailyLimit`)으로 제한한다. 두 조건을 모두 만족해야 노출한다(둘 중 하나라도
+  /// 걸리면 조용히 skip). 짧은 호흡 유틸의 체감 부담을 낮추려 간격은 넉넉히 둔다.
   private enum FrequencyCap {
     /// 마지막 전면 노출 이후 이 시간이 지나지 않았으면 skip(연속 노출 방지).
-    static let minimumInterval: TimeInterval = 60 * 30 // 30분
+    static let minimumInterval: TimeInterval = 60 * 8 // 8분
+    /// 하루(달력일 기준) 최대 전면 노출 횟수.
+    static let dailyLimit = 3
   }
 
   /// 마지막 전면 노출 시각(epoch 초). 비영속 UI 상태이므로 `@AppStorage` 백킹
   /// `UserDefaults` 에 둔다(SwiftData 아님). `0` 이면 노출 이력 없음.
   private static let lastInterstitialKey = "ad.lastInterstitialShownAt"
+
+  /// 오늘 누적 전면 노출 횟수 저장 키와 그 기준 날짜(epoch 초) 키. 날짜가 바뀌면 0 부터
+  /// 다시 센다(달력일 경계로 리셋).
+  private static let interstitialDailyCountKey = "ad.interstitialDailyCount"
+  private static let interstitialDailyCountDateKey = "ad.interstitialDailyCountDate"
 
   /// 구글 테스트 전면 광고 단위 ID(iOS). 실 ID 는 하드코딩하지 않는다.
   /// 출처: developers.google.com/admob/ios/test-ads
@@ -134,19 +149,34 @@ final class AdService {
 
   // MARK: - Frequency cap
 
-  /// 빈도 캡 통과 여부: 오늘 아직 노출 안 했고(하루 1회) + 마지막 노출 이후 최소 간격 경과.
+  /// 빈도 캡 통과 여부: 마지막 노출 이후 최소 간격이 지났고(연속 노출 방지) + 오늘 누적
+  /// 노출이 하루 상한 미만일 때만 통과. 둘 중 하나라도 걸리면 skip.
   private var isFrequencyCapSatisfied: Bool {
-    let lastShownEpoch = UserDefaults.standard.double(forKey: Self.lastInterstitialKey)
-    guard lastShownEpoch > 0 else { return true } // 노출 이력 없음
-    let lastShown = Date(timeIntervalSince1970: lastShownEpoch)
     let now = Date.now
-    if Calendar.current.isDate(lastShown, inSameDayAs: now) { return false } // 하루 1회
-    return now.timeIntervalSince(lastShown) >= FrequencyCap.minimumInterval
+    let lastShownEpoch = UserDefaults.standard.double(forKey: Self.lastInterstitialKey)
+    if lastShownEpoch > 0 {
+      let lastShown = Date(timeIntervalSince1970: lastShownEpoch)
+      if now.timeIntervalSince(lastShown) < FrequencyCap.minimumInterval { return false }
+    }
+    return interstitialCountToday(now: now) < FrequencyCap.dailyLimit
   }
 
-  /// 전면 노출 시각을 기록한다(빈도 캡 기준점).
+  /// 오늘(달력일) 누적 전면 노출 횟수. 저장된 기준 날짜가 오늘이 아니면 0(새 날 → 리셋).
+  private func interstitialCountToday(now: Date) -> Int {
+    let storedDateEpoch = UserDefaults.standard.double(forKey: Self.interstitialDailyCountDateKey)
+    guard storedDateEpoch > 0 else { return 0 }
+    let storedDate = Date(timeIntervalSince1970: storedDateEpoch)
+    guard Calendar.current.isDate(storedDate, inSameDayAs: now) else { return 0 }
+    return UserDefaults.standard.integer(forKey: Self.interstitialDailyCountKey)
+  }
+
+  /// 전면 노출 시각과 오늘 누적 횟수를 기록한다(빈도 캡 기준점).
   private func recordInterstitialShown() {
-    UserDefaults.standard.set(Date.now.timeIntervalSince1970, forKey: Self.lastInterstitialKey)
+    let now = Date.now
+    let nextCount = interstitialCountToday(now: now) + 1
+    UserDefaults.standard.set(now.timeIntervalSince1970, forKey: Self.lastInterstitialKey)
+    UserDefaults.standard.set(nextCount, forKey: Self.interstitialDailyCountKey)
+    UserDefaults.standard.set(now.timeIntervalSince1970, forKey: Self.interstitialDailyCountDateKey)
   }
 
   /// 전면 광고를 미리 로드한다. SDK 미지원 플랫폼(macOS)·이미 로드 보유/로드 중이면 no-op.

@@ -11,7 +11,17 @@ status: draft
 UI 우선 1차(시안 C 화면 골격: 5탭·장소·레시피·홈·추가 시트) 완료 후의 다음 후보.
 보류 상세는 `docs/follow-ups.md`.
 
-> 최근 완료: **AdMob 광고 수익화 P1(SDK + 동의/ATT 골격, 광고 미표시)** — 첫 외부
+> 최근 완료: **전면 광고 트리거 재설계(광고 고도화)** — 장보기 완료 단일 트리거가
+> 저빈도라 노출이 0 에 수렴하던 문제 해소. 포맷(전면+보상형)은 유지하고 트리거를
+> **마일스톤 완료 경계 2개**로 둠: `recipeAdded`(신규 레시피 생성 후 닫힘),
+> `shoppingSessionCompleted`(유지). **핵심 고빈도 루프(물건 추가)는 UX 부담이 커
+> 트리거에서 제외**(캡처 시트는 광고 의존성 없음). 빈도 캡은 하루 1회 → **세션 기반
+> (최소 간격 8분 + 하루 3회)**으로 완화하며 기존 "같은 날 차단" 데드코드 제거(최소
+> 간격·하루 상한 모두 실동작). 저장 시 세션 플래그만 세우고 `onDisappear` 에서
+> present(에디터 떠있는 동안 present 충돌 회피). iOS·macOS 빌드 green. 결정:
+> `docs/wiki/Decision/2026-06-18-전면광고-트리거-재설계.md`. 잔여: 실기기 노출 빈도·UX
+> 검증 + 캡 수치 튜닝, 닫힘 직후 present 타이밍 확인(`docs/follow-ups.md`).
+> 이전 완료: **AdMob 광고 수익화 P1(SDK + 동의/ATT 골격, 광고 미표시)** — 첫 외부
 > 의존성. `Project.swift` 에 Google Mobile Ads SDK(SPM `13.5.0` `.exact`) + UMP
 > (`GoogleUserMessagingPlatform` `3.1.0` `.exact`) 추가, **iOS 타깃에만 링크**(macOS
 > `dependencies: []` 유지 → macOS 빌드 green, SDK 미링크). iOS Info.plist 에

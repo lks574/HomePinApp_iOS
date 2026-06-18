@@ -7,12 +7,16 @@ import SwiftUI
 struct RecipeEditorView: View {
   @Environment(\.dismiss) private var dismiss
   @Environment(\.modelContext) private var modelContext
+  @Environment(AdService.self) private var adService
   @Query private var items: [Item]
 
   @State private var model: RecipeEditorModel
   private let onSaved: (() -> Void)?
 
   @State private var showingDeleteConfirm = false
+  /// 이번 세션에 새 레시피를 저장(생성)했는지. 닫힐 때 전면 광고 적격 시도 판단에만 쓴다
+  /// (편집·삭제·단순 닫기는 트리거 금지 — 신규 추가 완료 경계만).
+  @State private var didCreateThisSession = false
   @FocusState private var focusedField: RecipeEditorField?
 
   /// 분류 빠른 선택 칩(RecipesView 필터와 동일 raw 키). 저장/비교는 raw, 표시만 현지화.
@@ -60,6 +64,13 @@ struct RecipeEditorView: View {
       .onAppear {
         if model.title.isEmpty {
           focusedField = .title
+        }
+      }
+      .onDisappear {
+        // 새 레시피 추가 완료 트리거: 이번 세션에 신규 생성했을 때만 전면 광고 적격 시도.
+        // best-effort — 미로드/캡 미통과면 AdService 가 조용히 skip 한다.
+        if didCreateThisSession {
+          adService.showInterstitialIfEligible(trigger: .recipeAdded)
         }
       }
       .confirmationDialog(
@@ -354,6 +365,8 @@ struct RecipeEditorView: View {
 
   private func save() {
     guard model.canSave else { return }
+    // 신규 생성 여부는 저장 전(모드 기준)에 확정해 둔다 — 닫힘 시 전면 트리거 판단에 쓴다.
+    didCreateThisSession = !model.isEditing
     model.availableItems = items
     model.save(into: modelContext)
     onSaved?()
