@@ -158,6 +158,22 @@
         }
       }
     },
+    "Add common items for a place in one tap.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add common items for a place in one tap."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "구역에 자주 두는 물건을 한 번에 담아요."
+          }
+        }
+      }
+    },
     "Add items you need to pick up.": {
       "localizations": {
         "ko": {
@@ -215,6 +231,22 @@
         }
       }
     },
+    "Add to list": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add to list"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "목록에 추가"
+          }
+        }
+      }
+    },
     "All": {
       "extractionState": "stale",
       "localizations": {
@@ -232,6 +264,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "물건·장소·수납공간·레시피·분류·태그가 모두 삭제됩니다. 이 작업은 되돌릴 수 없습니다."
+          }
+        }
+      }
+    },
+    "All starter sets": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All starter sets"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "전체 스타터 세트"
           }
         }
       }
@@ -346,6 +394,38 @@
         }
       }
     },
+    "Choose a starter set": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a starter set"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "스타터 세트 고르기"
+          }
+        }
+      }
+    },
+    "Choose from photos": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose from photos"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "사진에서 고르기"
+          }
+        }
+      }
+    },
     "Clear": {
       "localizations": {
         "en": {
@@ -418,6 +498,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "이미지에서 텍스트를 읽지 못했어요. 다른 사진을 쓰거나 직접 입력해 주세요."
+          }
+        }
+      }
+    },
+    "Couldn't read the receipt. Try another photo or add manually.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't read the receipt. Try another photo or add manually."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "영수증을 읽지 못했어요. 다른 사진을 쓰거나 직접 추가해 주세요."
           }
         }
       }
@@ -699,6 +795,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "백업 쓰기에 실패했습니다: %@"
+          }
+        }
+      }
+    },
+    "Fill with a template": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fill with a template"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "템플릿으로 채우기"
           }
         }
       }
@@ -1058,6 +1170,22 @@
         }
       }
     },
+    "No items found. Add them manually instead.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No items found. Add them manually instead."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "물건을 찾지 못했어요. 직접 추가해 주세요."
+          }
+        }
+      }
+    },
     "No location": {
       "localizations": {
         "ko": {
@@ -1125,6 +1253,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "선택 안 함"
+          }
+        }
+      }
+    },
+    "Not now": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not now"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "지금 안 함"
           }
         }
       }
@@ -1310,6 +1454,38 @@
         }
       }
     },
+    "Reading the receipt…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reading the receipt…"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "영수증을 읽는 중…"
+          }
+        }
+      }
+    },
+    "Receipt scanning isn't available on this device.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Receipt scanning isn't available on this device."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 기기에서는 영수증 스캔을 쓸 수 없어요."
+          }
+        }
+      }
+    },
     "Recent searches": {
       "localizations": {
         "ko": {
@@ -1409,6 +1585,54 @@
           "stringUnit": {
             "state": "translated",
             "value": "스캔"
+          }
+        }
+      }
+    },
+    "Scan Receipt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scan Receipt"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "영수증 스캔"
+          }
+        }
+      }
+    },
+    "Scan a receipt to add items": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scan a receipt to add items"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "영수증을 스캔해 물건을 담아요"
+          }
+        }
+      }
+    },
+    "Scan receipt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scan receipt"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "영수증 스캔"
           }
         }
       }
@@ -1614,6 +1838,54 @@
         }
       }
     },
+    "Start with a template": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start with a template"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "템플릿으로 시작하기"
+          }
+        }
+      }
+    },
+    "Starter Templates": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Starter Templates"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "스타터 템플릿"
+          }
+        }
+      }
+    },
+    "Starter templates": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Starter templates"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "스타터 템플릿"
+          }
+        }
+      }
+    },
     "Step description": {
       "extractionState": "stale",
       "localizations": {
@@ -1657,6 +1929,22 @@
         }
       }
     },
+    "Suggested for this place": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suggested for this place"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 구역에 어울려요"
+          }
+        }
+      }
+    },
     "Support the developer": {
       "extractionState": "manual",
       "localizations": {
@@ -1678,6 +1966,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "태그"
+          }
+        }
+      }
+    },
+    "Take a photo": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Take a photo"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "사진 찍기"
           }
         }
       }
@@ -1966,6 +2270,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "짧은 광고를 보고 개발자를 응원할 수 있어요. 잠금 해제되는 기능은 없으며, 그저 감사의 표시예요."
+          }
+        }
+      }
+    },
+    "We read item names only. The receipt image is not saved.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "We read item names only. The receipt image is not saved."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "물건 이름만 읽어요. 영수증 이미지는 저장하지 않아요."
           }
         }
       }
@@ -2802,6 +3122,22 @@
         }
       }
     },
+    "place.template.prompt.%@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fill “%@” with a starter template?"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” 구역을 스타터 템플릿으로 채울까요?"
+          }
+        }
+      }
+    },
     "places.summary.%@.%@": {
       "comment": "A summary of the number of places and total items in them. The first argument is the count of places. The second argument is the total count of items in all places.",
       "isCommentAutoGenerated": true,
@@ -2827,6 +3163,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$lld곳 · %2$lld개 보관 중"
+          }
+        }
+      }
+    },
+    "receipt.found.%lld": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Found %lld item"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Found %lld items"
+                }
+              }
+            }
+          }
+        },
+        "ko": {
+          "variations": {
+            "plural": {
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld개를 찾았어요"
+                }
+              }
+            }
           }
         }
       }

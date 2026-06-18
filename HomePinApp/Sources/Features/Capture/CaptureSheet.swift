@@ -11,9 +11,22 @@ import SwiftUI
 /// - 음성(🎤): 받아쓰기(`SpeechDictationViewModel`) 결과가 같은 입력 필드로 들어가고,
 ///   `추가하기` 를 누르면 동일한 에디터 경로로 합류한다(단일 경로 원칙).
 struct CaptureSheet: View {
+  /// 시트를 여는 초기 모드. 진입점(중앙 ✨ 버튼·홈 빈 상태·새 구역 제안·영수증 스캔)이
+  /// 같은 시트를 다른 입력 어댑터로 연다. nil(기본) 이면 검색-우선 단일 입력으로 연다.
+  enum InitialMode {
+    /// 스타터 템플릿으로 시작 — bulk 모드로 열고 템플릿 선택 시트를 띄운다.
+    /// `area` 가 있으면 그 구역을 세션 Area 로, `suggestKind` 가 있으면 그 종류를 추천 강조한다.
+    case starterTemplate(area: Area? = nil, suggestKind: StarterTemplate.Kind? = nil)
+    /// 영수증 스캔으로 시작 — bulk 모드로 열고 영수증 스캔 시트를 띄운다.
+    case receiptScan
+  }
+
   @Environment(\.dismiss) private var dismiss
   @Environment(\.modelContext) private var modelContext
   @Environment(AppRouter.self) private var router
+
+  private let initialMode: InitialMode?
+
   @State private var query = ""
   @State private var dictation = SpeechDictationViewModel()
   @State private var editorRoute: ItemEditorRoute?
@@ -26,8 +39,16 @@ struct CaptureSheet: View {
   @State private var bulkDraft = ""
   @State private var showingSessionAreaPicker = false
   @State private var ignoredSpot: Spot?
+  /// 스타터 템플릿 선택 시트 표시 여부.
+  @State private var showingTemplatePicker = false
+  /// 영수증 스캔 어댑터 시트 표시 여부.
+  @State private var showingReceiptScan = false
   @AppStorage(RecentSearches.storageKey) private var recentSearchesJSON = "[]"
   @FocusState private var inputFocused: Bool
+
+  init(initialMode: InitialMode? = nil) {
+    self.initialMode = initialMode
+  }
 
   /// 검색 대상 전체 물건. 이름순으로 받아 정규화 키로 in-memory 필터한다(개인 재고
   /// 규모에선 충분). 동적 술어 대신 단일 `@Query` + 필터.
@@ -74,6 +95,16 @@ struct CaptureSheet: View {
       .sheet(isPresented: $showingRecipeCapture) {
         RecipeCaptureView()
       }
+      .sheet(isPresented: $showingTemplatePicker) {
+        StarterTemplatePickerSheet(suggested: suggestedTemplate) { template in
+          bulkModel.appendChips(from: template)
+        }
+      }
+      .sheet(isPresented: $showingReceiptScan) {
+        ReceiptScanSheet { lines in
+          applyReceiptLines(lines)
+        }
+      }
       .confirmationDialog(
         mergeDialogTitle,
         isPresented: mergeDialogPresented,
@@ -83,7 +114,7 @@ struct CaptureSheet: View {
         Button("Add as new") { addAsNewFromMerge() }
         Button("Cancel", role: .cancel) { mergeCandidate = nil }
       }
-      .onAppear { inputFocused = true }
+      .onAppear { applyInitialMode() }
       .onChange(of: dictation.transcript) { _, newTranscript in
         applyTranscript(newTranscript)
       }
@@ -142,6 +173,39 @@ struct CaptureSheet: View {
     isBulkMode ? $bulkDraft : $query
   }
 
+  // MARK: - 초기 모드 (진입점별 어댑터)
+
+  /// 진입점이 지정한 초기 모드를 적용한다. 기본(nil)이면 단일 입력 필드에 포커스만 둔다.
+  /// 템플릿·영수증 모드는 bulk 모드로 열어 결과 칩이 같은 staging UI 로 합류하게 한다.
+  private func applyInitialMode() {
+    switch initialMode {
+    case nil:
+      inputFocused = true
+    case let .starterTemplate(area, _):
+      isBulkMode = true
+      if let area { bulkModel.sessionArea = area }
+      showingTemplatePicker = true
+    case .receiptScan:
+      isBulkMode = true
+      showingReceiptScan = true
+    }
+  }
+
+  /// 템플릿 선택 시트의 추천 템플릿. 명시적 종류 → 새 Area 이름 매칭 → 없으면 nil(전체 목록).
+  private var suggestedTemplate: StarterTemplate? {
+    guard case let .starterTemplate(area, suggestKind) = initialMode else { return nil }
+    if let suggestKind { return StarterTemplate.template(for: suggestKind) }
+    if let area { return StarterTemplate.match(areaName: area.name) }
+    return nil
+  }
+
+  /// 영수증 OCR 에서 추출한 품목 라인들을 칩으로 적재한다. 라인 한 줄 = 멀티 파서 한 조각.
+  /// 빈 결과면 빈 staging 으로 두고 호출부 안내(빈 상태 문구)에 맡긴다(자동 저장 없음).
+  private func applyReceiptLines(_ lines: [String]) {
+    guard !lines.isEmpty else { return }
+    bulkModel.appendChips(from: lines.joined(separator: "\n"), areas: allAreas, spots: allSpots)
+  }
+
   // MARK: - 연속 입력 (여러 개 추가)
 
   /// 단일 입력 ↔ 칩 staging 모드를 같은 시트 안에서 전환한다. 진행 중 받아쓰기·입력은 정리한다.
@@ -185,6 +249,7 @@ struct CaptureSheet: View {
     ScrollView {
       VStack(alignment: .leading, spacing: 16) {
         sessionAreaRow
+        adapterRow
         if bulkModel.chips.isEmpty {
           Text("Type or speak items. Separate with commas or new lines to make chips.")
             .font(.appFootnote).foregroundStyle(AppColor.textMuted)
@@ -220,6 +285,39 @@ struct CaptureSheet: View {
         Image(systemName: "chevron.right").font(.appTag).foregroundStyle(AppColor.textFaint)
       }
       .padding(.horizontal, 16).padding(.vertical, 12)
+      .appCard()
+    }
+    .buttonStyle(.plain)
+  }
+
+  /// bulk 모드의 입력 어댑터 진입 행 — 스타터 템플릿(양 플랫폼) + 영수증 스캔(iOS).
+  /// 두 어댑터 모두 결과를 같은 칩 staging 으로 합류시킨다(insert 는 "추가" 버튼에서만).
+  private var adapterRow: some View {
+    HStack(spacing: 10) {
+      adapterButton(title: "Starter templates", icon: "square.grid.2x2") {
+        showingTemplatePicker = true
+      }
+      #if os(iOS)
+      adapterButton(title: "Scan receipt", icon: "doc.text.viewfinder") {
+        showingReceiptScan = true
+      }
+      #endif
+    }
+  }
+
+  private func adapterButton(
+    title: LocalizedStringKey,
+    icon: String,
+    action: @escaping () -> Void
+  ) -> some View {
+    Button(action: action) {
+      HStack(spacing: 8) {
+        Image(systemName: icon).font(.appItemBody).foregroundStyle(AppColor.accent)
+        Text(title).font(.appCaptionStrong).foregroundStyle(AppColor.textPrimary)
+          .lineLimit(1).minimumScaleFactor(0.8)
+      }
+      .frame(maxWidth: .infinity)
+      .padding(.horizontal, 12).padding(.vertical, 12)
       .appCard()
     }
     .buttonStyle(.plain)

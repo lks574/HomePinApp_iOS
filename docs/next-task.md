@@ -11,7 +11,27 @@ status: draft
 UI 우선 1차(시안 C 화면 골격: 5탭·장소·레시피·홈·추가 시트) 완료 후의 다음 후보.
 보류 상세는 `docs/follow-ups.md`.
 
-> 최근 완료: **연속 입력 모드 + 미정리함 캡처(screen-20)** — 물건 추가 두 마찰 완화.
+> 최근 완료: **스타터 템플릿(screen-21) + 영수증 OCR(screen-22) 입력 어댑터** — 둘 다
+> screen-20 칩 staging 코어(`ItemBulkAddModel`+`bulkInsert`+CaptureSheet bulk UI)를
+> 재사용하는 입력 어댑터(새 화면 아님). 출력은 칩 staging 으로 합류, insert 는 "추가"
+> 버튼에서만(자동 저장 없음), 신규 `@Model` 없음. **④ 스타터 템플릿**: 구역 종류별
+> 자주 두는 품목 정적 데이터(`StarterTemplate`/`+Sets`, 시드 Area 8종+공통, 품목명+
+> 수량 기본값만, en/ko 코드 내 분기, 릴리스 노출=DEBUG 게이트 없음). `appendChips(from
+> template:)` 로 칩 적재(parsedArea=nil→세션 Area 합류). 선택 시트
+> `StarterTemplatePickerSheet`(Area 이름 매칭 `StarterTemplate.match`, 실패 시 전체
+> 목록 폴백). 진입점 2개 — HomeView 빈 상태 CTA, PlaceEditorView create 후
+> confirmationDialog 제안(수락 시 sessionArea 주입). **③ 영수증 OCR**(권한): 카메라/
+> 사진 권한 재추가(`NSCameraUsageDescription`·`NSPhotoLibraryUsageDescription`, en/ko,
+> `tuist generate` 재실행), `ReceiptTextRecognizer`(Vision `.accurate`+ko/en, Sendable,
+> 비-MainActor, 이미지 미저장), `CameraImagePicker`(iOS, nonisolated NSObject Coordinator
+> +MainActor hop), `ReceiptScanViewModel`(@MainActor @Observable, 단일 Task, OCR+필터
+> Task.detached), `ReceiptLineFilter`(보수적 — 합계/날짜/사업자번호/줄끝 가격 제거),
+> `ReceiptScanSheet`(카메라 가용 게이팅+PhotosPicker, 추출 0건/실패 빈 staging 폴백).
+> **FoundationModels 비채택**. macOS 는 PhotosPicker 만(카메라 `#if os(iOS)`). iOS·macOS
+> 빌드 green. 결정: `docs/wiki/Decision/2026-06-18-스타터-템플릿-칩합류.md`,
+> `docs/wiki/Decision/2026-06-18-영수증-OCR-Vision-규칙추출.md`. 잔여: 실기기 한국어
+> 영수증 OCR 품질·라인 필터 정밀화·macOS 영수증 UX·템플릿 품목 튜닝(`docs/follow-ups.md`).
+> 이전 완료: **연속 입력 모드 + 미정리함 캡처(screen-20)** — 물건 추가 두 마찰 완화.
 > ① 연속 입력: `CaptureSheet` 안에서 단일 입력 ↔ 칩 staging 모드 전환("Add several"
 > 토글). 쉼표·줄바꿈만 분절(공백 분절 없음)해 `ItemQuickAddParser.parse(multiline:)`
 > 로 칩 생성, 세션 Area(생략 가능)·칩별 area override, 인라인 이름/수량/삭제, "추가"

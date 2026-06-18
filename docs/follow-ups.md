@@ -210,6 +210,31 @@ i18n 1차(screen-10, en/ko 시스템 추종) 완료 후 남은 항목. 결정:
   `Features/Monetization/AdService.swift`, `Features/Recipes/RecipeEditorView.swift`. 결정:
   `docs/wiki/Decision/2026-06-18-전면광고-트리거-재설계.md`)
 
+## 입력 어댑터 (screen-21 스타터 템플릿 / screen-22 영수증 OCR)
+
+스타터 템플릿·영수증 OCR 는 screen-20 칩 staging 코어를 재사용하는 입력 어댑터다.
+결정: `docs/wiki/Decision/2026-06-18-스타터-템플릿-칩합류.md`,
+`docs/wiki/Decision/2026-06-18-영수증-OCR-Vision-규칙추출.md`.
+
+- [ ] **실기기 한국어 영수증 OCR 품질** — 빌드 green·시뮬레이터에서 PhotosPicker→Vision
+  인식 경로·라인 필터·빈/실패 폴백까지 정적/시뮬레이터 검증. 실제 카메라 촬영 영수증의
+  한국어 인식 정확도(흐림·반사·열전사 영수증 폰트)와 라인 필터(합계/날짜/사업자번호 제거,
+  줄끝 가격 분리, 품목명 추출)의 실데이터 정밀도는 실기기 검증 필요(시뮬레이터는 카메라
+  불가, OCR 입력은 사진만). 추출 0건/오추출 빈도를 보고 `ReceiptLineFilter` 의 키워드·
+  정규식·`isNameLetter` 판정을 튜닝한다. (모듈: `Shared/OCR/ReceiptLineFilter.swift`,
+  `Shared/OCR/ReceiptTextRecognizer.swift`)
+- [ ] **macOS 영수증 스캔 UX** — ③ 영수증 OCR 은 iOS 우선. macOS 는 카메라/UIImagePicker
+  를 `#if os(iOS)` 로 비노출하고 `PhotosPicker`(NSImage→CGImage) 만 제공한다. macOS
+  데스크톱에 맞는 영수증 입력 UX(파일 드롭·스캐너 연동 등)는 후속. (모듈:
+  `Features/Capture/ReceiptScanSheet.swift`)
+- [ ] **영수증 OCR 카메라 권한 거부 graceful 실기기 확인** — 카메라 권한 거부 시
+  시스템이 처리하고 사진/수동 경로가 살아 있는 graceful 동작은 코드상 보장(카메라 버튼은
+  `cameraAvailable` 게이팅, 거부해도 PhotosPicker·수동 입력 유지). 실제 권한 시트 표출·
+  거부 후 흐름은 실기기 확인 필요(시뮬레이터 카메라 불가).
+- [ ] **스타터 템플릿 품목 구성 튜닝** — `StarterTemplate+Sets` 의 구역별 품목 묶음은
+  초기 보편값(각 5~7개). 실사용 피드백으로 품목·기본 수량을 다듬는다. (모듈:
+  `Features/Capture/StarterTemplate+Sets.swift`)
+
 ## iCloud 동기화 / CloudKit (screen-19)
 
 - [ ] **iCloud / CloudKit entitlement 복구 (실기기 서명 차단 해소)** — Apple Developer

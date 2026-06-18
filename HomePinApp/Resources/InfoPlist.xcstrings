@@ -30,6 +30,23 @@
         }
       }
     },
+    "NSCameraUsageDescription" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Used to scan a receipt and read item names from it."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "영수증을 찍어 물건 이름을 읽어오기 위해 카메라를 사용해요."
+          }
+        }
+      }
+    },
     "NSMicrophoneUsageDescription" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -43,6 +60,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "물건을 말로 빠르게 추가·검색하기 위해 마이크를 사용해요."
+          }
+        }
+      }
+    },
+    "NSPhotoLibraryUsageDescription" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Used to read item names from a receipt photo you choose."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "고른 영수증 사진에서 물건 이름을 읽어오기 위해 사진 보관함을 사용해요."
           }
         }
       }

@@ -57,7 +57,10 @@ struct PlacesListView: View {
       .hideNavBar()
       .navigationDestination(for: Area.self) { PlaceDetailView(area: $0) }
       .sheet(item: $editorRoute) { route in
+        // 시트는 부모 환경을 자동 상속하지 않는다. 새 구역 추가 후 템플릿 제안 시트가
+        // CaptureSheet 를 띄울 때 router 가 필요하므로 명시적으로 재주입한다.
         PlaceEditorView(mode: route.mode)
+          .environment(router)
       }
       .confirmationDialog(
         Text("place.delete.title.\(pendingDelete?.name ?? "")"),

@@ -8,6 +8,7 @@ struct HomeView: View {
   @Query(sort: \Item.createdAt, order: .reverse) private var items: [Item]
   @Query(sort: \ShoppingItem.createdAt, order: .reverse) private var shoppingItems: [ShoppingItem]
   @State private var editorRoute: ItemEditorRoute?
+  @State private var showingStarterTemplate = false
 
   var body: some View {
     NavigationStack {
@@ -17,6 +18,10 @@ struct HomeView: View {
             .font(.appScreenTitle)
             .foregroundStyle(AppColor.textPrimary)
             .padding(.bottom, 22)
+
+          if items.isEmpty {
+            starterTemplateCTA.padding(.bottom, 26)
+          }
 
           if !expiringItems.isEmpty {
             Button {
@@ -51,7 +56,33 @@ struct HomeView: View {
       .sheet(item: $editorRoute) { route in
         ItemEditorView(mode: route.mode)
       }
+      .sheet(isPresented: $showingStarterTemplate) {
+        CaptureSheet(initialMode: .starterTemplate())
+          .environment(router)
+      }
     }
+  }
+
+  /// 물건이 하나도 없을 때만 노출하는 빈 상태 CTA. 누르면 캡처 시트를 템플릿 모드로 연다
+  /// (별도 화면을 만들지 않고 진입 트리거로만 쓴다). 칩 staging 으로 합류해 "추가" 전엔 저장 안 됨.
+  private var starterTemplateCTA: some View {
+    Button { showingStarterTemplate = true } label: {
+      VStack(alignment: .leading, spacing: 8) {
+        HStack(spacing: 8) {
+          Image(systemName: "square.grid.2x2")
+            .font(.appItemBody).foregroundStyle(AppColor.accent)
+          Text("Start with a template")
+            .font(.system(size: 16, weight: .semibold)).foregroundStyle(AppColor.textPrimary)
+          Spacer()
+          Image(systemName: "chevron.right").font(.appTag).foregroundStyle(AppColor.textFaint)
+        }
+        Text("Add common items for a place in one tap.")
+          .font(.appCaption).foregroundStyle(AppColor.textMuted)
+      }
+      .padding(16)
+      .appCard()
+    }
+    .buttonStyle(.plain)
   }
 
   private var expiringItems: [Item] { items.expiringSoonByExpiry }

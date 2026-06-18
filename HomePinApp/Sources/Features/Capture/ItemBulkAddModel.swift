@@ -35,6 +35,16 @@ final class ItemBulkAddModel {
     }
   }
 
+  /// 스타터 템플릿 품목들을 칩으로 누적한다(자동 저장 아님). 템플릿은 위치를 싣지 않으므로
+  /// `parsedArea` 는 nil 로 두고 호출부가 세션 Area 로 적용하게 한다. 빈 이름은 건너뛴다.
+  func appendChips(from template: StarterTemplate) {
+    for item in template.items {
+      let trimmed = item.name.trimmingCharacters(in: .whitespacesAndNewlines)
+      guard !trimmed.isEmpty else { continue }
+      chips.append(Chip(name: trimmed, quantity: max(1, item.quantity), parsedArea: nil))
+    }
+  }
+
   func updateName(_ name: String, for id: Chip.ID) {
     guard let index = chips.firstIndex(where: { $0.id == id }) else { return }
     chips[index].name = name
