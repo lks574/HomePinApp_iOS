@@ -2,8 +2,7 @@ import Foundation
 import os
 
 /// 레시피 자연어 파싱의 UI 상태 소유자. 추론은 비-MainActor `NLRecipeParser` 가 하고,
-/// 이 ViewModel 은 가용성 게이트·파싱 상태·**단일 세션 Task** 소유/cancel 을 맡는다
-/// (`NLParseViewModel`(물건) 패턴 복제).
+/// 이 ViewModel 은 가용성 게이트·파싱 상태·**단일 세션 Task** 소유/cancel 을 맡는다.
 ///
 /// 텍스트·붙여넣기·음성 공용 단일 경로: 레시피 입력 화면이 같은 텍스트로 `parse(...)` 를
 /// 부른다. 가용하지 않거나 실패·취소·빈 결과면 `state` 가 `.unavailable`/`.failed` 로 떨어져

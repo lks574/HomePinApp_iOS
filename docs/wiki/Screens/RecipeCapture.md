@@ -46,7 +46,8 @@ screen-id: screen-12
   `@Generable ParsedRecipe`(제목·cuisine·dishType·servings·totalMinutes·재료배열
   `[ParsedIngredient(name, quantity)]`·단계 텍스트배열). 단계별 타이머는 파싱 제외.
 - `NLRecipeParseViewModel`(@MainActor @Observable): 파싱 상태(idle/parsing/prefill/
-  unavailable/failed) + 단일 세션 Task 소유/cancel([[Capture]] `NLParseViewModel` 패턴).
+  unavailable/failed) + 단일 세션 Task 소유/cancel(STT `SpeechDictationViewModel` 의
+  "단일 소비 Task" 생명주기 패턴).
 - `RecipeDraftResolver`(도메인 경계): 분류 raw 정규화 매칭(정확 일치만 채움, 표류 흡수)·
   인분/시간 양수만·재료/단계 trim·필터 → `RecipeEditorPrefill` → `RecipeEditorModel(prefill:)`.
 

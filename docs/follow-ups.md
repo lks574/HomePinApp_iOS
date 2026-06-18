@@ -50,13 +50,14 @@ status: draft
 
 UI 우선 1차(시안 C 화면 골격)에서 의도적으로 뒤로 미룬 것들.
 
-- [x] **AI 자연어 파싱 연동 완료(1차)** — 추가 시트(`CaptureSheet`)가 입력 텍스트를
-  온디바이스 Foundation Models 파서(`NLItemParser` `@Generable`)로 구조화하고 확인
-  드래프트(`CaptureDraftReviewView`, screen-09)에서 다건 확인/수정 후 `AddDraftResolver`
-  가 없으면생성/있으면매핑(`Item.normalize`)으로 일괄 저장. 가용성 게이트·실패·취소 시
-  단건 스텁 폴백. (결정: `docs/wiki/Decision/2026-06-15-NL-추가-파서-FoundationModels.md`)
-  잔여: 실기기 추론·한국어 품질 검증, 모델 다운로드 유도 UX, 유통기한·메모. (find/add
-  의도판별은 검색-우선 통합 UX 로 대체·불필요.)
+- [~] **물건 AI 자연어 파싱 — 제거됨(규칙 기반 `ItemQuickAddParser` 로 대체)** — 한때
+  추가 시트(`CaptureSheet`)가 입력 텍스트를 온디바이스 Foundation Models 파서
+  (`NLItemParser` `@Generable`)로 구조화하고 확인 드래프트(`CaptureDraftReviewView`,
+  screen-09)에서 다건 확인/수정 후 `AddDraftResolver` 로 일괄 저장했으나, screen-04
+  검색-우선 통합에서 물건 추가가 규칙 기반 `ItemQuickAddParser → ItemEditor.create(initialName:)`
+  로 교체되며 이 물건 NL 파서 플로우는 dead island 가 되어 2026-06-18 제거됐다. 결정
+  supersede: `docs/wiki/Decision/2026-06-15-NL-추가-파서-FoundationModels.md`. 레시피 NL
+  파서(screen-12)·STT 는 영향 없음.
 - [x] **음성(STT) 입력기 연동 완료** — `SpeechDictation`(iOS 26 `SpeechAnalyzer` +
   `SpeechTranscriber` 온디바이스 받아쓰기)을 `CaptureSheet` 마이크 버튼에 실연동.
   받아쓰기 결과를 단일 입력 필드(`query`)에 주입, 권한·불가용·
@@ -94,14 +95,12 @@ UI 우선 1차(시안 C 화면 골격)에서 의도적으로 뒤로 미룬 것�
 - [ ] **Pretendard 미번들** — 우선 시스템 폰트. 폰트 파일 번들 + 적용 필요.
 - [ ] **비주얼 미세조정** — `음성 플로우` 시안은 컴포넌트 픽셀 미확인(개념 기준 구성).
   실기기 렌더 후 중앙 마이크 위치·탭바 여백·세이프에어리어 조정 필요.
-- [ ] **NL 추가 파서 실기기 검증** — 빌드 green·시뮬레이터 폴백 경로(미가용 → 단건
-  스텁 → `ItemEditor` 이름 prefill)·UI·매칭/저장 로직까지 시뮬레이터 검증 완료. 실제
-  온디바이스 추론·한국어 추출 품질(다건 분리·수량·위치 grounding 정확도)·`@Generable`
-  스키마 준수·확인 화면 신규/기존 매칭·다건 일괄 저장은 Apple Intelligence 가용 실기기
-  필수(시뮬레이터 `availability` 미가용). 결정: `docs/wiki/Decision/2026-06-15-NL-추가-파서-FoundationModels.md`
-- [ ] **Apple Intelligence 기기 게이팅 / 한국어 모델 다운로드 / fallback UX** — 미가용
-  기기·언어 처리(텍스트·단건 폴백은 구조상 확보). 잔여: 모델 미설치 시 다운로드 동의·
-  진행률 UI, 추가 진입 전 사전 게이팅 안내(현재는 `add()` 시점 가용성 판단).
+- [ ] **Apple Intelligence 기기 게이팅 / 한국어 모델 다운로드 / fallback UX (레시피 NL 파서)** —
+  레시피 NL 파서(`NLRecipeParser`/`NLRecipeParseViewModel`, screen-12)의 미가용 기기·언어 처리
+  (텍스트·수동 에디터 폴백은 구조상 확보). 잔여: 모델 미설치 시 다운로드 동의·진행률 UI,
+  진입 전 사전 게이팅 안내(현재는 파싱 트리거 시점 가용성 판단). 결정:
+  `docs/wiki/Decision/2026-06-16-레시피-NL파서-ParsedRecipe.md`. (물건 NL 파서 게이팅 부분은
+  물건 island 제거로 무효 — 물건 추가는 규칙 기반 `ItemQuickAddParser` 로 게이팅 불필요.)
 - [ ] **Space 단일 가정** — UI 가 "장소"=Area 만 노출(단일 "우리집"). 멀티홈 필요 시
   Space 스위처 노출.
 - [x] **레시피 검색/분류 필터 실제 동작** — 레시피 목록 검색바가 제목·요약·분류 라벨·
@@ -178,10 +177,11 @@ i18n 1차(screen-10, en/ko 시스템 추종) 완료 후 남은 항목. 결정:
   `Locale("ko-KR")` 로 한국어 고정. 영어 사용자도 한국어 인식기로 받아쓰기된다.
   시스템 언어(en/ko)에 맞춰 인식 locale 을 고르고, 미지원 시 폴백 안내를 다듬어야 한다.
   (현재 i18n 범위 밖으로 분리. STT 권한·불가용·오류 표시 문구는 이미 현지화됨.)
-- [ ] **영어 NL 추출 품질 검증** — `NLItemParser` 프롬프트·`@Guide` 가 한국어 문장
-  추출 기준이라 영어 입력의 다건 분리·수량·위치 grounding 정확도가 미검증. 영어 입력
-  품질 확인 후 필요 시 프롬프트를 언어별로 다루는 방안 검토(시뮬레이터 추론 불가 →
-  Apple Intelligence 가용 실기기 필요).
+- [ ] **영어 NL 추출 품질 검증 (레시피 NL 파서)** — `NLRecipeParser` 프롬프트·`@Guide` 가
+  한국어 텍스트 추출 기준이라 영어 입력의 재료 분리·수량 문자열·분류 raw 매칭 정확도가
+  미검증. 영어 입력 품질 확인 후 필요 시 프롬프트를 언어별로 다루는 방안 검토(시뮬레이터
+  추론 불가 → Apple Intelligence 가용 실기기 필요). (물건 NL 파서는 island 제거로 무효 —
+  물건 추가는 규칙 기반 `ItemQuickAddParser`.)
 - [ ] **AdMob 전면 최소간격 의미 명료화** — `AdService.isFrequencyCapSatisfied` 는
   "같은 날이면 차단"(하루 1회)이 먼저라, 30분 최소간격 검사는 날짜 경계를 넘은
   경우에만 도달해 사실상 데드코드. 정책상 더 보수적이라 버그는 아니나, 향후

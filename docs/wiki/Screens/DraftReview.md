@@ -2,12 +2,15 @@
 aliases: [DraftReview, 확인 드래프트, AI 추가 확인]
 tags: [screen, screen/item]
 created: 2026-06-15
-updated: 2026-06-17
-status: in-progress
+updated: 2026-06-18
+status: removed
 screen-id: screen-09
 ---
 
 # DraftReview (확인 드래프트)
+
+> [!warning] 제거됨 (2026-06-18)
+> [[Capture]] 의 물건 추가 경로가 규칙 기반 `ItemQuickAddParser → ItemEditor.create(initialName:)` 로 교체되면서, 이 화면과 물건 AI NL 파서 플로우는 어떤 live View 에서도 도달되지 않는 self-contained island 로 남아 코드·문서에서 제거되었다. 삭제된 코드: `NLParseViewModel`·`CaptureDraftReviewView`·`AddDraftResolver`·`AddDraft`·`DraftTaxonomyPickerSheets`·`Shared/AI/NLItemParser`(`ParsedItemList`/`ParsedItem`/`NLParseGrounding` 포함). 결정 supersede: [[2026-06-15-NL-추가-파서-FoundationModels]]. 레시피 NL 파서([[RecipeCapture]])·STT 는 영향 없음. 아래는 제거 시점의 설계 기록(historical)으로만 보존한다.
 
 AI 자연어 파서([[Capture]] 의 `NLParseViewModel`)가 뽑은 추가 물건 목록을 사용자가 확인·수정·삭제한 뒤 일괄 저장하는 push 화면. [[Capture]] 가 소유하며(`navigationDestination`), 자동 저장 대신 **확인 단계를 필수 안전망**으로 둔다(소형 모델 오인식 방어).
 

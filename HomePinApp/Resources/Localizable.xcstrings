@@ -1590,6 +1590,7 @@
       }
     },
     "New" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ko" : {
           "stringUnit" : {
@@ -3093,6 +3094,7 @@
       }
     },
     "This is what AI sorted out. Check it, edit if needed, and add. \"New\" items will be created this time." : {
+      "extractionState" : "stale",
       "localizations" : {
         "ko" : {
           "stringUnit" : {

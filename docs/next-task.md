@@ -170,7 +170,9 @@ UI 우선 1차(시안 C 화면 골격: 5탭·장소·레시피·홈·추가 시�
      후속. 결정: [[2026-06-17-macOS-네이티브-타깃-추가]].
 2. **물건 추가 흐름 통일** — 중앙 검색 시트의 `+ "{입력어}" 추가하기`와 장보기 미등록
    항목 체크 후 재고 생성이 같은 `ItemEditor` `create(initialName:)` 화면을 사용한다.
-   과거 물건 AI 드래프트 경로(screen-09)는 현재 중앙 추가 경로에서 연결하지 않는다.
+   입력어는 규칙 기반 `ItemQuickAddParser` 로 이름·수량·위치를 prefill 한다. 과거 물건
+   AI 드래프트 경로(screen-09: `NLItemParser`/`CaptureDraftReviewView`/`AddDraftResolver`)는
+   dead island 가 되어 2026-06-18 제거했다.
 3. **검색 동작** — 중앙 버튼 시트 **검색-우선 통합** 완료(`screen-04`): [추가|검색]
    모드 토글 제거, 단일 입력 필드 하나(타이핑·음성 공용). 입력 즉시 물건
    (이름·위치·분류·태그·메모 부분 일치) + 레시피(제목·요약·분류·태그·재료 세부 텍스트
@@ -197,10 +199,12 @@ UI 우선 1차(시안 C 화면 골격: 5탭·장소·레시피·홈·추가 시�
    자동 생성과 장보기 완료→재고 반영은 완료.
    (장소 CRUD `screen-05`·세부위치 CRUD `screen-06` 완료 — 추가/편집은 `PlaceEditor`/`SpotEditor`, 삭제는 확인 다이얼로그.)
    장소/세부위치 에디터 확장(아이콘·Space 선택), 정렬 변경(drag) 이 후속.
-6. **기기 게이팅 + 한국어/폴백** — AI 미지원 환경 처리. NL 추가 파서의 가용성 게이트
-   (`SystemLanguageModel.default.availability`)·단건 스텁 폴백은 #1 에서 구현됨. 잔여는
-   한국어 모델 다운로드/Apple Intelligence 미설치 유도 UX(진행률·동의), 시작 전 사전
-   게이팅(마이크/추가 진입 시 미가용 사전 안내), 실기기 한국어 인식·추론 정확도 검증.
+6. **기기 게이팅 + 한국어/폴백** — AI 미지원 환경 처리. 레시피 NL 파서(screen-12,
+   `NLRecipeParser`)의 가용성 게이트(`SystemLanguageModel.default.availability`)·수동
+   에디터 폴백은 구현됨(물건 추가는 규칙 기반 `ItemQuickAddParser` 라 AI 게이팅 불필요).
+   잔여는 한국어 모델 다운로드/Apple Intelligence 미설치 유도 UX(진행률·동의), 시작 전
+   사전 게이팅(마이크/레시피 파싱 진입 시 미가용 사전 안내), 실기기 한국어 인식·추론
+   정확도 검증.
 
 ## 진행 메모
 

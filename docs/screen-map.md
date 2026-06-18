@@ -2,7 +2,7 @@
 aliases: [screen-map, 화면 맵]
 tags: [doc/code, screens]
 created: 2026-06-12
-updated: 2026-06-17
+updated: 2026-06-18
 status: draft
 ---
 
@@ -58,7 +58,6 @@ flowchart TD
 | Capture (AI 추가/검색) | 텍스트+음성 → 물건·레시피 검색 + 물건/레시피 추가 진입 | in-progress |
 | RecipeCapture (레시피 NL 입력) | 여러 줄 텍스트·붙여넣기·음성 → AI 파싱 → 확인 에디터 prefill | in-progress |
 | Shopping (장보기) | 살 것 목록 — 수동 추가·체크·삭제 | in-progress |
-| DraftReview (확인 드래프트) | 물건 AI 파서 결과 확인 화면. 현재 중앙 추가 경로에서는 미연결 | paused |
 | Settings (설정) | 표시(테마)·데이터(현황·iCloud Sync·백업/가져오기·전체 정리)·정보 | in-progress |
 | DataTransfer (백업/가져오기·CSV) | 전체 백업 export/import(디렉터리 패키지·id upsert) + CSV 대량 입력(Item·Recipe, 템플릿) | in-progress |
 | ItemEditor | 물건 추가/편집 공용 시트 | in-progress |

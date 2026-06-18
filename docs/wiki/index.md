@@ -32,8 +32,7 @@ SORT created ASC
 - [[Places]] → [[PlaceDetail]] → [[ItemEditor]]
 - [[Places]] · [[PlaceDetail]] → [[PlaceEditor]] — 장소 추가/편집
 - [[PlaceDetail]] → [[SpotEditor]] — 세부위치 추가/편집
-- [[Home]] · [[Capture]] → [[ItemEditor]] — 물건 추가/편집 공용 에디터(AI 미가용·실패 폴백)
-- [[Capture]] → [[DraftReview]] — AI 자연어 파싱 결과 확인 드래프트(다건 일괄 저장)
+- [[Home]] · [[Capture]] → [[ItemEditor]] — 물건 추가/편집 공용 에디터(`ItemQuickAddParser` prefill 후 create)
 - [[Capture]] → [[RecipeDetail]] — AI 검색 레시피 결과 탭(레시피 탭 전환 + push)
 - [[Capture]] → [[RecipeCapture]] → [[RecipeEditor]] — 레시피 자연어 추가(NL 입력 → AI 파싱 → prefill 확인)
 - [[Home]] → [[Shopping]] — 장보기 요약 섹션 탭(살 것 추가·체크·삭제)

@@ -5,7 +5,7 @@ created: 2026-06-12
 updated: 2026-06-18
 status: in-progress
 screen-id: screen-01
-related-tasks: [screen-01, screen-04, screen-09, screen-12, screen-16]
+related-tasks: [screen-01, screen-04, screen-12, screen-16]
 ---
 
 # Capture (검색-우선 통합 시트)
@@ -84,8 +84,8 @@ related-tasks: [screen-01, screen-04, screen-09, screen-12, screen-16]
 
 ## 관련 태스크 / 결정
 
-- `[screen-01]`, `[screen-04]`, `[screen-09]`, `[screen-12]`, `[screen-16]` (docs/screen-implementation-tasks.md)
-- 관련 결정: [[2026-06-12-네비게이션-UI구조]], [[2026-06-15-음성입력-STT-아키텍처]], [[2026-06-15-NL-추가-파서-FoundationModels]], [[2026-06-16-레시피-NL파서-ParsedRecipe]], [[2026-06-17-검색-랭킹-초성-편집거리]], [[2026-06-17-자연어-규칙-외부화]]
+- `[screen-01]`, `[screen-04]`, `[screen-12]`, `[screen-16]` (docs/screen-implementation-tasks.md)
+- 관련 결정: [[2026-06-12-네비게이션-UI구조]], [[2026-06-15-음성입력-STT-아키텍처]], [[2026-06-16-레시피-NL파서-ParsedRecipe]], [[2026-06-17-검색-랭킹-초성-편집거리]], [[2026-06-17-자연어-규칙-외부화]]
 
 ## 메모
 

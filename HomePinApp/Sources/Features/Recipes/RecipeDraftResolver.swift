@@ -1,8 +1,7 @@
 import Foundation
 
 /// 파서가 뽑은 순수 문자열(`ParsedRecipe`)과 레시피 도메인 사이의 경계.
-/// `AddDraftResolver`(물건) 패턴을 본떴다 — 엔진은 추출만 하고(분류/재고 무지),
-/// 분류 raw 정규화·draft 행 변환은 전부 여기서 한다.
+/// 엔진은 추출만 하고(분류/재고 무지), 분류 raw 정규화·draft 행 변환은 전부 여기서 한다.
 ///
 /// 재료 Item grounding(재고 매칭)은 `RecipeEditorModel.save(into:)` 가 저장 직전에
 /// `availableItems` 와 이름 정규화로 수행하므로(기존 수동 에디터와 동일 경로), 여기서는
