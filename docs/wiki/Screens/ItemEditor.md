@@ -2,7 +2,7 @@
 aliases: [ItemEditor, 물건 추가, 물건 편집]
 tags: [screen, screen/item]
 created: 2026-06-14
-updated: 2026-06-17
+updated: 2026-06-18
 status: in-progress
 screen-id: screen-02
 ---
@@ -13,7 +13,7 @@ screen-id: screen-02
 
 ## 역할
 
-- 이름, 수량, 사진(`photoData`), 장소(`Area`), 세부위치(`Spot`), 분류(`ItemCategory`),
+- 이름, 수량, 장소(`Area`), 세부위치(`Spot`), 분류(`ItemCategory`),
   태그(`Tag`), 유통기한, 메모를 입력/수정한다.
 - 분류·태그는 기존 값을 선택하거나 에디터 안에서 새로 만들어 바로 연결한다.
 - 추가 시 새 [[Item]] 을 `modelContext.insert` 로 저장한다.
@@ -26,7 +26,8 @@ screen-id: screen-02
 
 - 들어옴 ←: [[Home]] — 최근 추가 물건 행 탭
 - 들어옴 ←: [[PlaceDetail]] — 물건 행 탭, 장소/수납공간 추가 버튼
-- 들어옴 ←: [[Capture]] — 텍스트 입력 후 확인 단계
+- 들어옴 ←: [[Capture]] — `+ "{입력어}" 추가하기` 또는 검색 결과 탭
+- 들어옴 ←: [[Shopping]] — 미등록 장보기 항목 체크 후 재고 생성
 
 ## 사용 모델
 
@@ -38,7 +39,7 @@ screen-id: screen-02
 
 ## 상태 관리
 
-- 얇은 `@Observable` 모델 **`ItemEditorModel`** 이 draft(이름·수량·사진·위치·분류·태그·
+- 얇은 `@Observable` 모델 **`ItemEditorModel`** 이 draft(이름·수량·위치·분류·태그·
   유통기한·메모)와 `save(into:)`(create/edit 분기·`normalizedName` 동기화·spot→area
   불변식)를 소유한다. SwiftData 직결로 충분하지 않은 다필드 draft + 다단계 쓰기 케이스.
 - View 는 레이아웃과 순수 UI 상태(focus·picker 시트 표시)만 갖고 `@Bindable` 로
@@ -56,4 +57,4 @@ screen-id: screen-02
   `ItemEditorModel.swift` (draft·저장)
 - 선택 시트: `HomePinApp/Sources/Features/Items/ItemLocationPickerSheets.swift`
 - 분류/태그 선택 시트: `HomePinApp/Sources/Features/Items/ItemTaxonomyPickerSheets.swift`
-- 후속: 사진 downsampling/압축 정책, AI 파싱 결과 structured draft.
+- 물건 사진 선택/저장은 제거했다. 레시피 OCR 사진/카메라 입력도 제거했다.

@@ -5,7 +5,7 @@ import UniformTypeIdentifiers
 ///
 /// 디스크 임시 파일을 거치지 않고 메모리 페이로드로 **디렉터리 FileWrapper 를 직접 구성**한다.
 /// (URL 기반 `FileWrapper(url:)` 는 fileExporter 쓰기에서 "파일이 이미 존재" 에러·패키지
-/// 누락을 일으켜 폐기했다.) 레이아웃: `data.json` + `photos/<id>.dat`.
+/// 누락을 일으켜 폐기했다.) 레이아웃: `data.json`.
 struct BackupDocument: FileDocument {
   static var readableContentTypes: [UTType] { [.homePinBackup] }
   static var writableContentTypes: [UTType] { [.homePinBackup] }
@@ -31,17 +31,6 @@ struct BackupDocument: FileDocument {
     let dataWrapper = FileWrapper(regularFileWithContents: payload.dataJSON)
     dataWrapper.preferredFilename = BackupBundleLayout.dataFileName
     root.addFileWrapper(dataWrapper)
-
-    if !payload.photos.isEmpty {
-      let photosDir = FileWrapper(directoryWithFileWrappers: [:])
-      photosDir.preferredFilename = BackupBundleLayout.photosDirectoryName
-      for photo in payload.photos {
-        let photoWrapper = FileWrapper(regularFileWithContents: photo.data)
-        photoWrapper.preferredFilename = "\(photo.id.uuidString).dat"
-        photosDir.addFileWrapper(photoWrapper)
-      }
-      root.addFileWrapper(photosDir)
-    }
 
     return root
   }

@@ -6,8 +6,6 @@ import Foundation
 /// - **관계는 객체 중첩 금지, 전부 UUID 참조** — 순환 참조·중복 직렬화를 피하고
 ///   import 시 2-pass(엔티티 upsert → 참조 재연결)로 복원한다.
 /// - `RecipeStep` 은 이미 Codable 값 타입이라 `RecipeDTO` 안에 값배열로 인라인한다.
-/// - **사진 바이너리는 DTO 에 넣지 않는다.** `photoFile` 에 번들 내 상대 경로
-///   (`photos/<itemID>.dat`)만 두고, 실제 데이터는 패키지의 별도 파일로 분리한다.
 ///
 /// 결정: `docs/wiki/Decision/2026-06-17-데이터-백업-번들포맷.md`
 struct BackupBundle: Codable {
@@ -93,8 +91,6 @@ struct ItemDTO: Codable {
   var categoryID: UUID?
   /// 태그(N:N) 참조 목록.
   var tagIDs: [UUID]
-  /// 사진 바이너리는 번들 파일로 분리. 여기엔 상대 경로(`photos/<id>.dat`)만.
-  var photoFile: String?
 }
 
 struct RecipeDTO: Codable {

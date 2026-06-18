@@ -4,7 +4,7 @@ import SwiftData
 /// 백업 디렉터리 패키지(`.homepinbackup`)의 export/import I/O.
 ///
 /// 외부 의존성 없이 `FileManager` 만으로 처리한다(ZIP 불채택).
-/// 패키지 레이아웃: `data.json`(메타+엔티티) + `photos/<id>.dat`(아이템 사진 원본).
+/// 패키지 레이아웃: `data.json`(메타+엔티티).
 ///
 /// 결정: `docs/wiki/Decision/2026-06-17-데이터-백업-번들포맷.md`
 @MainActor
@@ -33,8 +33,6 @@ enum BackupArchive {
   struct ExportPayload {
     /// `data.json` 직렬화 결과.
     let dataJSON: Data
-    /// 사진이 있는 아이템의 (id, 원본 데이터). 패키지 `photos/<id>.dat` 로 들어간다.
-    let photos: [(id: UUID, data: Data)]
     /// 제안 파일명(확장자 제외 — 시스템이 contentType 으로 붙인다).
     let fileBaseName: String
   }
@@ -42,11 +40,9 @@ enum BackupArchive {
   /// 전체 데이터를 메모리 페이로드로 만든다(디스크 임시 파일 없음).
   static func makeExportPayload(from modelContext: ModelContext) throws -> ExportPayload {
     let bundle = try makeBundle(from: modelContext)
-    let photos = try fetchPhotoData(from: modelContext)
     let dataJSON = try BackupCodec.makeEncoder().encode(bundle)
     return ExportPayload(
       dataJSON: dataJSON,
-      photos: photos.map { (id: $0.0, data: $0.1) },
       fileBaseName: makeFileBaseName(),
     )
   }
@@ -68,13 +64,6 @@ enum BackupArchive {
     )
   }
 
-  /// 사진이 있는 아이템만 (id, data) 로 모은다.
-  private static func fetchPhotoData(from modelContext: ModelContext) throws -> [(UUID, Data)] {
-    try modelContext.fetch(FetchDescriptor<Item>()).compactMap { item in
-      item.photoData.map { (item.id, $0) }
-    }
-  }
-
   private static func makeFileBaseName() -> String {
     let formatter = DateFormatter()
     formatter.dateFormat = "yyyyMMdd-HHmmss"
@@ -85,7 +74,6 @@ enum BackupArchive {
   // MARK: - Import
 
   /// 패키지 URL 을 읽어 decode → schemaVersion 가드 → 2-pass upsert.
-  /// (사진은 패키지에서 읽어 해당 아이템의 `photoData` 로 복원한다.)
   static func `import`(from packageURL: URL, into modelContext: ModelContext) throws -> ImportSummary {
     let needsSecurityScope = packageURL.startAccessingSecurityScopedResource()
     defer { if needsSecurityScope { packageURL.stopAccessingSecurityScopedResource() } }
@@ -106,37 +94,9 @@ enum BackupArchive {
     }
 
     let engine = BackupUpsertEngine(modelContext: modelContext)
-    var summary = try engine.apply(bundle)
+    let summary = try engine.apply(bundle)
 
-    restorePhotos(for: bundle.items, packageURL: packageURL, into: modelContext, summary: &summary)
     try modelContext.save()
     return summary
-  }
-
-  /// 번들의 photoFile 경로를 따라 사진을 읽어 해당 아이템 `photoData` 로 복원한다.
-  /// 파일이 없으면 사진만 스킵(아이템 자체는 이미 upsert 됨).
-  private static func restorePhotos(
-    for items: [ItemDTO],
-    packageURL: URL,
-    into modelContext: ModelContext,
-    summary: inout ImportSummary,
-  ) {
-    let withPhotos = items.filter { $0.photoFile != nil }
-    guard !withPhotos.isEmpty else { return }
-
-    // upsert 직후라 id 로 다시 조회한다(소량 N — 사진 가진 아이템만).
-    for dto in withPhotos {
-      guard let relativePath = dto.photoFile else { continue }
-      let photoURL = packageURL.appendingPathComponent(relativePath)
-      guard let photoData = try? Data(contentsOf: photoURL) else {
-        summary.skip("Photo missing for item \(dto.id.uuidString)")
-        continue
-      }
-      let itemID = dto.id
-      let descriptor = FetchDescriptor<Item>(predicate: #Predicate { $0.id == itemID })
-      if let item = try? modelContext.fetch(descriptor).first {
-        item.photoData = photoData
-      }
-    }
   }
 }

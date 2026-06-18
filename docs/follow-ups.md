@@ -12,42 +12,24 @@ status: draft
 
 ## 플랫폼 / macOS (screen-17)
 
-- [ ] **macOS 실기 런타임 검증(AC-004~006)** — iOS·macOS 빌드는 green 이나 macOS 는
+- [ ] **macOS 실기 런타임 검증(AC-005~006)** — iOS·macOS 빌드는 green 이나 macOS 는
   실기 런타임 미검증(빌드만으로는 권한·파일·디바이스 경로를 확인 못 함).
-  - AC-004 PhotosPicker OCR — 사진 라이브러리 선택→Vision OCR→[[RecipeCapture]] 채우기.
   - AC-005 파일 Import/Export — [[DataTransfer]] `.homepinbackup` export/import 가
     sandbox(`files.user-selected.read-write`)에서 정상인지.
   - AC-006 STT 권한/받아쓰기 — 마이크(`device.audio-input`)·음성인식 권한·온디바이스
     받아쓰기가 macOS 에서 정상인지(`AVAudioSession` 없이).
   (결정: `docs/wiki/Decision/2026-06-17-macOS-네이티브-타깃-추가.md`)
-- [ ] **sandbox 사진 entitlement 보정 필요 여부** — 현재 macOS entitlements 는
-  app-sandbox·files.user-selected.read-write·device.audio-input 만. PhotosPicker 사진
-  접근이 런타임에 막히면 사진 관련 entitlement 추가가 필요할 수 있다(AC-004 검증에서
-  판단). (파일: `Tuist/Support/HomePinApp-macOS.entitlements`)
 - [ ] **macOS 데스크톱 UX 최적화** — 셸(`RootTabView`)·네비게이션은 macOS 재설계 없이
   그대로 동작(이번 범위). 메뉴 바·창 크기/리사이즈·사이드바·키보드 단축키 등 데스크톱
   1급 경험은 후속. (결정: `docs/wiki/Decision/2026-06-17-macOS-네이티브-타깃-추가.md`)
-- [ ] **macOS 카메라 입력 대응 여부** — 카메라 OCR 은 `UIImagePickerController` 기반이라
-  macOS 비노출(사진 라이브러리 OCR 로 대체). 필요 시 AVFoundation 캡처로 macOS 카메라
-  입력을 새로 구현할지 검토. (모듈: `Shared/OCR/CameraImagePicker.swift`)
 
 ## 데이터 / 영속화
 
-- [ ] **백업 사진 downsampling/압축** — screen-15 백업은 아이템 사진을
-  `photos/<itemID>.dat` 에 **원본 그대로** 번들에 넣는다(이번 범위 제외). 대용량 사진이
-  많으면 패키지가 커지므로, export 시 다운샘플/압축(예: HEIC·JPEG quality) 정책을 정해야
-  한다. (모듈: `Features/DataTransfer/BackupArchive.swift`, 결정:
-  `docs/wiki/Decision/2026-06-17-데이터-백업-번들포맷.md`)
 - [ ] **백업 schemaVersion ↔ VersionedSchema 연동** — `BackupBundle.schemaVersion`(현재 1)
   은 import 가드(상위 버전 거부)만 쓴다. 첫 릴리스 `VersionedSchema` 도입 시(아래 항목),
   백업 스키마 버전을 모델 스키마 버전과 연동하고 구버전 번들 마이그레이션 경로를 정해야
   한다. (모듈: `Features/DataTransfer/`, 결정:
   `docs/wiki/Decision/2026-06-17-데이터-백업-번들포맷.md`)
-- [ ] **백업 import 사진 클리어 비대칭** — 번들 아이템의 `photoFile == nil`(사진 없음)이고
-  기존 아이템에 사진이 있으면 `restorePhotos` 가 기존 `photoData` 를 보존한다(다른 스칼라
-  필드는 전부 덮어쓰는 것과 비대칭). "병합" 관점에선 안전한 보존이라 버그는 아니나, 의도를
-  명시하거나 사진도 덮어쓰기로 통일할지 정해야 한다. (모듈:
-  `Features/DataTransfer/BackupArchive.swift` restorePhotos)
 - [ ] **CSV 재료 재import 중복 누적** — `recipe_ingredients.csv` 재료는 id 키가 없어(스키마상
   의도) upsert 불가, 항상 신규 insert 된다. 같은 재료 CSV 를 두 번 넣으면 재료가 중복
   누적된다. 재료 식별 키(예: recipeTitle+name) 기반 dedup 도입 여부 검토. (모듈:
@@ -80,8 +62,8 @@ UI 우선 1차(시안 C 화면 골격)에서 의도적으로 뒤로 미룬 것�
   받아쓰기 결과를 단일 입력 필드(`query`)에 주입, 권한·불가용·
   거부 시 텍스트 폴백. (결정: `docs/wiki/Decision/2026-06-15-음성입력-STT-아키텍처.md`)
   잔여는 아래 3개 항목으로 분리.
-- [x] **음성 → AI 파서 경로 재사용 완료** — 받아쓰기로 채운 텍스트가 타이핑 텍스트와
-  같은 `CaptureSheet.add()` 파서 경로로 합류한다(추가 모드). 텍스트·음성 공용 단일 파서.
+- [x] **음성 → 공용 물건 에디터 경로 재사용 완료** — 받아쓰기로 채운 텍스트가 타이핑 텍스트와
+  같은 `CaptureSheet.add()` 경로에서 `ItemEditor` `create(initialName:)` 로 합류한다.
 - [ ] **한국어 받아쓰기 모델 다운로드 UX** — 현재는 모델 미설치·미지원 시 `state`
   를 `.unavailable` 로 떨어뜨려 텍스트 폴백만 안내. 진행률·다운로드 동의 UI 미구현
   (`AssetInventory.assetInstallationRequest` 진행률 노출).
@@ -105,9 +87,10 @@ UI 우선 1차(시안 C 화면 골격)에서 의도적으로 뒤로 미룬 것�
 - [x] **물건 삭제/정리 UX** — `ItemEditor` 편집 모드 삭제, 수량 1에서 `-` 탭 시 삭제 확인,
   [[PlaceDetail]] 물건 행 context menu "다 썼어요" 빠른 정리 추가. 삭제 시
   `RecipeIngredient.item` 은 nullify 로 끊겨 레시피 부족 상태로 돌아간다.
-- [x] **물건 고급 편집 1차** — `ItemEditor` 에 사진 선택/제거, 분류 선택/신규 생성,
-  태그 다중 선택/신규 생성을 추가했다. 저장 시 `Item.photoData`·`category`·`tags` 갱신.
-  잔여: 사진 downsampling/압축 정책.
+- [x] **물건 고급 편집 1차** — `ItemEditor` 에 분류 선택/신규 생성,
+  태그 다중 선택/신규 생성을 추가했다. 저장 시 `category`·`tags` 갱신.
+- [x] **물건 사진 선택/저장 제거** — `Item.photoData`, 물건 에디터 사진 선택 UI,
+  백업 `photos/` 패키징/복원을 제거했다.
 - [ ] **Pretendard 미번들** — 우선 시스템 폰트. 폰트 파일 번들 + 적용 필요.
 - [ ] **비주얼 미세조정** — `음성 플로우` 시안은 컴포넌트 픽셀 미확인(개념 기준 구성).
   실기기 렌더 후 중앙 마이크 위치·탭바 여백·세이프에어리어 조정 필요.
@@ -168,26 +151,9 @@ i18n·검색·장보기 1차(중앙 AI 버튼·레시피 검색·장보기 CRUD)
   `NLRecipeParseViewModel`/`RecipeDraftResolver`) → 확인은 기존 `RecipeEditorView` 를
   `RecipeEditorModel(prefill:)` 로 재사용. 미가용·실패 시 수동 에디터 폴백. 재료 Item
   grounding 은 기존 저장 매칭(`Item.normalize`) 재사용. 결정:
-  `docs/wiki/Decision/2026-06-16-레시피-NL파서-ParsedRecipe.md`. 잔여: 단계 2(사진/스크린샷
-  OCR), 실기기 한국어 추출 품질(아래).
-- [x] **레시피 NL 추가 — 사진/스크린샷 OCR(단계 2) 완료(screen-13)** — 온디바이스 Apple
-  Vision(`VNRecognizeTextRequest`, `.accurate`, `usesLanguageCorrection`, 한국어+영어)로
-  이미지→텍스트 추출 후 기존 입력 필드에 채워 같은 코어(`NLRecipeParser` "Sort with AI")에
-  합류. 카메라(`UIImagePickerController`)+사진(`PhotosPicker`) 둘 다, 카메라·사진 권한 신규
-  (`InfoPlist.xcstrings` en/ko). 자동 파싱 안 함(확인 단계 유지). `TextRecognizer`(비-MainActor)
-  + `RecipeOCRViewModel`(@MainActor 단일 Task) + `CameraImagePicker`(Coordinator nonisolated).
-  결정: `docs/wiki/Decision/2026-06-16-레시피-OCR-VisionKit.md`. ([[레시피-간편-추가]] §Phase 2)
-- [ ] **레시피 OCR 실기기 카메라·한국어/손글씨 품질 검증** — 빌드 green·시뮬레이터
-  사진 라이브러리→Vision OCR→입력 필드 채움 경로는 검증. **카메라 즉석 촬영은 시뮬레이터
-  미지원**이라 코드 경로/권한 키로만 검증함. 실기기에서 카메라 촬영→OCR, 한국어 인쇄체·
-  손글씨·요리책 사진의 인식 정확도(재료/단계 줄 분리·순서 복원·언어 혼용)는 실기기 필수.
-- [ ] **표/복잡 레이아웃 OCR 은 reading-order 근사 — 완벽한 표 복원은 후속** —
-  `TextRecognizer` 가 관찰을 "줄 그룹핑(세로 겹침) + 줄 내 가로 정렬(minX)" 로 reading-order
-  를 복원해, 표/멀티컬럼에서 같은 행 셀이 좌우로 뒤섞이던 열 인터리브 버그는 해소(2026-06-16).
-  다만 **셀 격자(열 구조) 자체는 복원하지 않는다** — 한 행을 좌→우 연속 텍스트로 읽어 AI 파서가
-  행 맥락을 이해하게 두는 근사다. 셀 정렬·열 헤더 매핑이 필요한 복잡 표는 후속(예: x-좌표
-  클러스터링으로 열 경계 추정). 같은 줄 임계값(`sameLineHeightRatio = 0.6`)은 실데이터로
-  미세조정 여지(너무 작은/큰 글자 혼용 표) — 실기기 다양한 표 레시피로 확인 필요.
+  `docs/wiki/Decision/2026-06-16-레시피-NL파서-ParsedRecipe.md`. 잔여: 실기기 한국어 추출 품질(아래).
+- [x] **레시피 OCR 사진/카메라 입력 제거** — `RecipeCaptureView` 의 사진/카메라 OCR 진입점,
+  `RecipeOCRViewModel`, `TextRecognizer`, `CameraImagePicker`, 카메라/사진 권한 문구를 제거했다.
 - [ ] **레시피 NL 추가 실기기 한국어 추출 품질** — 빌드 green·시뮬레이터 폴백 경로
   (미가용 → 수동 `RecipeEditorView`)·prefill·저장 매칭까지 정적/시뮬레이터 검증. 실제
   온디바이스 추론·한국어 레시피 추출 품질(재료 분리·수량 문자열·단계 순서·분류 raw 매칭)
@@ -246,6 +212,6 @@ i18n 1차(screen-10, en/ko 시스템 추종) 완료 후 남은 항목. 결정:
 - [ ] **CloudKit private 동기화·가족공유 실기기/실계정 검증** — private DB 동기화, 가족공유
   초대(`UICloudSharingController`)·`CKShare` 스냅샷 저장, 공유 가져오기(`sharedCloudDatabase`
   → 로컬 upsert)는 시뮬레이터/정적 검증만 됐다. entitlement 복구 + 유료 Developer Program +
-  실 iCloud 계정으로 실기기 검증 필요. 잔여: 참가자 push, 충돌 처리, 사진 공유. (결정:
+  실 iCloud 계정으로 실기기 검증 필요. 잔여: 참가자 push, 충돌 처리. (결정:
   `docs/wiki/Decision/2026-06-18-CloudKit-가족공유-1차-스냅샷.md`,
   `docs/wiki/Decision/2026-06-18-CloudKit-가족공유-2차-가져오기.md`)
