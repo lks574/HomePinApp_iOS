@@ -64,9 +64,9 @@ struct DraftCategoryPickerSheet: View {
   }
 
   private func subtitle(_ category: ItemCategory) -> String {
-    category.items.isEmpty
+    (category.items ?? []).isEmpty
       ? String(localized: "No items")
-      : String(localized: "picker.itemCount.\(category.items.count)")
+      : String(localized: "picker.itemCount.\((category.items ?? []).count)")
   }
 
   private func isSelected(_ category: ItemCategory) -> Bool {
@@ -132,9 +132,9 @@ struct DraftTagPickerSheet: View {
   }
 
   private func subtitle(_ tag: Tag) -> String {
-    tag.items.isEmpty
+    (tag.items ?? []).isEmpty
       ? String(localized: "No items")
-      : String(localized: "picker.itemCount.\(tag.items.count)")
+      : String(localized: "picker.itemCount.\((tag.items ?? []).count)")
   }
 
   private func isSelected(_ tag: Tag) -> Bool {

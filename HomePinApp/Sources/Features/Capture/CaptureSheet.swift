@@ -565,7 +565,7 @@ struct CaptureSheet: View {
       item.memo,
       item.quantity > 1 ? String(item.quantity) : nil,
     ]
-    fields.append(contentsOf: item.tags.map { Optional($0.name) })
+    fields.append(contentsOf: (item.tags ?? []).map { Optional($0.name) })
     return fields.compactMap { $0 }.filter { !$0.isEmpty }
   }
 
@@ -580,8 +580,8 @@ struct CaptureSheet: View {
       recipe.servings.map(String.init),
       recipe.totalMinutes.map(String.init),
     ]
-    fields.append(contentsOf: recipe.tags.map { Optional($0.name) })
-    fields.append(contentsOf: recipe.ingredients.flatMap(searchableIngredientFields).map(Optional.init))
+    fields.append(contentsOf: (recipe.tags ?? []).map { Optional($0.name) })
+    fields.append(contentsOf: (recipe.ingredients ?? []).flatMap(searchableIngredientFields).map(Optional.init))
     return fields.compactMap { $0 }.filter { !$0.isEmpty }
   }
 

@@ -5,13 +5,13 @@ import SwiftData
 /// (inverse 는 각각 `Item.tags`·`Recipe.tags` 에 선언.)
 @Model
 final class Tag {
-  @Attribute(.unique) var id: UUID
+  var id: UUID
   var name: String
   var createdAt: Date
   var updatedAt: Date
 
-  var items: [Item]
-  var recipes: [Recipe]
+  var items: [Item]?
+  var recipes: [Recipe]?
 
   init(
     id: UUID = UUID(),

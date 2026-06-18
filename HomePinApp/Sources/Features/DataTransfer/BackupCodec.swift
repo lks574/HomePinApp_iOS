@@ -89,7 +89,7 @@ enum BackupCodec {
       areaID: item.area?.id,
       spotID: item.spot?.id,
       categoryID: item.category?.id,
-      tagIDs: item.tags.map(\.id),
+      tagIDs: (item.tags ?? []).map(\.id),
       photoFile: item.photoData == nil ? nil : BackupBundleLayout.photoFile(for: item.id),
     )
   }
@@ -107,7 +107,7 @@ enum BackupCodec {
       steps: recipe.steps,
       createdAt: recipe.createdAt,
       updatedAt: recipe.updatedAt,
-      tagIDs: recipe.tags.map(\.id),
+      tagIDs: (recipe.tags ?? []).map(\.id),
     )
   }
 

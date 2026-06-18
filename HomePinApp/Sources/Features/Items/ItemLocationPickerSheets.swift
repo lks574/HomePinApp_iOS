@@ -37,7 +37,7 @@ struct AreaPickerSheet: View {
   /// "<n> items · <m> spots" — 수량은 현지화 plural, 이름은 없음(전부 UI 라벨).
   private func areaSubtitle(_ area: Area) -> String {
     let items = String(localized: "picker.itemCount.\(area.itemCount)")
-    let spots = String(localized: "picker.spotCount.\(area.spots.count)")
+    let spots = String(localized: "picker.spotCount.\((area.spots ?? []).count)")
     return "\(items) · \(spots)"
   }
 

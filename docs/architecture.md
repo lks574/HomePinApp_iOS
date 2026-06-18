@@ -2,7 +2,7 @@
 aliases: [architecture, 아키텍처]
 tags: [doc/code, architecture]
 created: 2026-06-12
-updated: 2026-06-17
+updated: 2026-06-18
 status: draft
 ---
 
@@ -15,13 +15,21 @@ status: draft
 | UI | SwiftUI |
 | 대상 | iOS 기기, 최소 **iOS 26.5** |
 | 언어 | **Swift 6.2** (Swift 6 언어 모드, strict concurrency) |
-| 영속화 | **SwiftData** (`@Model`, `ModelContainer`, `@Query`) — 서버 없이 기기 내부 저장 |
+| 영속화 | **SwiftData** (`@Model`, `ModelContainer`, `@Query`) — 기본 로컬 저장, 선택적으로 CloudKit private DB 동기화 |
 | 프로젝트 구성 | **Tuist** (`Project.swift` manifest, mise 로 설치) |
 
 - iOS 26.5 / Swift 6.2 최소 사양이라 최신 SwiftUI · Observation(`@Observable`) ·
   SwiftData API 를 제약 없이 사용한다. 하위 호환 우회 코드는 두지 않는다.
 - 동시성은 Swift 6 strict concurrency 를 기준으로 한다 — `Sendable`, actor 격리,
   `async`/`await`. 경고를 억지로 끄거나 우회하지 않는다.
+- CloudKit 동기화는 Settings 의 `iCloud Sync` 토글이 켜진 다음 앱 시작부터
+  `ModelConfiguration.cloudKitDatabase = .private("iCloud.com.sro.homepinapp")` 로
+  적용한다. 토글을 켤 때 iCloud 계정 상태를 먼저 확인하고, 앱 시작 시 CloudKit store
+  생성이 실패하면 설정을 끄고 로컬 SwiftData store로 fallback한다. 가족공유는 private
+  동기화 설정 위에 `CKShare` 초대 흐름으로 얹는다. 1차 가족공유는 root record 에 현재
+  `BackupBundle` JSON 스냅샷을 저장해 공유하는 방식이고, 2차는 참가자가
+  `sharedCloudDatabase` 에서 이 스냅샷을 수동으로 가져와 로컬 SwiftData 로 upsert 한다.
+  실시간 공동 편집은 후속 범위다.
 
 ### SwiftData 매크로 적극 사용
 

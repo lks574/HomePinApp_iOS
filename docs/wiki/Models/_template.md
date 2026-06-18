@@ -20,7 +20,7 @@ status: planned
 
 | 프로퍼티 | 타입 | 비고 (매크로·제약) |
 | --- | --- | --- |
-| `id` | `UUID` | `@Attribute(.unique)` |
+| `id` | `UUID` | 앱 로직 유일성 |
 | ... | ... | ... |
 
 ## 관계 (`@Relationship`)

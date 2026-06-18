@@ -2,7 +2,7 @@
 aliases: [follow-ups, 후속 항목]
 tags: [doc/code, followups]
 created: 2026-06-12
-updated: 2026-06-17
+updated: 2026-06-18
 status: draft
 ---
 
@@ -54,7 +54,7 @@ status: draft
   `Features/DataTransfer/CSVImporter.swift`, 결정:
   `docs/wiki/Decision/2026-06-17-CSV-대량입력-스키마.md`)
 
-- [ ] **이름 중복 방지(앱 로직)** — `@Attribute(.unique)` 는 upsert 의미라 사용자 입력
+- [ ] **이름 중복 방지(앱 로직)** — `.unique` 는 upsert 의미라 사용자 입력
   이름엔 안 씀. 한 공간 내 구역명·한 구역 내 세부위치명·전역 카테고리/태그명 중복을
   **쓰기 로직에서 검증**해야 한다. (모델: [[Space]]/[[Area]]/[[Spot]]/[[ItemCategory]]/[[Tag]],
   결정: `docs/wiki/Decision/2026-06-12-위치-물건-데이터모델.md`)
@@ -216,3 +216,36 @@ i18n 1차(screen-10, en/ko 시스템 추종) 완료 후 남은 항목. 결정:
   추출 기준이라 영어 입력의 다건 분리·수량·위치 grounding 정확도가 미검증. 영어 입력
   품질 확인 후 필요 시 프롬프트를 언어별로 다루는 방안 검토(시뮬레이터 추론 불가 →
   Apple Intelligence 가용 실기기 필요).
+- [ ] **AdMob 전면 최소간격 의미 명료화** — `AdService.isFrequencyCapSatisfied` 는
+  "같은 날이면 차단"(하루 1회)이 먼저라, 30분 최소간격 검사는 날짜 경계를 넘은
+  경우에만 도달해 사실상 데드코드. 정책상 더 보수적이라 버그는 아니나, 향후
+  "하루 N회 + 간격" 으로 완화할 때 의미를 갖는다. (screen-18 리뷰 관찰)
+- [ ] **AdMob 보상형 로드 실패 자가 회복** — `presentRewarded` 는 미로드 시 조용히
+  false 반환만 하고 재로드를 트리거하지 않아, 스타트업 보상형 로드가 실패하면 세션
+  내 버튼이 계속 비활성(흐름 차단은 없음, R7/R9 만족). 세션 내 재시도 경로 추가 검토.
+  (screen-18 리뷰 관찰)
+- [ ] **AdMob 출시 전 실광고 ID 교체·실기 런타임 검증** — 현재 Google 테스트 앱/단위
+  ID 사용. 출시 전 실 AdMob 계정 App ID·전면/보상형 단위 ID 로 교체. 실기에서 UMP
+  동의 폼·ATT 프롬프트 표출, 전면/보상형 실제 렌더·닫힘·보상 콜백 타이밍 검증(정적
+  리뷰 불가). (screen-18)
+
+## iCloud 동기화 / CloudKit (screen-19)
+
+- [ ] **iCloud / CloudKit entitlement 복구 (실기기 서명 차단 해소)** — Apple Developer
+  App ID(`com.sro.homepinappios`)에 iCloud capability 와 컨테이너
+  (`iCloud.com.sro.homepinapp`)가 미등록이라 실기기(device) 빌드 서명이 실패했다
+  (`Provisioning profile ... doesn't include the iCloud capability`). 임시로 iOS·macOS
+  entitlements 의 `com.apple.developer.icloud-container-identifiers`·
+  `icloud-services(CloudKit)` 키를 **주석 처리해 제거**(2026-06-18) → 실기기·시뮬레이터
+  빌드 green. CloudKit 동기화는 entitlement 없이도 `AppModelContainer` 가 로컬 fallback
+  하므로 런타임 안전(기능만 비활성). 계정에 iCloud capability + 컨테이너 등록 후 양쪽
+  entitlements 파일의 주석 블록을 복구해야 CloudKit private 동기화·가족공유가 실기기에서
+  동작한다. (파일: `Tuist/Support/HomePinApp-iOS.entitlements`,
+  `Tuist/Support/HomePinApp-macOS.entitlements`. 결정:
+  `docs/wiki/Decision/2026-06-17-CloudKit-private-동기화-골격.md`)
+- [ ] **CloudKit private 동기화·가족공유 실기기/실계정 검증** — private DB 동기화, 가족공유
+  초대(`UICloudSharingController`)·`CKShare` 스냅샷 저장, 공유 가져오기(`sharedCloudDatabase`
+  → 로컬 upsert)는 시뮬레이터/정적 검증만 됐다. entitlement 복구 + 유료 Developer Program +
+  실 iCloud 계정으로 실기기 검증 필요. 잔여: 참가자 push, 충돌 처리, 사진 공유. (결정:
+  `docs/wiki/Decision/2026-06-18-CloudKit-가족공유-1차-스냅샷.md`,
+  `docs/wiki/Decision/2026-06-18-CloudKit-가족공유-2차-가져오기.md`)

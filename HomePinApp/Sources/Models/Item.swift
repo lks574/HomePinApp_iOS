@@ -7,7 +7,7 @@ import SwiftData
 /// (`area`·`spot`·`category` 가 옵셔널인 이유 = nullify 보존.)
 @Model
 final class Item {
-  @Attribute(.unique) var id: UUID
+  var id: UUID
   var name: String
   /// 매칭/검색용 정규화 키(소문자·공백 정리). `name` 변경 시 함께 갱신한다.
   var normalizedName: String
@@ -26,11 +26,11 @@ final class Item {
   var category: ItemCategory?
 
   @Relationship(inverse: \Tag.items)
-  var tags: [Tag]
+  var tags: [Tag]?
 
   /// 이 물건을 재료로 쓰는 레시피 재료 라인(레시피 역참조·임박 추천용).
   @Relationship(deleteRule: .nullify, inverse: \RecipeIngredient.item)
-  var usedInIngredients: [RecipeIngredient]
+  var usedInIngredients: [RecipeIngredient]?
 
   #Index<Item>([\.name], [\.normalizedName], [\.expiresAt])
 

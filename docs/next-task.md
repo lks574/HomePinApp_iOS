@@ -2,7 +2,7 @@
 aliases: [next-task, 다음 할 일]
 tags: [doc/code, tasks]
 created: 2026-06-12
-updated: 2026-06-17
+updated: 2026-06-18
 status: draft
 ---
 
@@ -11,7 +11,33 @@ status: draft
 UI 우선 1차(시안 C 화면 골격: 5탭·장소·레시피·홈·추가 시트) 완료 후의 다음 후보.
 보류 상세는 `docs/follow-ups.md`.
 
-> 최근 완료: **macOS 플랫폼 지원 횡단(screen-17)** — 네이티브 macOS 앱 타깃 추가
+> 최근 완료: **AdMob 광고 수익화 P1(SDK + 동의/ATT 골격, 광고 미표시)** — 첫 외부
+> 의존성. `Project.swift` 에 Google Mobile Ads SDK(SPM `13.5.0` `.exact`) + UMP
+> (`GoogleUserMessagingPlatform` `3.1.0` `.exact`) 추가, **iOS 타깃에만 링크**(macOS
+> `dependencies: []` 유지 → macOS 빌드 green, SDK 미링크). iOS Info.plist 에
+> `GADApplicationIdentifier`(Google 테스트 앱 ID)·`SKAdNetworkItems`(50개)·
+> `NSUserTrackingUsageDescription`(en/ko 현지화) 추가. 앱 레벨 `PrivacyInfo.xcprivacy`
+> iOS 전용 리소스(`Resources-iOS/`, 공유 glob 밖)로 추가. `AdService`
+> (`@MainActor @Observable`, `Features/Monetization/`) — iOS 실구현/macOS no-op,
+> SDK 타입은 `#if canImport(GoogleMobileAds)` 안에만. 시작 플로우
+> `AppModel.start(adService:)` → `AdService.startup()`: ① UMP 동의 → ② ATT →
+> ③ `MobileAds.shared.start()` → `.home`(거부해도 비개인화로 진행, 차단 없음, 스플래시
+> 최소노출과 병렬). `AppRootView` 가 `AdService` 소유·`.environment` 주입. UMP 완료
+> 핸들러 nonisolated 콜백은 `nonisolated static` 헬퍼+`withCheckedContinuation` 으로
+> 받아 메인 액터 hop(격리 트랩 회피). iOS·macOS 빌드 둘 다 green, 동시성 경고 0.
+> **P2 전면 광고 완료**: 장보기 세션 완료(`shoppingSessionCompleted`) 트리거에서만
+> best-effort 표시, 하루 1회+최소 간격 빈도 캡(`UserDefaults`), 사전 로드·닫힘 후
+> 재로드, rootVC present, 닫힘 delegate 는 `Task { @MainActor in }` hop. **P3 보상형
+> 완료**: opt-in 전용(Settings "개발자 응원하기" 버튼 직접 탭 시에만, 강제 노출 0).
+> 테스트 보상형 단위 ID(`.../1712485313`), `presentRewarded()` 사전 로드→present,
+> `userDidEarnRewardHandler` 수신 시에만 누적 응원 카운터(`UserDefaults`
+> `ad.developerSupportCount`) +1. **보상거리 = 상징적 "개발자 응원"으로 어떤 기능도
+> 잠그지 않음**(R10). 보상 플래그는 `@MainActor` 참조 박스로 present 핸들러·닫힘
+> delegate 가 공유(mutable var 캡처 회피), 시청 중단·취소·실패 시 미적용(R9). Settings
+> 진입점은 `#if os(iOS)` 로 macOS 비노출(AdService no-op). 결정:
+> `docs/wiki/Decision/2026-06-17-AdMob-광고-수익화-도입.md`. 잔여: 출시 전 실광고
+> 앱/단위 ID 교체, ATT/동의·전면·보상형 실기 런타임 검증.
+> 이전 완료: **macOS 플랫폼 지원 횡단(screen-17)** — 네이티브 macOS 앱 타깃 추가
 > (화면 추가 아님, 플랫폼 확장). `Project.swift` 에 `HomePinApp-macOS`(`.macOS("26.0")`,
 > bundleId `com.sro.homepinappmac`, entitlements app-sandbox·files.user-selected.read-write·
 > device.audio-input) 추가, **소스·리소스 한 벌 공유** + `#if os` 흡수(Mac Catalyst·
@@ -128,7 +154,30 @@ UI 우선 1차(시안 C 화면 골격: 5탭·장소·레시피·홈·추가 시�
 
 ## 다음 후보 (우선순위순 제안)
 
-0. **macOS 실기 런타임 검증(screen-17 후속)** — iOS·macOS 빌드는 green 이나 macOS 는
+0. **CloudKit 동기화 + 가족공유 착수** — `feat/icloud-sync` 브랜치에서 시작. 목표는
+   Settings 에서 iCloud 동기화를 켜고, 이후 CloudKit 공유 초대로 가족에게 데이터를 공유할 수
+   있게 하는 것. 단, 현재 모델/프로젝트 상태상 버튼부터 추가하지 않고 아래 순서로 진행한다.
+   - **Phase 0 스키마 호환화**: 전 `@Model` 의 `id` `.unique` 제거, `#Index<Item>`
+     재검토, 비옵셔널 속성 기본값/optional 감사, 관계 optional+inverse 보장 점검,
+     `Item.photoData` 동기화 비용 정책 결정.
+   - **Phase A Private 동기화**: iCloud container 확정 후 iOS/macOS entitlements 확장,
+     `AppModelContainer` 를 CloudKit private DB 구성으로 전환, Settings 에 sync 상태/안내
+     진입점 추가. 골격 구현 완료: container ID `iCloud.com.sro.homepinapp`, Settings
+     `iCloud Sync` 토글, iCloud 계정 상태 확인, 토글 전 계정 가용성 확인, startup
+     CloudKit 실패 시 로컬 store fallback + Settings 사유 표시, iOS/macOS entitlements.
+     **단, App ID 에 iCloud capability·컨테이너 미등록이라 실기기 서명이 실패해
+     entitlements 의 CloudKit 키는 2026-06-18 임시 제거(주석)** — 계정 등록 후 복구 필요.
+     잔여는 Apple Developer 포털 container 생성/확인 + entitlement 복구 + 실기기/실계정
+     검증(`docs/follow-ups.md` "iCloud 동기화 / CloudKit").
+   - **Phase B 가족공유**: 1차 초대 골격과 2차 가져오기 골격 구현 완료. Settings `Share Home Data` 가 iOS
+     `UICloudSharingController` 를 띄우고, custom zone root record 에 현재 데이터를
+     `BackupBundle` JSON 스냅샷(사진 제외)으로 저장해 `CKShare` 한다. 초대 수락 후
+     `Import Shared Home Data` 는 `sharedCloudDatabase` 의 root snapshot 을 로컬 SwiftData 로
+     upsert 한다. Apple 가족 그룹 자동 연동이 아니라 초대 기반 공유로 다룬다. 잔여는
+     참가자 push, 충돌 처리, 사진 공유, 실기기/실계정 초대·가져오기 검증.
+   - 전제: 유료 Apple Developer Program 및 사용할 iCloud container ID 확정.
+   - 검토 문서: `docs/wiki/Research/CloudKit-동기화-가족공유-도입검토.md`.
+1. **macOS 실기 런타임 검증(screen-17 후속)** — iOS·macOS 빌드는 green 이나 macOS 는
    실기 런타임 검증이 남았다(시뮬레이터/CI 빌드만으로는 못 보는 권한·파일·디바이스 경로).
    - **AC-004 PhotosPicker OCR** — macOS 에서 사진 라이브러리 선택 → Vision OCR →
      [[RecipeCapture]] 입력 채우기. sandbox 에서 사진 접근/읽기 정상 여부.
@@ -139,7 +188,7 @@ UI 우선 1차(시안 C 화면 골격: 5탭·장소·레시피·홈·추가 시�
    - 검증 중 sandbox 사진 entitlement(예: `files.photos`/PhotosPicker 접근) 보정이
      필요하면 entitlements 에 추가. macOS 데스크톱 UX 최적화(메뉴/창/사이드바)는 별도
      후속. 결정: [[2026-06-17-macOS-네이티브-타깃-추가]].
-1. **AI 자연어 추가** — 1차 구현 완료(screen-09). Foundation Models `@Generable`
+2. **AI 자연어 추가** — 1차 구현 완료(screen-09). Foundation Models `@Generable`
    (`NLItemParser`, 추출만·비-MainActor) → `NLParseViewModel`(@MainActor, 가용성
    게이트·단일 세션 Task) → 확인 드래프트(`CaptureDraftReviewView`) → `AddDraftResolver`
    다건 저장(grounding·없으면생성/있으면매핑·`Item.normalize` 매칭). `CaptureSheet.add()`
@@ -147,7 +196,7 @@ UI 우선 1차(시안 C 화면 골격: 5탭·장소·레시피·홈·추가 시�
    잔여: 실기기 추론·한국어 품질 검증(시뮬레이터 미가용), 모델 다운로드 유도 UX(#5),
    유통기한·메모·find/add 의도판별은 후속. (제품 방향: [[제품-방향-재고-레시피-AI]],
    결정: [[2026-06-15-NL-추가-파서-FoundationModels]])
-2. **검색 동작** — 중앙 버튼 시트 **검색-우선 통합** 완료(`screen-04`): [추가|검색]
+3. **검색 동작** — 중앙 버튼 시트 **검색-우선 통합** 완료(`screen-04`): [추가|검색]
    모드 토글 제거, 단일 입력 필드 하나(타이핑·음성 공용). 입력 즉시 물건
    (이름·위치·분류·태그·메모 부분 일치) + 레시피(제목·요약·분류·태그·재료 세부 텍스트
    부분 일치) 실시간 검색 → 물건/레시피 섹션, 결과 아래 항상 `+ "{입력어}" 추가하기` 행(명시적 추가만,
@@ -156,14 +205,14 @@ UI 우선 1차(시안 C 화면 골격: 5탭·장소·레시피·홈·추가 시�
    제거한 토큰 전체 일치 + 임박/만료/위치 없음/지금 만들 수 있음/부족 재료 속성 플래그로
    보강. 홈/장소의 정적 검색바는 제거.
    (find/add 의도판별은 검색-우선 통합으로 대체·불필요.)
-3. **음성 입력(STT)** — 입력기 완료 + actor 경계 분리 리팩터 완료
+4. **음성 입력(STT)** — 입력기 완료 + actor 경계 분리 리팩터 완료
    (`SpeechDictationViewModel`(UI 상태/단일 세션 Task) + `SpeechDictationEngine`
    (비-MainActor 권한/오디오/모델) ↔ `DictationEvent` 스트림 경계. iOS 26
    `SpeechAnalyzer` + `SpeechTranscriber` 온디바이스 받아쓰기 → 활성 모드 필드,
    권한·불가용·거부 폴백, tap 버퍼 복사·고아 자원 누수 버그 해소). 잔여: 1번 AI 파서
    경로 재사용(받아쓰기 텍스트 → 구조화), 기기/모델 게이팅·한국어 모델 다운로드 UX,
    실기기 인식 정확도 검증(시뮬레이터 불가).
-4. **물건/레시피 고급 편집** — 물건 추가/편집/삭제는 `ItemEditor` 로 연결됨. 사진 선택/제거,
+5. **물건/레시피 고급 편집** — 물건 추가/편집/삭제는 `ItemEditor` 로 연결됨. 사진 선택/제거,
    분류 선택/신규 생성, 태그 다중 선택/신규 생성까지 완료. 수량 1에서
    `-` 탭 시 삭제 확인, 장소 상세 물건 행 "다 썼어요" 빠른 정리까지 완료.
    레시피 상세(`screen-03`)·CRUD(`screen-07`)·시드 10개 완료 — 카드 → `RecipeDetail`,
@@ -175,18 +224,10 @@ UI 우선 1차(시안 C 화면 골격: 5탭·장소·레시피·홈·추가 시�
    남은 범위는 사진 downsampling/압축 정책.
    (장소 CRUD `screen-05`·세부위치 CRUD `screen-06` 완료 — 추가/편집은 `PlaceEditor`/`SpotEditor`, 삭제는 확인 다이얼로그.)
    장소/세부위치 에디터 확장(아이콘·Space 선택), 정렬 변경(drag) 이 후속.
-5. **기기 게이팅 + 한국어/폴백** — AI 미지원 환경 처리. NL 추가 파서의 가용성 게이트
+6. **기기 게이팅 + 한국어/폴백** — AI 미지원 환경 처리. NL 추가 파서의 가용성 게이트
    (`SystemLanguageModel.default.availability`)·단건 스텁 폴백은 #1 에서 구현됨. 잔여는
    한국어 모델 다운로드/Apple Intelligence 미설치 유도 UX(진행률·동의), 시작 전 사전
    게이팅(마이크/추가 진입 시 미가용 사전 안내), 실기기 한국어 인식·추론 정확도 검증.
-
-## 추후 (보류)
-
-- **CloudKit 동기화 + 가족공유** — 같은 사용자 아이폰↔맥 동일 데이터(Private DB) +
-  가족 구성원 데이터 공유(Shared DB/CKShare). **현재 미착수.** 전제: 유료 Apple
-  Developer Program 가입. 선행: 전 `@Model` 의 `@Attribute(.unique)` 제거 등 CloudKit
-  호환 마이그레이션. 검토 문서:
-  `docs/wiki/Research/CloudKit-동기화-가족공유-도입검토.md`.
 
 ## 진행 메모
 

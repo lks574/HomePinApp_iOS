@@ -2,14 +2,16 @@
 aliases: [CloudKit 동기화·가족공유 검토, iCloud 동기화, 가족공유]
 tags: [research, decision/data]
 created: 2026-06-17
-updated: 2026-06-17
-status: draft
+updated: 2026-06-18
+status: active
 ---
 
 # CloudKit 동기화·가족공유 도입 검토
 
-> 추후 작업용 검토 문서. **현재 구현하지 않는다.** 유료 Apple Developer Program 가입 후
-> [[index|hpi:plan]] 으로 정식 기획·Decision 승격 후 착수한다.
+> `feat/icloud-sync` 브랜치에서 착수 중. CloudKit capability 골격, 데이터 모델 호환화,
+> private DB 구성, 가족공유 초대·참가자 가져오기 골격은 적용했다. Apple Developer 포털
+> container 생성/확인과 실기기 동기화·공유 검증은 아직 필요하다. 동기화·공유는 persistence
+> 구조를 바꾸는 비가역 결정으로 다룬다.
 
 ## 요약
 
@@ -20,9 +22,37 @@ status: draft
   비가역 결정**이다.
 - **전제: 유료 Apple Developer Program($99/년) 필수.** iCloud/CloudKit entitlement 는
   무료(personal team) 계정으로 활성화 불가.
-- **선행 필수: 데이터 모델 개편.** 현재 10개 `@Model` 전부가 CloudKit 동기화 제약을
-  위반(`@Attribute(.unique)`)한다. "CloudKit 켜기"가 아니라 **스키마 마이그레이션이
+- **선행 필수: 데이터 모델 개편.** 기존 10개 `@Model` 전부가 `id` 에 `.unique` 를
+  선언해 CloudKit 동기화 제약을 위반했다. "CloudKit 켜기"가 아니라 **스키마 마이그레이션이
   본체**다.
+
+## 2026-06-17~18 착수 메모
+
+- 작업 브랜치: `feat/icloud-sync` (`feat/admob` HEAD 에서 분기).
+- 사용자 목표:
+  1. Settings 에서 iCloud 동기화를 켤 수 있게 한다.
+  2. iCloud 공유를 통해 가족에게 데이터를 공유할 수 있게 한다.
+- 구현 해석:
+  - Settings 의 버튼은 "즉시 한 번 동기화"가 아니라 **iCloud sync 활성화/상태/안내**
+    진입점으로 설계한다. SwiftData + CloudKit 은 `ModelContainer` 구성이 동기화 경로를
+    결정하고, 실제 sync 는 시스템이 자동 수행한다.
+  - 가족 공유는 Apple 가족 그룹 자동 연동이 아니라 **CloudKit `CKShare` 초대 기반 공유**
+    로 다룬다.
+- 현재 코드 확인:
+  - `AppModelContainer` 는 Settings 토글 값에 따라 `.none` 또는
+    `.private("iCloud.com.sro.homepinapp")` 를 사용한다.
+  - 토글을 켤 때 iCloud 계정 상태를 확인하고, 앱 시작 시 CloudKit store 생성 실패는
+    로컬 store fallback + Settings 사유 표시로 처리한다.
+  - iOS/macOS 타깃에 CloudKit entitlements 를 추가했다.
+  - 모든 영속 모델의 `id` `.unique` 를 제거했고, to-many 관계를 optional 관계로 전환했다.
+  - Settings 에 iOS 전용 `Share Home Data` 버튼을 추가했다. 1차는 custom zone root record 에
+    현재 `BackupBundle` JSON 스냅샷(사진 제외)을 저장하고 `CKShare` + `UICloudSharingController`
+    로 초대 UI를 띄우는 골격이다.
+  - 초대 수락은 iOS app delegate 에서 `CKContainer.accept(_:)` 로 처리하고,
+    `hierarchicalRootRecordID` 를 저장한다.
+  - Settings 의 `Import Shared Home Data` 버튼은 저장된 root record 를
+    `sharedCloudDatabase` 에서 읽어 `BackupUpsertEngine` 으로 로컬 SwiftData 에 병합한다.
+  - macOS iCloud entitlement 는 실행 가능한 서명 빌드에 Apple Development 인증서가 필요하다.
 
 ## 범위 (2단계로 분리)
 
@@ -42,6 +72,10 @@ status: draft
 - ⚠️ Apple "가족 공유 그룹" 과 CloudKit 공유는 **자동 연동되지 않는다.** "내 가족과
   공유" 토글 같은 건 없고, 공유는 초대로 이뤄진다.
 - 난이도: **상** (구조·UI 모두 추가 작업 큼). Phase A 안정화 후 별도 착수 권장.
+- 1차 구현: `HomePinFamilyHome` zone 의 `HomePinSharedHome/homepin-home-root` record 를
+  `CKShare` root 로 공유한다. record payload 는 현재 데이터의 JSON 스냅샷이며, 참가자
+  `sharedCloudDatabase` 병합은 2차에서 수동 가져오기 버튼으로 구현했다. 실시간 공동 편집은
+  후속이다.
 
 ## 선행 필수: 데이터 모델 개편
 
@@ -80,13 +114,17 @@ CloudKit 동기화(NSPersistentCloudKitContainer 계열) 제약과 현재 모델
 ## 착수 전 체크리스트
 
 1. [ ] 유료 Apple Developer Program 가입
-2. [ ] hpi:plan 으로 Phase A/B 분리 기획 + Decision 노트 승격(데이터모델·동기화 비가역)
-3. [ ] 모델 CloudKit 호환 마이그레이션(`.unique` 제거 등) — 무료 상태에서 선행 가능
-4. [ ] iCloud 컨테이너 생성·iOS/macOS entitlement 확장
-5. [ ] Phase A(private) 구현·검증 → 안정화 후 Phase B(가족공유) 착수
+2. [x] hpi:auto 로 Phase A/B 분리 기획 + Decision 노트 승격(데이터모델·동기화 비가역)
+3. [x] 모델 CloudKit 호환 마이그레이션(`.unique` 제거, to-many optional 관계)
+4. [x] iCloud 컨테이너 ID 결정·iOS/macOS entitlement 확장
+5. [ ] Apple Developer 포털에서 `iCloud.com.sro.homepinapp` 컨테이너 생성/확인
+6. [ ] Phase A(private) 실기기/실계정 검증
+7. [x] Phase B 1차 `CKShare` 초대 골격 구현(스냅샷 공유, iOS UICloudSharingController)
+8. [x] 참가자 shared DB 읽기·로컬 병합 골격 구현(`Import Shared Home Data`)
+9. [ ] 충돌 처리, 참가자 push, 사진 공유 정책 구현
 
 ## 적용
 
 - 관련 결정: [[2026-06-12-swiftdata-마이그레이션-방침]],
   [[2026-06-17-데이터-백업-번들포맷]], [[2026-06-17-macOS-네이티브-타깃-추가]]
-- 상태: **draft (보류)** — 확정·착수 시 Decision 노트로 승격하고 status 갱신.
+- 상태: **active** — 개발자 계정/실기기 검증 전이므로 런타임 검증 항목은 미완료.

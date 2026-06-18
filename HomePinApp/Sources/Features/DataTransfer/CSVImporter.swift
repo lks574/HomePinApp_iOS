@@ -126,7 +126,7 @@ struct CSVImporter {
         continue
       }
 
-      let order = nextSortOrder[recipe.id] ?? recipe.ingredients.count
+      let order = nextSortOrder[recipe.id] ?? (recipe.ingredients ?? []).count
       nextSortOrder[recipe.id] = order + 1
 
       let ingredient = RecipeIngredient(

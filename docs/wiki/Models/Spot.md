@@ -14,7 +14,7 @@ status: in-progress
 
 | 프로퍼티 | 타입 | 비고 |
 | --- | --- | --- |
-| `id` | `UUID` | `@Attribute(.unique)` |
+| `id` | `UUID` | 앱 로직 유일성 |
 | `name` | `String` | 한 구역 내 중복은 앱 로직 검증 |
 | `sortOrder` | `Int` | |
 | `createdAt`/`updatedAt` | `Date` | |
@@ -22,7 +22,7 @@ status: in-progress
 ## 관계
 
 - ← [[Area]] : `area: Area?` (부모)
-- → [[Item]] : `items: [Item]` `@Relationship(.nullify)` — 세부위치 삭제 시 물건은
+- → [[Item]] : `items: [Item]?` `@Relationship(.nullify)` — 세부위치 삭제 시 물건은
   보존(구역엔 남음).
 
 ## 사용 화면

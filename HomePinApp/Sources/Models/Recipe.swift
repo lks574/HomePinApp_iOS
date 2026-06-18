@@ -5,7 +5,7 @@ import SwiftData
 /// 보유/부족을 판정한다(상세: Decision 노트 "레시피 모델").
 @Model
 final class Recipe {
-  @Attribute(.unique) var id: UUID
+  var id: UUID
   var title: String
   var summary: String?
   var servings: Int?
@@ -21,10 +21,10 @@ final class Recipe {
   var updatedAt: Date
 
   @Relationship(deleteRule: .cascade, inverse: \RecipeIngredient.recipe)
-  var ingredients: [RecipeIngredient]
+  var ingredients: [RecipeIngredient]?
 
   @Relationship(inverse: \Tag.recipes)
-  var tags: [Tag]
+  var tags: [Tag]?
 
   init(
     id: UUID = UUID(),
@@ -57,7 +57,7 @@ final class Recipe {
   /// 조리 가능 판정의 기준이 되는 주재료(부재료 제외) 목록.
   /// 부재료(`isOptional`)는 보유/부족 표시만 하고 판정·부족분·장보기 집계에서 빠진다.
   var mainIngredients: [RecipeIngredient] {
-    ingredients.filter { !$0.isOptional }
+    (ingredients ?? []).filter { !$0.isOptional }
   }
 
   /// 주재료 수(보유 진행률·"X/전체" 분모의 기준).

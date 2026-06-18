@@ -15,7 +15,7 @@ nullify 로 보존된다.
 
 | 프로퍼티 | 타입 | 비고 |
 | --- | --- | --- |
-| `id` | `UUID` | `@Attribute(.unique)` |
+| `id` | `UUID` | 앱 로직 유일성 |
 | `name` | `String` | `#Index` |
 | `normalizedName` | `String` | `#Index`, 매칭/검색 키(소문자·공백정리). `Item.normalize()` |
 | `quantity` | `Int` | 기본 1 |
@@ -30,8 +30,8 @@ nullify 로 보존된다.
 - → [[Area]] : `area: Area?` (앱규칙 필수, nullify 보존 위해 옵셔널)
 - → [[Spot]] : `spot: Spot?` (선택)
 - → [[ItemCategory]] : `category: ItemCategory?` (분류 1개)
-- ↔ [[Tag]] : `tags: [Tag]` **N:N** (inverse 를 여기 선언)
-- ↔ [[RecipeIngredient]] : `usedInIngredients` `.nullify` (이 물건을 쓰는 레시피 재료 — 역참조·임박 추천)
+- ↔ [[Tag]] : `tags: [Tag]?` **N:N** (inverse 를 여기 선언)
+- ↔ [[RecipeIngredient]] : `usedInIngredients: [RecipeIngredient]?` `.nullify` (이 물건을 쓰는 레시피 재료 — 역참조·임박 추천)
 
 ## 사용 화면
 

@@ -16,7 +16,7 @@ status: done
 
 | 프로퍼티 | 타입 | 비고 |
 | --- | --- | --- |
-| `id` | `UUID` | `@Attribute(.unique)` |
+| `id` | `UUID` | 앱 로직 유일성 |
 | `name` | `String` | 살 것 이름(사용자 입력, 현지화 비대상) |
 | `normalizedName` | `String` | 매칭/검색용 정규화 키(`Item.normalize` 재사용) |
 | `quantity` | `Int?` | 살 수량(옵셔널 — 나중에 정함) |

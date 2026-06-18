@@ -97,6 +97,23 @@
           }
         }
       }
+    },
+    "NSUserTrackingUsageDescription" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Used to show you more relevant ads. You can still use the app if you decline."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "더 관련성 높은 광고를 보여 주기 위해 사용해요. 거부해도 앱은 그대로 쓸 수 있어요."
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

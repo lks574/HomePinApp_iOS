@@ -131,7 +131,7 @@ struct RecipesView: View {
       recipe.cuisine.map(RecipeClassification.cuisineLabel),
       recipe.dishType.map(RecipeClassification.dishTypeLabel),
     ]
-    fields.append(contentsOf: recipe.ingredients.flatMap(searchableIngredientFields).map(Optional.init))
+    fields.append(contentsOf: (recipe.ingredients ?? []).flatMap(searchableIngredientFields).map(Optional.init))
     return fields.compactMap { $0 }.filter { !$0.isEmpty }
   }
 
@@ -182,7 +182,7 @@ struct RecipesView: View {
   /// 임박 재료가 있는 레시피 카드 — 진행률 + 재료 칩.
   private func recipeSoonCard(_ recipe: Recipe) -> some View {
     // 칩은 주/부 모두 보이고, 진행률·"X/전체"는 주재료 기준(판정과 일치).
-    let ingredients = recipe.ingredients.sorted { $0.sortOrder < $1.sortOrder }
+    let ingredients = (recipe.ingredients ?? []).sorted { $0.sortOrder < $1.sortOrder }
     let soon = ingredients.filter { $0.stockStatus == .soon }
     let badge: String? = soon.isEmpty
       ? nil

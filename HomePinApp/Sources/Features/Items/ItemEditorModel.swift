@@ -46,7 +46,7 @@ final class ItemEditorModel {
       selectedArea = item.area
       selectedSpot = item.spot
       selectedCategory = item.category
-      selectedTags = item.tags.sorted { $0.name < $1.name }
+      selectedTags = (item.tags ?? []).sorted { $0.name < $1.name }
       photoData = item.photoData
       hasExpiration = item.expiresAt != nil
       expiresAt = item.expiresAt ?? .now

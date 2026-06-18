@@ -2,7 +2,7 @@
 aliases: [codebase-overview, 코드베이스 개요]
 tags: [doc/code, overview]
 created: 2026-06-12
-updated: 2026-06-17
+updated: 2026-06-18
 status: draft
 ---
 
@@ -18,10 +18,34 @@ status: draft
   - `HomePinApp-macOS` — 네이티브 macOS, `.macOS("26.0")`, bundleId
     `com.sro.homepinappmac`, entitlements `Tuist/Support/HomePinApp-macOS.entitlements`
     (app-sandbox·files.user-selected.read-write·device.audio-input).
+  - `HomePinApp` — iOS entitlements `Tuist/Support/HomePinApp-iOS.entitlements`.
+  - **CloudKit entitlement 임시 제거(2026-06-18)**: App ID 에 iCloud capability·컨테이너
+    미등록이라 실기기 서명이 실패해, 양 entitlements 의 `icloud-container-identifiers`·
+    `icloud-services(CloudKit)` 키를 주석 처리해 뺐다. 계정 등록 후 복구 필요
+    (`docs/follow-ups.md` "iCloud 동기화 / CloudKit"). 런타임은 로컬 fallback 으로 안전.
 - **스킴**: `automaticSchemesOptions` `targetSchemesGrouping: .notGrouped` 로 타깃별
   스킴 분리 → `HomePinApp`(iOS) / `HomePinApp-macOS`(macOS). 한 스킴에 묶으면
   (`.singleScheme`) macOS 빌드 시 iOS 타깃까지 끌려와 서명 오류가 나서 분리했다.
 - 명령은 `docs/development.md` 참고.
+
+## Sync / CloudKit
+
+- `Features/Sync/CloudSyncPreference.swift` — iCloud sync 설정 키와 CloudKit container
+  ID(`iCloud.com.sro.homepinapp`), startup fallback 사유 키, Settings 계정 상태 확인 모델.
+- `Persistence/AppModelContainer.swift` — `cloudSync.isEnabled` 가 켜져 있으면
+  SwiftData `ModelConfiguration` 을 `.private("iCloud.com.sro.homepinapp")` 로 만들고,
+  아니면 `.none` 으로 로컬 저장소만 사용한다. CloudKit container 생성이 실패하면
+  `cloudSync.isEnabled` 를 끄고 fallback 사유를 저장한 뒤 로컬 저장소로 다시 시작한다.
+- Settings 의 `iCloud Sync` 토글은 켜기 전에 `CKContainer.accountStatus()` 를 확인한다.
+  iCloud 계정이 사용 가능할 때만 다음 앱 시작부터 CloudKit private DB 구성을 적용한다.
+  fallback 사유가 있으면 Settings 데이터 섹션에 표시한다.
+- `Features/Sync/HomeShareService.swift` — 가족공유 서비스. owner 는 custom zone/root
+  record 를 준비하고 현재 `BackupBundle` JSON 스냅샷(사진 제외)을 저장한 뒤 `CKShare` 를
+  만든다. participant 는 accepted share 의 root record ID 를 저장하고
+  `sharedCloudDatabase` 에서 snapshot 을 fetch 해 `BackupUpsertEngine` 으로 로컬 병합한다.
+- `Features/Sync/HomeShareSheet.swift` — iOS `UICloudSharingController` SwiftUI wrapper.
+- `App/CloudSharingAppDelegate.swift` — CloudKit 공유 초대 수락 metadata 를
+  `CKContainer.accept(_:)` 로 처리하고 root record ID 를 저장한다.
 
 ## 공용 / 플랫폼 추상화 (`Shared/`)
 

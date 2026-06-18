@@ -14,14 +14,14 @@ status: in-progress
 
 | 프로퍼티 | 타입 | 비고 |
 | --- | --- | --- |
-| `id` | `UUID` | `@Attribute(.unique)` |
+| `id` | `UUID` | 앱 로직 유일성 |
 | `name` | `String` | 중복은 앱 로직 검증 |
 | `createdAt`/`updatedAt` | `Date` | |
 
 ## 관계
 
-- ↔ [[Item]] : `items: [Item]` (N:N, inverse 는 `Item.tags` 에 선언)
-- ↔ [[Recipe]] : `recipes: [Recipe]` (N:N, inverse 는 `Recipe.tags` 에 선언)
+- ↔ [[Item]] : `items: [Item]?` (N:N, inverse 는 `Item.tags` 에 선언)
+- ↔ [[Recipe]] : `recipes: [Recipe]?` (N:N, inverse 는 `Recipe.tags` 에 선언)
 
 ## 메모
 
