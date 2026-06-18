@@ -2,13 +2,20 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>com.apple.developer.icloud-container-identifiers</key>
-	<array>
-		<string>iCloud.com.sro.homepinapp</string>
-	</array>
-	<key>com.apple.developer.icloud-services</key>
-	<array>
-		<string>CloudKit</string>
-	</array>
+	<!--
+	  iCloud / CloudKit entitlement 임시 제거.
+	  Apple Developer App ID(com.sro.homepinappios)에 iCloud capability 와
+	  컨테이너(iCloud.com.sro.homepinapp)가 아직 등록되지 않아 실기기 서명이 실패한다.
+	  계정에 iCloud capability 등록 후 아래 키를 복구한다(macOS entitlements 도 동일).
+
+	  <key>com.apple.developer.icloud-container-identifiers</key>
+	  <array>
+	  	<string>iCloud.com.sro.homepinapp</string>
+	  </array>
+	  <key>com.apple.developer.icloud-services</key>
+	  <array>
+	  	<string>CloudKit</string>
+	  </array>
+	-->
 </dict>
 </plist>

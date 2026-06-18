@@ -2,7 +2,7 @@
 aliases: [next-task, 다음 할 일]
 tags: [doc/code, tasks]
 created: 2026-06-12
-updated: 2026-06-17
+updated: 2026-06-18
 status: draft
 ---
 
@@ -165,7 +165,10 @@ UI 우선 1차(시안 C 화면 골격: 5탭·장소·레시피·홈·추가 시�
      진입점 추가. 골격 구현 완료: container ID `iCloud.com.sro.homepinapp`, Settings
      `iCloud Sync` 토글, iCloud 계정 상태 확인, 토글 전 계정 가용성 확인, startup
      CloudKit 실패 시 로컬 store fallback + Settings 사유 표시, iOS/macOS entitlements.
-     잔여는 Apple Developer 포털 container 생성/확인과 실기기/실계정 검증.
+     **단, App ID 에 iCloud capability·컨테이너 미등록이라 실기기 서명이 실패해
+     entitlements 의 CloudKit 키는 2026-06-18 임시 제거(주석)** — 계정 등록 후 복구 필요.
+     잔여는 Apple Developer 포털 container 생성/확인 + entitlement 복구 + 실기기/실계정
+     검증(`docs/follow-ups.md` "iCloud 동기화 / CloudKit").
    - **Phase B 가족공유**: 1차 초대 골격과 2차 가져오기 골격 구현 완료. Settings `Share Home Data` 가 iOS
      `UICloudSharingController` 를 띄우고, custom zone root record 에 현재 데이터를
      `BackupBundle` JSON 스냅샷(사진 제외)으로 저장해 `CKShare` 한다. 초대 수락 후

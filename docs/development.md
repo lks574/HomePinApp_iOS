@@ -2,7 +2,7 @@
 aliases: [development, 개발 워크플로]
 tags: [doc/code, dev]
 created: 2026-06-12
-updated: 2026-06-17
+updated: 2026-06-18
 status: draft
 ---
 
@@ -44,6 +44,9 @@ xcodebuild -workspace HomePinApp.xcworkspace -scheme HomePinApp-macOS \
 - 분리 빌드 검증: iOS·macOS 두 스킴 모두 `** BUILD SUCCEEDED **` 인지 각각 확인.
 - CloudKit entitlement 가 켜진 macOS 타깃은 실행 가능한 서명 빌드에 Apple Development
   인증서가 필요하다. 서명 환경이 준비되지 않은 컴파일 검증은 아래처럼 수행한다.
+  (단 **2026-06-18 현재 CloudKit entitlement 는 임시 제거** 상태 — App ID 미등록으로 인한
+  실기기 서명 실패 회피. iOS device 빌드도 서명까지 green. 복구 시 다시 인증서 필요.
+  `docs/follow-ups.md` "iCloud 동기화 / CloudKit".)
 
 ```bash
 xcodebuild -workspace HomePinApp.xcworkspace -scheme HomePinApp-macOS \

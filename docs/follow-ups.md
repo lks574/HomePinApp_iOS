@@ -2,7 +2,7 @@
 aliases: [follow-ups, 후속 항목]
 tags: [doc/code, followups]
 created: 2026-06-12
-updated: 2026-06-17
+updated: 2026-06-18
 status: draft
 ---
 
@@ -228,3 +228,24 @@ i18n 1차(screen-10, en/ko 시스템 추종) 완료 후 남은 항목. 결정:
   ID 사용. 출시 전 실 AdMob 계정 App ID·전면/보상형 단위 ID 로 교체. 실기에서 UMP
   동의 폼·ATT 프롬프트 표출, 전면/보상형 실제 렌더·닫힘·보상 콜백 타이밍 검증(정적
   리뷰 불가). (screen-18)
+
+## iCloud 동기화 / CloudKit (screen-19)
+
+- [ ] **iCloud / CloudKit entitlement 복구 (실기기 서명 차단 해소)** — Apple Developer
+  App ID(`com.sro.homepinappios`)에 iCloud capability 와 컨테이너
+  (`iCloud.com.sro.homepinapp`)가 미등록이라 실기기(device) 빌드 서명이 실패했다
+  (`Provisioning profile ... doesn't include the iCloud capability`). 임시로 iOS·macOS
+  entitlements 의 `com.apple.developer.icloud-container-identifiers`·
+  `icloud-services(CloudKit)` 키를 **주석 처리해 제거**(2026-06-18) → 실기기·시뮬레이터
+  빌드 green. CloudKit 동기화는 entitlement 없이도 `AppModelContainer` 가 로컬 fallback
+  하므로 런타임 안전(기능만 비활성). 계정에 iCloud capability + 컨테이너 등록 후 양쪽
+  entitlements 파일의 주석 블록을 복구해야 CloudKit private 동기화·가족공유가 실기기에서
+  동작한다. (파일: `Tuist/Support/HomePinApp-iOS.entitlements`,
+  `Tuist/Support/HomePinApp-macOS.entitlements`. 결정:
+  `docs/wiki/Decision/2026-06-17-CloudKit-private-동기화-골격.md`)
+- [ ] **CloudKit private 동기화·가족공유 실기기/실계정 검증** — private DB 동기화, 가족공유
+  초대(`UICloudSharingController`)·`CKShare` 스냅샷 저장, 공유 가져오기(`sharedCloudDatabase`
+  → 로컬 upsert)는 시뮬레이터/정적 검증만 됐다. entitlement 복구 + 유료 Developer Program +
+  실 iCloud 계정으로 실기기 검증 필요. 잔여: 참가자 push, 충돌 처리, 사진 공유. (결정:
+  `docs/wiki/Decision/2026-06-18-CloudKit-가족공유-1차-스냅샷.md`,
+  `docs/wiki/Decision/2026-06-18-CloudKit-가족공유-2차-가져오기.md`)

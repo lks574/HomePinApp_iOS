@@ -34,6 +34,15 @@ status: accepted
   - macOS 는 iCloud entitlement 때문에 일반 실행 빌드에 Apple Development 서명이 필요하다.
     서명 없는 컴파일 검증은 `CODE_SIGNING_ALLOWED=NO` 로 수행한다.
 
+> [!warning] 상태 업데이트 (2026-06-18)
+> App ID(`com.sro.homepinappios`)에 iCloud capability·컨테이너
+> (`iCloud.com.sro.homepinapp`)가 아직 등록되지 않아 **실기기(device) 빌드 서명이 실패**한다
+> (`Provisioning profile ... doesn't include the iCloud capability`). 임시 조치로 iOS·macOS
+> entitlements 의 CloudKit 키를 주석 처리해 제거했다(실기기·시뮬레이터 빌드 green).
+> CloudKit 동기화는 entitlement 없이도 로컬 fallback 으로 런타임 안전. 계정에 iCloud
+> capability + 컨테이너 등록 후 entitlement 를 복구하면 결정대로 동작한다.
+> 추적: `docs/follow-ups.md` "iCloud 동기화 / CloudKit".
+
 ## 선행 정리
 
 - 전 `@Model` 의 `id` `.unique` 제약 제거.

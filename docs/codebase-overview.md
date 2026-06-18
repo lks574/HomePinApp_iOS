@@ -17,9 +17,12 @@ status: draft
   - `HomePinApp` — iOS, `.iOS("26.5")`, bundleId `com.sro.homepinappios`.
   - `HomePinApp-macOS` — 네이티브 macOS, `.macOS("26.0")`, bundleId
     `com.sro.homepinappmac`, entitlements `Tuist/Support/HomePinApp-macOS.entitlements`
-    (app-sandbox·files.user-selected.read-write·device.audio-input·CloudKit).
-  - `HomePinApp` — iOS entitlements `Tuist/Support/HomePinApp-iOS.entitlements`
-    (CloudKit).
+    (app-sandbox·files.user-selected.read-write·device.audio-input).
+  - `HomePinApp` — iOS entitlements `Tuist/Support/HomePinApp-iOS.entitlements`.
+  - **CloudKit entitlement 임시 제거(2026-06-18)**: App ID 에 iCloud capability·컨테이너
+    미등록이라 실기기 서명이 실패해, 양 entitlements 의 `icloud-container-identifiers`·
+    `icloud-services(CloudKit)` 키를 주석 처리해 뺐다. 계정 등록 후 복구 필요
+    (`docs/follow-ups.md` "iCloud 동기화 / CloudKit"). 런타임은 로컬 fallback 으로 안전.
 - **스킴**: `automaticSchemesOptions` `targetSchemesGrouping: .notGrouped` 로 타깃별
   스킴 분리 → `HomePinApp`(iOS) / `HomePinApp-macOS`(macOS). 한 스킴에 묶으면
   (`.singleScheme`) macOS 빌드 시 iOS 타깃까지 끌려와 서명 오류가 나서 분리했다.
