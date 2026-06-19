@@ -224,3 +224,33 @@ i18n 1차(screen-10, en/ko 시스템 추종) 완료 후 남은 항목. 결정:
   실 iCloud 계정으로 실기기 검증 필요. 잔여: 참가자 push, 충돌 처리. (결정:
   `docs/wiki/Decision/2026-06-18-CloudKit-가족공유-1차-스냅샷.md`,
   `docs/wiki/Decision/2026-06-18-CloudKit-가족공유-2차-가져오기.md`)
+
+## Firebase (Analytics·Crashlytics·RemoteConfig)
+
+- [ ] **Firebase 콘솔 앱 등록 + `GoogleService-Info.plist` 주입** — 코드만 먼저 들어간
+  상태(plist 없으면 `FirebaseBootstrap` 가 구성 skip → 빌드 green·앱 정상). Firebase
+  콘솔에서 iOS(`com.sro.homepinappios`)·macOS(`com.sro.homepinappmac`) 앱을 등록하고
+  각 `GoogleService-Info.plist` 를 `HomePinApp/Resources-iOS/`·`Resources-macOS/` 에
+  넣어야 Analytics·Crashlytics·RemoteConfig 가 실제 동작한다. 실 plist 는 `.gitignore`
+  비커밋(샘플만 커밋). (결정:
+  `docs/wiki/Decision/2026-06-18-Firebase-analytics-crashlytics-remoteconfig.md`)
+- [ ] **RemoteConfig 파라미터 생성** — 콘솔 RemoteConfig 에 아래 3개 키를 만들어야 버전
+  게이트가 동작한다(미생성/fetch 실패 시 게이트 미적용, 차단 없음). 키·타입·예시:
+  - `latest_app_version` (String, 예: `1.2.0`) — 현재 < 이 값이면 **선택** 업데이트 안내(1회 알럿).
+  - `min_required_app_version` (String, 예: `1.1.0`) — 현재 < 이 값이면 **강제** 업데이트(차단 화면).
+  - `update_store_url` (String, 예: App Store 링크) — 업데이트 버튼이 여는 URL. 비우면 기본값 사용.
+  비교는 `CFBundleShortVersionString` 과 `.numeric` 비교다(예: `1.10.0` > `1.9.0`). iOS·macOS
+  공통 키 — 플랫폼별로 다른 버전을 강제하려면 키 분리 검토(예: `ios_*`/`macos_*`).
+- [ ] **출시 후 실제 App Store 링크 교체** — 앱 미출시라 기본 스토어 URL 이 플레이스홀더
+  (`VersionGateService.defaultStoreURLString = https://apps.apple.com/app/id000000000`).
+  출시 후 실제 링크로 교체하고 RemoteConfig `update_store_url` 로 내린다. macOS 는 스토어
+  URL 이 iOS 와 다를 수 있어 별도 확인. (파일:
+  `HomePinApp/Sources/Features/AppUpdate/VersionGateService.swift`)
+- [ ] **버전 게이트·크래시·dSYM 실기기 검증** — 강제/선택 업데이트 분기(차단 화면·1회 알럿·
+  설정 행), Crashlytics 크래시 수집·증상 리포트, dSYM 업로드 스크립트(SPM 체크아웃 `run` +
+  plist 존재 가드) 동작은 정적 검증만 됐다. 실 plist + 실기기에서 검증 필요. Analytics
+  자동 이벤트 수집과 커스텀 `app_update_prompt` 이벤트 콘솔 도달도 확인. (모듈:
+  `Features/AppUpdate/`, `Shared/Firebase/`, `Project.swift` Crashlytics 스크립트)
+- [ ] **macOS Firebase 런타임 검증** — macOS 샌드박스에 `com.apple.security.network.client`
+  를 추가했다(서버 통신용). 실제 macOS 앱에서 Firebase 서버 접속·RemoteConfig fetch·
+  Crashlytics 전송이 되는지 확인. (파일: `Tuist/Support/HomePinApp-macOS.entitlements`)

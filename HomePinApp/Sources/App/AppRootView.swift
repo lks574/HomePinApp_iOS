@@ -5,6 +5,11 @@ import SwiftUI
 struct AppRootView: View {
   @State private var appModel = AppModel()
   @State private var adService = AdService()
+  @State private var versionGate = VersionGateService()
+  /// 선택 업데이트 안내 알럿을 이번 실행에서 한 번만 띄우기 위한 플래그/표시 상태.
+  @State private var didPromptOptionalUpdate = false
+  @State private var showingOptionalUpdate = false
+  @Environment(\.openURL) private var openURL
   @AppStorage(AppThemePreference.storageKey) private var themeRaw = AppThemePreference.system.rawValue
   @AppStorage(AppLanguagePreference.storageKey) private var languageRaw = AppLanguagePreference.system.rawValue
 
@@ -18,13 +23,40 @@ struct AppRootView: View {
         RootTabView()
           .transition(.opacity)
       }
+
+      // 강제 업데이트: 앱 전체를 덮는 닫을 수 없는 차단 화면(스토어 이동만 가능).
+      if versionGate.requiresForcedUpdate {
+        ForcedUpdateView(latestVersion: versionGate.latestVersion, updateURL: versionGate.updateURL)
+          .transition(.opacity)
+          .zIndex(1)
+      }
     }
     .animation(.default, value: appModel.phase)
+    .animation(.default, value: versionGate.requiresForcedUpdate)
     .preferredColorScheme(theme.colorScheme)
     .applyLanguage(language)
     .environment(adService)
+    .environment(versionGate)
     .task {
-      await appModel.start(adService: adService)
+      await appModel.start(adService: adService, versionGate: versionGate)
+    }
+    // 선택 업데이트: 닫기 가능한 1회성 안내 알럿. 강제일 때는 차단 화면이 우선이라 띄우지 않는다.
+    .onChange(of: versionGate.hasOptionalUpdate) { _, hasUpdate in
+      guard hasUpdate, !didPromptOptionalUpdate else { return }
+      didPromptOptionalUpdate = true
+      showingOptionalUpdate = true
+    }
+    .alert("Update Available", isPresented: $showingOptionalUpdate) {
+      Button("Update") {
+        if let url = versionGate.updateURL { openURL(url) }
+      }
+      Button("Later", role: .cancel) {}
+    } message: {
+      if let latest = versionGate.latestVersion {
+        Text("A new version (\(latest)) of HomePin is available.")
+      } else {
+        Text("A new version of HomePin is available.")
+      }
     }
   }
 

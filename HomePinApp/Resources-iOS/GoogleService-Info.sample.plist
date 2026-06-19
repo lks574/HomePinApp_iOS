@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  iOS용 GoogleService-Info 템플릿(형식 안내). 실제 파일은 Firebase 콘솔에서 iOS 앱
+  (bundle id: com.sro.homepinappios)을 등록해 받은 GoogleService-Info.plist 를 이 폴더에
+  `GoogleService-Info.plist` 이름으로 넣는다. 실 파일은 .gitignore 로 커밋되지 않으며,
+  파일이 없으면 FirebaseBootstrap 이 구성을 skip 한다(앱은 정상 동작).
+-->
+<plist version="1.0">
+<dict>
+	<key>API_KEY</key>
+	<string>REPLACE_WITH_API_KEY</string>
+	<key>GCM_SENDER_ID</key>
+	<string>REPLACE_WITH_SENDER_ID</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.sro.homepinappios</string>
+	<key>PROJECT_ID</key>
+	<string>REPLACE_WITH_PROJECT_ID</string>
+	<key>STORAGE_BUCKET</key>
+	<string>REPLACE_WITH_STORAGE_BUCKET</string>
+	<key>IS_ADS_ENABLED</key>
+	<false/>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<true/>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true/>
+	<key>IS_GCM_ENABLED</key>
+	<true/>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true/>
+	<key>GOOGLE_APP_ID</key>
+	<string>REPLACE_WITH_GOOGLE_APP_ID</string>
+</dict>
+</plist>

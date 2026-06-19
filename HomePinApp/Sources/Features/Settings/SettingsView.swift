@@ -4,6 +4,8 @@ import SwiftUI
 /// 설정 — 표시(테마) · 데이터(현황·전체 정리) · 정보.
 struct SettingsView: View {
   @Environment(\.modelContext) private var modelContext
+  @Environment(\.openURL) private var openURL
+  @Environment(VersionGateService.self) private var versionGate
   @AppStorage(AppThemePreference.storageKey) private var themeRaw = AppThemePreference.system.rawValue
   @AppStorage(AppLanguagePreference.storageKey) private var languageRaw = AppLanguagePreference.system.rawValue
   @AppStorage(CloudSyncPreference.storageKey) private var cloudSyncEnabled = false
@@ -249,6 +251,7 @@ struct SettingsView: View {
   private var infoSection: some View {
     Section("About") {
       LabeledContent("Version") { Text(verbatim: appVersion) }
+      updateStatusRow
       LabeledContent("Storage") { Text("This device (SwiftData)") }
       Text("HomePin — a local app to pin your home's items to places, and add and find them by voice.\nAll data is stored only on this device and is never sent anywhere.")
         .font(.footnote)
@@ -326,6 +329,33 @@ struct SettingsView: View {
     // 시드와 동일하게 시스템 언어 기준 기본 공간명을 쓴다(생성 시점 1회 고정 데이터).
     modelContext.insert(Space(name: SeedText.current.space))
     try? modelContext.save()
+  }
+
+  /// 앱 버전 옆 업데이트 상태. RemoteConfig 버전 게이트(`VersionGateService`)가 정한 상태에
+  /// 따라 "업데이트 가능"(최신 버전 + 스토어 버튼) 또는 "최신 버전"을 보여준다. 점검 전
+  /// (`unknown`)이거나 게이트 미적용 시에는 아무것도 표시하지 않는다.
+  @ViewBuilder
+  private var updateStatusRow: some View {
+    switch versionGate.status {
+    case .optional(let latest), .forced(let latest):
+      VStack(alignment: .leading, spacing: 6) {
+        Label("Update available", systemImage: "arrow.up.circle")
+          .foregroundStyle(AppColor.accent)
+        Text("Latest version: \(latest)")
+          .font(.footnote)
+          .foregroundStyle(.secondary)
+        Button {
+          if let url = versionGate.updateURL { openURL(url) }
+        } label: {
+          Label("Update in App Store", systemImage: "arrow.up.right.square")
+        }
+      }
+    case .upToDate:
+      Label("Up to date", systemImage: "checkmark.circle")
+        .foregroundStyle(.secondary)
+    case .unknown:
+      EmptyView()
+    }
   }
 
   private var appVersion: String {

@@ -98,6 +98,14 @@ let macOSInfoPlist: [String: Plist.Value] = sharedInfoPlist.merging([
 // 패키지(3.1.0)도 명시적으로 추가한다. SDK 는 iOS 전용(macOS 미지원) → iOS 타깃에만 링크하고
 // macOS 타깃은 `dependencies: []` 를 유지한다(추가 시 macOS 빌드가 깨진다).
 // 결정: docs/wiki/Decision/2026-06-17-AdMob-광고-수익화-도입.md
+//
+// Firebase(SPM `firebase-ios-sdk` 12.15.0, 2026 최신 안정)도 동일하게 `.exact` 로 핀한다.
+// AdMob 과 달리 Firebase 는 macOS 를 지원하므로 **iOS·macOS 두 타깃 모두에 링크**한다.
+// 범위: Analytics(간단 분석) · Crashlytics(크래시) · RemoteConfig(앱 버전 게이트).
+// 실제 동작에는 `GoogleService-Info.plist` 가 필요하다(타깃별로 다른 파일). 이 코드 단계에서는
+// 코드만 먼저 들어가고 plist 는 비커밋(.gitignore)으로 로컬에서 주입한다. plist 가 없으면
+// `FirebaseBootstrap` 가 구성을 skip 해 앱은 정상 동작한다(차단 없음).
+// 결정: docs/wiki/Decision/2026-06-18-Firebase-analytics-crashlytics-remoteconfig.md
 let packages: [Package] = [
   .remote(
     url: "https://github.com/googleads/swift-package-manager-google-mobile-ads.git",
@@ -107,6 +115,10 @@ let packages: [Package] = [
     url: "https://github.com/googleads/swift-package-manager-google-user-messaging-platform.git",
     requirement: .exact("3.1.0")
   ),
+  .remote(
+    url: "https://github.com/firebase/firebase-ios-sdk.git",
+    requirement: .exact("12.15.0")
+  ),
 ]
 
 // iOS 타깃에만 링크할 광고 SDK product.
@@ -114,6 +126,34 @@ let iOSAdDependencies: [TargetDependency] = [
   .package(product: "GoogleMobileAds"),
   .package(product: "GoogleUserMessagingPlatform"),
 ]
+
+// iOS·macOS 공통으로 링크할 Firebase product (Firebase 는 macOS 지원).
+let firebaseDependencies: [TargetDependency] = [
+  .package(product: "FirebaseAnalytics"),
+  .package(product: "FirebaseCrashlytics"),
+  .package(product: "FirebaseRemoteConfig"),
+]
+
+// Crashlytics dSYM 업로드(빌드 후). SPM 체크아웃의 `run` 스크립트와 번들 내
+// `GoogleService-Info.plist` 가 둘 다 있을 때만 실행하고, 없으면 조용히 skip 한다
+// (코드만 먼저 들어간 단계에서 plist 부재로 빌드가 깨지지 않게 — 빌드 green 유지).
+let crashlyticsUploadScript: TargetScript = .post(
+  script: """
+  RUN_SCRIPT="${BUILD_DIR%/Build/*}/SourcePackages/checkouts/firebase-ios-sdk/Crashlytics/run"
+  PLIST="${BUILT_PRODUCTS_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/GoogleService-Info.plist"
+  if [ -f "$RUN_SCRIPT" ] && [ -f "$PLIST" ]; then
+    "$RUN_SCRIPT"
+  else
+    echo "Crashlytics: run 스크립트 또는 GoogleService-Info.plist 없음 → dSYM 업로드 skip"
+  fi
+  """,
+  name: "Upload Crashlytics dSYMs",
+  inputPaths: [
+    "${DWARF_DSYM_FOLDER_PATH}/${DWARF_DSYM_FILE_NAME}/Contents/Resources/DWARF/${TARGET_NAME}",
+    "${BUILT_PRODUCTS_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/GoogleService-Info.plist",
+  ],
+  basedOnDependencyAnalysis: false
+)
 
 let project = Project(
   name: "HomePinApp",
@@ -139,12 +179,14 @@ let project = Project(
       deploymentTargets: .iOS("26.5"),
       infoPlist: .extendingDefault(with: iOSInfoPlist),
       sources: ["HomePinApp/Sources/**"],
-      // 공유 Resources + iOS 전용 프라이버시 매니페스트. AdMob 추적 도메인·required reason
-      // API 선언은 iOS(광고 SDK 링크 타깃)에만 의미가 있어 공유 glob 밖에 두고 iOS 타깃에만
-      // 포함한다. AdMob SDK 동봉 매니페스트와 빌드시 병합된다.
-      resources: ["HomePinApp/Resources/**", "HomePinApp/Resources-iOS/PrivacyInfo.xcprivacy"],
+      // 공유 Resources + iOS 전용 리소스(`Resources-iOS/**`). 프라이버시 매니페스트
+      // (AdMob 추적 도메인·required reason API)와 iOS용 `GoogleService-Info.plist` 가 여기 있다.
+      // glob(`**`)이라 plist 가 없어도(코드만 먼저) 빌드가 깨지지 않고, 있으면 자동 번들된다.
+      // 커밋된 `GoogleService-Info.sample.plist` 는 형식 안내용 템플릿(실 plist 는 .gitignore).
+      resources: ["HomePinApp/Resources/**", "HomePinApp/Resources-iOS/**"],
       entitlements: "Tuist/Support/HomePinApp-iOS.entitlements",
-      dependencies: iOSAdDependencies,
+      scripts: [crashlyticsUploadScript],
+      dependencies: iOSAdDependencies + firebaseDependencies,
       settings: .settings(
         base: [
           "TARGETED_DEVICE_FAMILY": "1,2",
@@ -161,9 +203,13 @@ let project = Project(
       deploymentTargets: .macOS("26.0"),
       infoPlist: .extendingDefault(with: macOSInfoPlist),
       sources: ["HomePinApp/Sources/**"],
-      resources: ["HomePinApp/Resources/**"],
+      // 공유 Resources + macOS 전용 `GoogleService-Info.plist`(`Resources-macOS/**`).
+      // iOS 와 다른 bundleId 라 Firebase plist 도 타깃별로 분리한다. AdMob 은 macOS 미지원이라
+      // 광고 SDK 는 링크하지 않고(아래 `firebaseDependencies` 만), 광고 코드는 #if 가드로 no-op.
+      resources: ["HomePinApp/Resources/**", "HomePinApp/Resources-macOS/**"],
       entitlements: "Tuist/Support/HomePinApp-macOS.entitlements",
-      dependencies: [],
+      scripts: [crashlyticsUploadScript],
+      dependencies: firebaseDependencies,
       settings: .settings(
         base: [
           "ENABLE_BITCODE": "NO",
