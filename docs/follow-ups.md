@@ -40,6 +40,22 @@ status: draft
   이름엔 안 씀. 한 공간 내 구역명·한 구역 내 세부위치명·전역 카테고리/태그명 중복을
   **쓰기 로직에서 검증**해야 한다. (모델: [[Space]]/[[Area]]/[[Spot]]/[[ItemCategory]]/[[Tag]],
   결정: `docs/wiki/Decision/2026-06-12-위치-물건-데이터모델.md`)
+  - 연계(screen-20, 2026-06-18): **물건 이름 중복은 멀티 추가에서 차단하지 않고
+    경고 + 사용자 선택 합치기** 로 한다 — 연속 입력(`ItemBulkAddModel`)은 staging
+    칩끼리·기존 재고와 `normalizedName` 충돌 시 인라인 배지로 표시하되 insert 는 막지
+    않고, **기존 재고 충돌 칩에 한해 탭 토글로 "기존에 합치기"(수량 가산)** 를 고를 수
+    있다(자동 아님·비연쇄). 위 "쓰기 로직 검증/유니크 제약" 항목과 별개로 유지한다
+    (멀티는 사용자 의도 존중 = 경고 후 통과 또는 명시적 합치기). 결정:
+    `docs/wiki/Decision/2026-06-18-area-생략-캡처-허용-및-멀티-추가.md`.
+  - 후속 후보(screen-20 합치기에서 분리): ① **복수 매칭 기본값** — 같은
+    `normalizedName` 기존 Item 이 여럿이면 현재 최근 수정(`updatedAt` 최신) 대표
+    하나에만 가산한다(어느 것에 합칠지 사용자 선택 UI 는 미구현). ② **"모두 합치기"
+    일괄 토글** 버튼(현재는 칩별 토글만). ③ **결과 요약 토스트("N개 추가, M개 합침")**
+    — `bulkInsert` 가 `(inserted:, merged:)` 를 이미 반환하나, 시트 dismiss·범용 토스트
+    인프라 부재로 표시 UI 는 미구현(시트 외부 비차단 안내 인프라 필요). ④ **동일키 복수
+    칩 합치기 동작 확정** — 같은 `normalizedName` 칩이 여럿 합치기로 켜지면 모두 한 대표
+    Item 에 순차 누적 가산된다(`ItemBulkAddModel.bulkInsert` 주석 참조, 수량 합산은 정확).
+    의도된 동작이나, UX 상 "이미 합치기 켠 동일 품목" 안내가 필요할지 후속 검토.
 - [ ] 첫 릴리스 시 `VersionedSchema`(`SchemaV1`) + `SchemaMigrationPlan` 도입
   (`AppModelContainer` 에 연결). 결정: `docs/wiki/Decision/2026-06-12-swiftdata-마이그레이션-방침.md`
 - [ ] `Item.name` 직접 수정 경로 금지 — `ItemEditor` 는 `name` 변경 시
@@ -203,6 +219,21 @@ i18n 1차(screen-10, en/ko 시스템 추종) 완료 후 남은 항목. 결정:
   게이팅(세션 N개 이상/M번째 세션) 얹어 재도입 검토. (모듈:
   `Features/Monetization/AdService.swift`, `Features/Recipes/RecipeEditorView.swift`. 결정:
   `docs/wiki/Decision/2026-06-18-전면광고-트리거-재설계.md`)
+
+## 입력 어댑터 (screen-21 스타터 템플릿)
+
+스타터 템플릿은 screen-20 칩 staging 코어를 재사용하는 입력 어댑터다.
+결정: `docs/wiki/Decision/2026-06-18-스타터-템플릿-칩합류.md`.
+(영수증 OCR 입력 어댑터(screen-22)는 제거됨 — 2026-06-18. 결정: `…/2026-06-18-영수증-OCR-Vision-규칙추출.md`, status: removed.)
+
+- [x] **실기기 한국어 영수증 OCR 품질** — 폐기. 영수증 OCR 입력 어댑터 자체가 제거되어
+  더 이상 검증 대상이 아니다(2026-06-18).
+- [x] **macOS 영수증 스캔 UX** — 폐기. 영수증 OCR 입력 어댑터 제거로 무효(2026-06-18).
+- [x] **영수증 OCR 카메라 권한 거부 graceful 실기기 확인** — 폐기. 카메라/사진 권한과
+  영수증 스캔 코드가 함께 제거되어 무효(2026-06-18).
+- [ ] **스타터 템플릿 품목 구성 튜닝** — `StarterTemplate+Sets` 의 구역별 품목 묶음은
+  초기 보편값(각 5~7개). 실사용 피드백으로 품목·기본 수량을 다듬는다. (모듈:
+  `Features/Capture/StarterTemplate+Sets.swift`)
 
 ## iCloud 동기화 / CloudKit (screen-19)
 

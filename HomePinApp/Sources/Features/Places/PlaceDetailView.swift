@@ -5,6 +5,7 @@ import SwiftUI
 struct PlaceDetailView: View {
   @Environment(\.dismiss) private var dismiss
   @Environment(\.modelContext) private var modelContext
+  @Environment(AppRouter.self) private var router
   @State private var editorRoute: ItemEditorRoute?
   @State private var placeEditorRoute: PlaceEditorRoute?
   @State private var spotEditorRoute: SpotEditorRoute?
@@ -53,6 +54,7 @@ struct PlaceDetailView: View {
     }
     .sheet(item: $placeEditorRoute) { route in
       PlaceEditorView(mode: route.mode)
+        .environment(router)
     }
     .sheet(item: $spotEditorRoute) { route in
       SpotEditorView(mode: route.mode)

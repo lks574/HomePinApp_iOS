@@ -65,8 +65,11 @@ final class ItemEditorModel {
     }
   }
 
+  /// 이름·수량만 충족하면 저장 가능. 구역 미선택(`selectedArea == nil`)은 합법이며
+  /// "위치 미지정"(미정리함)으로 저장된다 — `Item.area` 옵셔널은 이미 합법이고,
+  /// "생성 시 area 강제" 앱 규칙만 완화한 것이다(스키마/모델 변경 없음).
   var canSave: Bool {
-    !trimmedName.isEmpty && selectedArea != nil && quantity > 0
+    !trimmedName.isEmpty && quantity > 0
   }
 
   var isEditing: Bool {

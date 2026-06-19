@@ -11,16 +11,40 @@ import SwiftUI
 /// - 음성(🎤): 받아쓰기(`SpeechDictationViewModel`) 결과가 같은 입력 필드로 들어가고,
 ///   `추가하기` 를 누르면 동일한 에디터 경로로 합류한다(단일 경로 원칙).
 struct CaptureSheet: View {
+  /// 시트를 여는 초기 모드. 진입점(중앙 ✨ 버튼·홈 빈 상태·새 구역 제안)이
+  /// 같은 시트를 다른 입력 어댑터로 연다. nil(기본) 이면 검색-우선 단일 입력으로 연다.
+  enum InitialMode {
+    /// 스타터 템플릿으로 시작 — bulk 모드로 열고 템플릿 선택 시트를 띄운다.
+    /// `area` 가 있으면 그 구역을 세션 Area 로, `suggestKind` 가 있으면 그 종류를 추천 강조한다.
+    case starterTemplate(area: Area? = nil, suggestKind: StarterTemplate.Kind? = nil)
+  }
+
   @Environment(\.dismiss) private var dismiss
+  @Environment(\.modelContext) private var modelContext
   @Environment(AppRouter.self) private var router
+
+  private let initialMode: InitialMode?
+
   @State private var query = ""
   @State private var dictation = SpeechDictationViewModel()
   @State private var editorRoute: ItemEditorRoute?
   @State private var showingRecipeCapture = false
   /// 같은 이름 물건 추가 시 합치기/새로 추가를 묻기 위한 후보(있으면 다이얼로그 표시).
   @State private var mergeCandidate: Item?
+  /// 연속 입력(여러 개 추가) 모드 여부. 같은 시트 안에서 단일 입력 ↔ 칩 staging 으로 전환한다.
+  @State private var isBulkMode = false
+  @State private var bulkModel = ItemBulkAddModel()
+  @State private var bulkDraft = ""
+  @State private var showingSessionAreaPicker = false
+  @State private var ignoredSpot: Spot?
+  /// 스타터 템플릿 선택 시트 표시 여부.
+  @State private var showingTemplatePicker = false
   @AppStorage(RecentSearches.storageKey) private var recentSearchesJSON = "[]"
   @FocusState private var inputFocused: Bool
+
+  init(initialMode: InitialMode? = nil) {
+    self.initialMode = initialMode
+  }
 
   /// 검색 대상 전체 물건. 이름순으로 받아 정규화 키로 in-memory 필터한다(개인 재고
   /// 규모에선 충분). 동적 술어 대신 단일 `@Query` + 필터.
@@ -40,14 +64,24 @@ struct CaptureSheet: View {
             .font(.appFootnote).foregroundStyle(AppColor.textMuted)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
-        content
+        if isBulkMode {
+          bulkContent
+        } else {
+          content
+        }
       }
       .padding(20)
       .background(AppColor.screenBackground)
-      .navigationTitle(Text("Add or find"))
+      .navigationTitle(Text(isBulkMode ? "Add several" : "Add or find"))
       .compactNavTitle()
       .toolbar {
         ToolbarItem(placement: .cancellationAction) { Button("Close") { dismiss() } }
+        ToolbarItem(placement: .primaryAction) {
+          Button(isBulkMode ? "Single" : "Add several") { toggleBulkMode() }
+        }
+      }
+      .sheet(isPresented: $showingSessionAreaPicker) {
+        AreaPickerSheet(areas: allAreas, selectedArea: $bulkModel.sessionArea, selectedSpot: $ignoredSpot)
       }
       .sheet(item: $editorRoute) { route in
         ItemEditorView(mode: route.mode) {
@@ -56,6 +90,11 @@ struct CaptureSheet: View {
       }
       .sheet(isPresented: $showingRecipeCapture) {
         RecipeCaptureView()
+      }
+      .sheet(isPresented: $showingTemplatePicker) {
+        StarterTemplatePickerSheet(suggested: suggestedTemplate) { template in
+          bulkModel.appendChips(from: template)
+        }
       }
       .confirmationDialog(
         mergeDialogTitle,
@@ -66,9 +105,15 @@ struct CaptureSheet: View {
         Button("Add as new") { addAsNewFromMerge() }
         Button("Cancel", role: .cancel) { mergeCandidate = nil }
       }
-      .onAppear { inputFocused = true }
+      .onAppear { applyInitialMode() }
       .onChange(of: dictation.transcript) { _, newTranscript in
         applyTranscript(newTranscript)
+      }
+      .onChange(of: dictation.state) { oldState, newState in
+        handleDictationStateChange(from: oldState, to: newState)
+      }
+      .onChange(of: bulkDraft) { _, newValue in
+        if isBulkMode { ingestBulkSeparators(newValue) }
       }
       .onDisappear {
         dictation.reset()
@@ -92,12 +137,12 @@ struct CaptureSheet: View {
       .buttonStyle(.plain)
       .accessibilityLabel(micAccessibilityLabel)
       Image(systemName: "sparkles").foregroundStyle(AppColor.accent)
-      TextField("Type anything", text: $query)
+      TextField(isBulkMode ? "Add items, separated by commas" : "Type anything", text: inputBinding, axis: isBulkMode ? .vertical : .horizontal)
         .font(.appFieldText)
         .focused($inputFocused)
-        .submitLabel(.search)
-      if !query.isEmpty {
-        Button { query = "" } label: {
+        .submitLabel(isBulkMode ? .return : .search)
+      if !inputBinding.wrappedValue.isEmpty {
+        Button { inputBinding.wrappedValue = "" } label: {
           Image(systemName: "xmark.circle.fill").foregroundStyle(AppColor.textFaint)
         }
         .buttonStyle(.plain)
@@ -112,6 +157,250 @@ struct CaptureSheet: View {
 
   private var micAccessibilityLabel: LocalizedStringKey {
     dictation.state == .recording ? "Stop dictation" : "Speak to fill the field"
+  }
+
+  /// 활성 입력 필드 바인딩. bulk 모드면 `bulkDraft`, 아니면 검색·단건 추가용 `query`.
+  private var inputBinding: Binding<String> {
+    isBulkMode ? $bulkDraft : $query
+  }
+
+  // MARK: - 초기 모드 (진입점별 어댑터)
+
+  /// 진입점이 지정한 초기 모드를 적용한다. 기본(nil)이면 단일 입력 필드에 포커스만 둔다.
+  /// 템플릿 모드는 bulk 모드로 열어 결과 칩이 같은 staging UI 로 합류하게 한다.
+  private func applyInitialMode() {
+    switch initialMode {
+    case nil:
+      inputFocused = true
+    case let .starterTemplate(area, _):
+      isBulkMode = true
+      if let area { bulkModel.sessionArea = area }
+      showingTemplatePicker = true
+    }
+  }
+
+  /// 템플릿 선택 시트의 추천 템플릿. 명시적 종류 → 새 Area 이름 매칭 → 없으면 nil(전체 목록).
+  private var suggestedTemplate: StarterTemplate? {
+    guard case let .starterTemplate(area, suggestKind) = initialMode else { return nil }
+    if let suggestKind { return StarterTemplate.template(for: suggestKind) }
+    if let area { return StarterTemplate.match(areaName: area.name) }
+    return nil
+  }
+
+  // MARK: - 연속 입력 (여러 개 추가)
+
+  /// 단일 입력 ↔ 칩 staging 모드를 같은 시트 안에서 전환한다. 진행 중 받아쓰기·입력은 정리한다.
+  private func toggleBulkMode() {
+    dictation.reset()
+    if isBulkMode {
+      isBulkMode = false
+      bulkDraft = ""
+    } else {
+      isBulkMode = true
+      query = ""
+    }
+    inputFocused = true
+  }
+
+  /// 입력 텍스트에 분절자(쉼표·줄바꿈)가 들어오면 칩으로 커밋한다(자동 저장 아님).
+  /// 분절자가 없으면 계속 입력 중이라 보고 draft 에 남겨 둔다.
+  private func ingestBulkSeparators(_ text: String) {
+    guard text.contains(where: { $0 == "," || $0 == "、" || $0 == "\n" }) else { return }
+    commitBulkDraft()
+  }
+
+  /// 현재 draft 를 파싱해 칩으로 적재하고 draft 를 비운다. 빈 입력이면 no-op.
+  private func commitBulkDraft() {
+    let raw = bulkDraft
+    bulkDraft = ""
+    guard !raw.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
+    bulkModel.appendChips(from: raw, areas: allAreas, spots: allSpots)
+  }
+
+  /// 칩들을 실제 재고로 반영한다(명시적 "추가"). 빈 staging 이면 no-op. 합치기 룩업을 위해
+  /// 현재 전체 재고(`allItems`)를 모델에 넘긴다 — 템플릿·연속입력 진입이 모두 이 한
+  /// 경로로 합류하므로 1곳만 정리하면 된다. 추가 후 시트를 닫는다(결과 요약은 후속 항목).
+  private func commitBulkInsert() {
+    commitBulkDraft()
+    guard bulkModel.hasInsertableChips else { return }
+    // 반환 (inserted, merged) 는 결과 요약용 — 시트 dismiss·범용 토스트 인프라 부재로
+    // 표시 UI 는 후속(`docs/follow-ups.md`). 시그니처는 이번에 확정해 둔다.
+    _ = bulkModel.bulkInsert(into: modelContext, existingItems: allItems)
+    dismiss()
+  }
+
+  @ViewBuilder
+  private var bulkContent: some View {
+    ScrollView {
+      VStack(alignment: .leading, spacing: 16) {
+        sessionAreaRow
+        adapterRow
+        if bulkModel.chips.isEmpty {
+          Text("Type or speak items. Separate with commas or new lines to make chips.")
+            .font(.appFootnote).foregroundStyle(AppColor.textMuted)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.top, 8)
+        } else {
+          chipList
+        }
+      }
+    }
+    .safeAreaInset(edge: .bottom) {
+      AppFullWidthPrimaryButton(
+        title: "bulk.add.\(bulkModel.chips.count)",
+        isEnabled: bulkModel.hasInsertableChips,
+        action: commitBulkInsert
+      )
+      .padding(.top, 8)
+    }
+  }
+
+  /// 세션 구역 선택 행. 모든 칩의 기본 구역(칩이 직접 구역을 인식하면 그 칩만 override).
+  private var sessionAreaRow: some View {
+    Button { showingSessionAreaPicker = true } label: {
+      HStack(spacing: 10) {
+        Image(systemName: "tray.full").font(.appItemBody).foregroundStyle(AppColor.accent)
+        VStack(alignment: .leading, spacing: 2) {
+          Text("Place for all").font(.appRowLabel).foregroundStyle(AppColor.textPrimary)
+          Text(verbatim: bulkModel.sessionArea?.name ?? String(localized: "Unsorted (no location)"))
+            .font(.appCaption)
+            .foregroundStyle(bulkModel.sessionArea == nil ? AppColor.textMuted : AppColor.textSecondary)
+        }
+        Spacer()
+        Image(systemName: "chevron.right").font(.appTag).foregroundStyle(AppColor.textFaint)
+      }
+      .padding(.horizontal, 16).padding(.vertical, 12)
+      .appCard()
+    }
+    .buttonStyle(.plain)
+  }
+
+  /// bulk 모드의 입력 어댑터 진입 행 — 스타터 템플릿(양 플랫폼).
+  /// 어댑터 결과는 같은 칩 staging 으로 합류시킨다(insert 는 "추가" 버튼에서만).
+  private var adapterRow: some View {
+    HStack(spacing: 10) {
+      adapterButton(title: "Starter templates", icon: "square.grid.2x2") {
+        showingTemplatePicker = true
+      }
+    }
+  }
+
+  private func adapterButton(
+    title: LocalizedStringKey,
+    icon: String,
+    action: @escaping () -> Void
+  ) -> some View {
+    Button(action: action) {
+      HStack(spacing: 8) {
+        Image(systemName: icon).font(.appItemBody).foregroundStyle(AppColor.accent)
+        Text(title).font(.appCaptionStrong).foregroundStyle(AppColor.textPrimary)
+          .lineLimit(1).minimumScaleFactor(0.8)
+      }
+      .frame(maxWidth: .infinity)
+      .padding(.horizontal, 12).padding(.vertical, 12)
+      .appCard()
+    }
+    .buttonStyle(.plain)
+  }
+
+  private var chipList: some View {
+    let existingNames = Set(allItems.map(\.normalizedName))
+    return VStack(spacing: 10) {
+      ForEach(bulkModel.chips) { chip in
+        chipRow(
+          chip,
+          isDuplicate: bulkModel.isDuplicate(chip, existingNormalizedNames: existingNames),
+          conflictsWithStock: bulkModel.conflictsWithExistingStock(chip, existingNormalizedNames: existingNames)
+        )
+      }
+    }
+  }
+
+  /// - Parameters:
+  ///   - isDuplicate: staging 자기중복 또는 기존 재고 충돌(둘 다 경고 신호).
+  ///   - conflictsWithStock: 기존 재고 Item 과만 충돌(합치기 토글을 노출할 조건).
+  private func chipRow(
+    _ chip: ItemBulkAddModel.Chip,
+    isDuplicate: Bool,
+    conflictsWithStock: Bool
+  ) -> some View {
+    HStack(spacing: 10) {
+      VStack(alignment: .leading, spacing: 4) {
+        TextField("Item name", text: nameBinding(for: chip.id))
+          .font(.appItemBody).foregroundStyle(AppColor.textPrimary)
+        HStack(spacing: 6) {
+          if let area = chip.parsedArea ?? bulkModel.sessionArea {
+            Text(verbatim: area.name).font(.appTag).foregroundStyle(AppColor.textMuted)
+          } else {
+            Text("Unsorted").font(.appTag).foregroundStyle(AppColor.textFaint)
+          }
+          // 기존 재고와 충돌하는 칩만 탭 가능한 합치기 토글로 승격한다(미선택=경고, 선택=합치기).
+          // staging 자기중복만인 칩은 기존 경고 배지 그대로(합치기 의미 없음).
+          if conflictsWithStock {
+            mergeToggle(for: chip)
+          } else if isDuplicate {
+            duplicateWarningBadge
+          }
+        }
+      }
+      Spacer()
+      stepper(for: chip)
+      Button { bulkModel.remove(chip.id) } label: {
+        Image(systemName: "xmark.circle.fill").font(.appItemBody).foregroundStyle(AppColor.textFaint)
+      }
+      .buttonStyle(.plain)
+    }
+    .padding(.horizontal, 14).padding(.vertical, 10)
+    .appCard()
+  }
+
+  /// 기존 재고 충돌 칩의 인라인 토글. 미선택=경고 배지 ↔ 선택="기존에 합치기"(accent).
+  /// 탭만으로 의도를 바꾸며 다이얼로그를 연쇄하지 않는다(비차단·비연쇄).
+  private func mergeToggle(for chip: ItemBulkAddModel.Chip) -> some View {
+    Button { bulkModel.toggleMerge(chip.id) } label: {
+      HStack(spacing: 3) {
+        Image(systemName: chip.mergeIntoExisting ? "arrow.merge" : "exclamationmark.triangle.fill")
+        Text(chip.mergeIntoExisting ? "Merge into stock" : "Already in stock")
+      }
+      .font(.appTag)
+      .foregroundStyle(chip.mergeIntoExisting ? Color.white : AppColor.chipSoonText)
+      .padding(.horizontal, 8).padding(.vertical, 3)
+      .background(chip.mergeIntoExisting ? AppColor.accent : AppColor.chipSoonBackground, in: Capsule())
+    }
+    .buttonStyle(.plain)
+  }
+
+  private var duplicateWarningBadge: some View {
+    HStack(spacing: 3) {
+      Image(systemName: "exclamationmark.triangle.fill")
+      Text("Already in stock")
+    }
+    .font(.appTag)
+    .foregroundStyle(AppColor.chipSoonText)
+    .padding(.horizontal, 8).padding(.vertical, 3)
+    .background(AppColor.chipSoonBackground, in: Capsule())
+  }
+
+  private func stepper(for chip: ItemBulkAddModel.Chip) -> some View {
+    HStack(spacing: 8) {
+      Button { bulkModel.decrement(chip.id) } label: {
+        Image(systemName: "minus").font(.appBadge).frame(width: 28, height: 28)
+      }
+      .buttonStyle(.plain).foregroundStyle(AppColor.accent).disabled(chip.quantity <= 1)
+      Text("\(chip.quantity)").font(.appValueStrong).monospacedDigit().frame(minWidth: 22)
+        .foregroundStyle(AppColor.textPrimary)
+      Button { bulkModel.increment(chip.id) } label: {
+        Image(systemName: "plus").font(.appBadge).frame(width: 28, height: 28)
+      }
+      .buttonStyle(.plain).foregroundStyle(AppColor.accent)
+    }
+  }
+
+  private func nameBinding(for id: ItemBulkAddModel.Chip.ID) -> Binding<String> {
+    Binding(
+      get: { bulkModel.chips.first(where: { $0.id == id })?.name ?? "" },
+      set: { bulkModel.updateName($0, for: id) }
+    )
   }
 
   // MARK: - 본문 (빈 상태 / 결과 + 추가 행)
@@ -330,10 +619,24 @@ struct CaptureSheet: View {
     }
   }
 
-  /// 받아쓰기 텍스트를 단일 입력 필드에 채운다. 단일 라인이라 개행을 공백으로 바꾼다.
+  /// 받아쓰기 텍스트를 현재 활성 입력 필드에 채운다. 단일 라인이라 개행을 공백으로 바꾼다.
+  /// bulk 모드에선 무음 자동 종료 시점에 `bulkDraft` 를 칩으로 커밋한다(아래 상태 핸들러).
   private func applyTranscript(_ transcript: String) {
     guard !transcript.isEmpty else { return }
-    query = transcript.replacingOccurrences(of: "\n", with: " ")
+    let cleaned = transcript.replacingOccurrences(of: "\n", with: " ")
+    if isBulkMode {
+      bulkDraft = cleaned
+    } else {
+      query = cleaned
+    }
+  }
+
+  /// bulk 모드에서 받아쓰기 무음 자동 종료(`.recording` → `.idle`)를 칩 경계로 쓴다.
+  /// transcript 누적분을 칩으로 커밋하고 draft 를 비운다(자동 재시작 OFF — 사용자가 mic 재탭).
+  private func handleDictationStateChange(from oldState: SpeechDictationViewModel.State, to newState: SpeechDictationViewModel.State) {
+    guard isBulkMode, oldState == .recording, newState == .idle else { return }
+    commitBulkDraft()
+    dictation.reset()
   }
 
   // MARK: - 추가 로직

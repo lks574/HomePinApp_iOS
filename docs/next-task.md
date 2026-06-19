@@ -11,7 +11,54 @@ status: draft
 UI 우선 1차(시안 C 화면 골격: 5탭·장소·레시피·홈·추가 시트) 완료 후의 다음 후보.
 보류 상세는 `docs/follow-ups.md`.
 
-> 최근 완료: **전면 광고 트리거 재설계(광고 고도화)** — 장보기 완료 단일 트리거가
+> 최근 완료: **영수증 OCR 입력 어댑터 제거(screen-22 removed)** — 영수증 스캔 입력
+> 어댑터를 전체 제거(사유: 보수적 규칙 필터의 영수증 포맷 한계, 온디바이스 LLM OCR
+> 깨짐/게이팅 비용). 삭제 — `Features/Capture/ReceiptScanSheet.swift`, `Shared/OCR/`
+> (`ReceiptTextRecognizer`·`ReceiptLineFilter`·`CameraImagePicker`·`ReceiptScanViewModel`,
+> 디렉터리째), `CaptureSheet.InitialMode.receiptScan`+adapterRow "Scan receipt"+`applyReceiptLines`,
+> 카메라/사진 권한(`Project.swift` `NSCameraUsageDescription`·`NSPhotoLibraryUsageDescription`
+> + `InfoPlist.xcstrings` en/ko), 영수증 UI 키(`Localizable.xcstrings`). dead 참조·OCR
+> API(`PhotosPicker`/`UIImagePickerController`/`PHPicker`/`Vision`/`VNRecognizeText`) 0건
+> 확인. **screen-21 스타터 템플릿·칩 staging 코어는 유지**(adapterRow "Starter templates"·
+> `appendChips`·`bulkInsert` 무변경). `tuist generate` 후 iOS·macOS 빌드 green. 결정:
+> `docs/wiki/Decision/2026-06-18-영수증-OCR-Vision-규칙추출.md`(status: removed).
+> 이전 완료: **칩 중복 합치기(screen-20 확장)** — 연속 입력 칩이 기존 재고 Item 과
+> `normalizedName` 충돌 시, 경고에 더해 **칩별 인라인 합치기 토글**("Merge into stock")을
+> 노출(기존 재고 충돌 칩에만; staging 자기중복만인 칩은 경고만). 켠 칩은 `bulkInsert` 가
+> 새 Item 대신 기존 Item 수량에 가산(`quantity += max(1, qty)`, `updatedAt=.now`),
+> **area/spot 은 기존 위치 유지**(칩 area 로 안 덮음). 같은 키 기존 Item 이 여럿이면
+> **최근 수정(`updatedAt`) 대표 하나**에만 가산(결정적). 미선택·비충돌 칩은 전부 새
+> insert(회귀 0, 자동 합치기·자동 저장 없음·다이얼로그 비연쇄 유지). 시그니처
+> `bulkInsert(into:existingItems:) -> (inserted:, merged:)`(룩업은 모델 책임), 호출부는
+> `commitBulkInsert` 단 1곳이 `allItems` 전달. 신규 문자열 en/ko("Merge into stock").
+> iOS·macOS 빌드 green. 결정:
+> `docs/wiki/Decision/2026-06-18-area-생략-캡처-허용-및-멀티-추가.md`. 잔여(후속 분리,
+> `docs/follow-ups.md`): 복수 매칭 대상 선택 UI·"모두 합치기" 일괄 버튼·결과 요약
+> 토스트("N개 추가, M개 합침"; 반환 시그니처는 구현, 표시 UI 는 인프라 부재로 후속).
+> 이전 완료: **스타터 템플릿(screen-21) 입력 어댑터** — screen-20 칩 staging 코어
+> (`ItemBulkAddModel`+`bulkInsert`+CaptureSheet bulk UI)를 재사용하는 입력 어댑터(새
+> 화면 아님). 출력은 칩 staging 으로 합류, insert 는 "추가" 버튼에서만(자동 저장 없음),
+> 신규 `@Model` 없음. **④ 스타터 템플릿**: 구역 종류별 자주 두는 품목 정적 데이터
+> (`StarterTemplate`/`+Sets`, 시드 Area 8종+공통, 품목명+수량 기본값만, en/ko 코드 내
+> 분기, 릴리스 노출=DEBUG 게이트 없음). `appendChips(from template:)` 로 칩 적재
+> (parsedArea=nil→세션 Area 합류). 선택 시트 `StarterTemplatePickerSheet`(Area 이름
+> 매칭 `StarterTemplate.match`, 실패 시 전체 목록 폴백). 진입점 2개 — HomeView 빈 상태
+> CTA, PlaceEditorView create 후 confirmationDialog 제안(수락 시 sessionArea 주입).
+> iOS·macOS 빌드 green. 결정: `docs/wiki/Decision/2026-06-18-스타터-템플릿-칩합류.md`.
+> 잔여: 템플릿 품목 튜닝(`docs/follow-ups.md`). (영수증 OCR(screen-22)은 이후 removed.)
+> 이전 완료: **연속 입력 모드 + 미정리함 캡처(screen-20)** — 물건 추가 두 마찰 완화.
+> ① 연속 입력: `CaptureSheet` 안에서 단일 입력 ↔ 칩 staging 모드 전환("Add several"
+> 토글). 쉼표·줄바꿈만 분절(공백 분절 없음)해 `ItemQuickAddParser.parse(multiline:)`
+> 로 칩 생성, 세션 Area(생략 가능)·칩별 area override, 인라인 이름/수량/삭제, "추가"
+> 버튼 → 신규 `ItemBulkAddModel.bulkInsert`(name→normalizedName 동기화 +
+> `spot?.area ?? area` 불변식). 음성은 무음 종료를 칩 경계로 사용(자동 재시작 OFF).
+> 자동 저장 없음. ② 미정리함: `ItemEditorModel.canSave` 의 area 강제만 완화(스키마·
+> 모델·신규 @Model 무변경) → 단건/멀티 모두 area=nil 저장 가능, 기존 캡처 검색
+> "위치미지정" 필터로 노출. 중복은 차단 없는 인라인 경고 배지만(단건 합치기
+> 다이얼로그 미연쇄). iOS·macOS 빌드 green. 결정:
+> `docs/wiki/Decision/2026-06-18-area-생략-캡처-허용-및-멀티-추가.md`. 잔여: 실기기
+> 음성 칩 경계·세션 Area override UX 검증.
+> 이전 완료: **전면 광고 트리거 재설계(광고 고도화)** — 장보기 완료 단일 트리거가
 > 저빈도라 노출이 0 에 수렴하던 문제 해소. 포맷(전면+보상형)은 유지하고 트리거를
 > **마일스톤 완료 경계 2개**로 둠: `recipeAdded`(신규 레시피 생성 후 닫힘),
 > `shoppingSessionCompleted`(유지). **핵심 고빈도 루프(물건 추가)는 UX 부담이 커

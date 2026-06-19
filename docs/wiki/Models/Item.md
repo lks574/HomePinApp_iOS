@@ -8,8 +8,12 @@ status: in-progress
 
 # Item (물건)
 
-핀하는 대상. 최소한 구역에 속하고(앱 규칙), 세부위치는 선택. 위치/카테고리 삭제 시
-nullify 로 보존된다.
+핀하는 대상. 구역(Area)·세부위치(Spot)·분류(Category)는 모두 선택이다. 위치/카테고리
+삭제 시 nullify 로 보존된다. **area=nil 캡처 허용(`screen-20`)**: 위치를 모르거나 나중에
+정리하려는 물건은 `area == nil`("미정리함")으로 저장할 수 있다 — 스키마는 그대로(이미
+옵셔널·합법)이고 "생성 시 area 강제" **앱 규칙만 완화**(`ItemEditorModel.canSave`)한 것이다.
+신규 `@Model`·시스템 Area 를 만들지 않는다. area=nil 물건은 [[Capture]] 검색의
+"위치미지정"(`wantsNoLocation`) 필터로 노출된다(기존 경로 재사용).
 
 ## 보유 데이터
 
@@ -26,7 +30,7 @@ nullify 로 보존된다.
 
 ## 관계
 
-- → [[Area]] : `area: Area?` (앱규칙 필수, nullify 보존 위해 옵셔널)
+- → [[Area]] : `area: Area?` (선택 — nil 이면 "미정리함". nullify 보존도 옵셔널 사유)
 - → [[Spot]] : `spot: Spot?` (선택)
 - → [[ItemCategory]] : `category: ItemCategory?` (분류 1개)
 - ↔ [[Tag]] : `tags: [Tag]?` **N:N** (inverse 를 여기 선언)
@@ -44,4 +48,5 @@ nullify 로 보존된다.
 
 ## 메모
 
-- 결정: [[2026-06-12-위치-물건-데이터모델]]
+- 결정: [[2026-06-12-위치-물건-데이터모델]], [[2026-06-18-area-생략-캡처-허용-및-멀티-추가]]
+- 연속 입력(여러 개 추가, `screen-20`)으로 한 번에 여러 Item 을 insert 할 때도 단건과 같은 불변식(name→normalizedName 동기화, `spot?.area ?? area`)을 적용한다 — `ItemBulkAddModel.bulkInsert(into:existingItems:)`. 멀티 추가의 이름 중복은 차단 없는 경고가 기본이되, **기존 재고와 충돌하는 칩은 사용자가 합치기 토글로 기존 Item 수량에 가산**할 수 있다(새 Item 미생성, area/spot 은 기존 Item 유지, `updatedAt=.now`; 같은 `normalizedName` 기존 Item 여럿이면 최근 수정 대표 하나에만 가산). 자동 합치기·자동 저장은 아니다(명시적 "추가" + 토글). 유니크 제약 검토는 별도(`docs/follow-ups.md`).
