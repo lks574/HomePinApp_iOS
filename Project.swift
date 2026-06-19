@@ -4,7 +4,7 @@ import ProjectDescription
 // 서버 없이 기기 내부에 저장하는 로컬 앱. iOS 앱 타깃과 네이티브 macOS 앱 타깃을 둔다.
 // 두 타깃은 소스·리소스 경로를 공유하고, 플랫폼 차이는 코드의 `#if os(macOS)` 로 흡수한다.
 let baseSettings: SettingsDictionary = [
-  "MARKETING_VERSION": "0.1.0",
+  "MARKETING_VERSION": "0.0.9",
   "CURRENT_PROJECT_VERSION": "1",
   // SWIFT_VERSION 은 "언어 모드"다. 6.0 = Swift 6 언어 모드(strict concurrency).
   // 툴체인 자체는 Xcode 26 의 Swift 6.2 를 쓴다.
@@ -24,6 +24,11 @@ let baseSettings: SettingsDictionary = [
 let sharedInfoPlist: [String: Plist.Value] = [
   "CFBundleDevelopmentRegion": "en",
   "CFBundleLocalizations": ["en", "ko"],
+  // 버전은 빌드 세팅(MARKETING_VERSION·CURRENT_PROJECT_VERSION)을 단일 소스로 쓴다.
+  // Tuist 기본 Info.plist 는 CFBundleShortVersionString 을 리터럴 "1.0" 으로 박으므로,
+  // 빌드 변수를 참조하도록 명시 매핑해 baseSettings 의 버전이 실제 번들에 반영되게 한다.
+  "CFBundleShortVersionString": "$(MARKETING_VERSION)",
+  "CFBundleVersion": "$(CURRENT_PROJECT_VERSION)",
   "CKSharingSupported": true,
   "NSMicrophoneUsageDescription": "Used to quickly add and search items by voice.",
   "NSSpeechRecognitionUsageDescription": "Used to transcribe what you say into text.",
