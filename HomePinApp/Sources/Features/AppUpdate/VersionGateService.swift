@@ -6,7 +6,10 @@ import FirebaseCore
 #endif
 
 #if canImport(FirebaseRemoteConfig)
-import FirebaseRemoteConfig
+// FirebaseRemoteConfig 는 아직 Sendable 감사가 끝나지 않아, strict concurrency 에서 모듈
+// 타입(RemoteConfig 등) 관련 경고가 뜬다. 컴파일러 권고대로 `@preconcurrency` 로 가져와
+// 서드파티 SDK 의 Sendable 경고를 흡수한다(우리 코드의 격리는 nonisolated 헬퍼로 이미 안전).
+@preconcurrency import FirebaseRemoteConfig
 #endif
 
 /// 앱 버전 게이트. Firebase RemoteConfig 가 내려주는 **최신 버전**과 **강제 업데이트
