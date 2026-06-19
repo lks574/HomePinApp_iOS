@@ -251,6 +251,7 @@ struct SettingsView: View {
   private var infoSection: some View {
     Section("About") {
       LabeledContent("Version") { Text(verbatim: appVersion) }
+      latestVersionRow
       updateStatusRow
       LabeledContent("Storage") { Text("This device (SwiftData)") }
       Text("HomePin — a local app to pin your home's items to places, and add and find them by voice.\nAll data is stored only on this device and is never sent anywhere.")
@@ -337,13 +338,10 @@ struct SettingsView: View {
   @ViewBuilder
   private var updateStatusRow: some View {
     switch versionGate.status {
-    case .optional(let latest), .forced(let latest):
+    case .optional, .forced:
       VStack(alignment: .leading, spacing: 6) {
         Label("Update available", systemImage: "arrow.up.circle")
           .foregroundStyle(AppColor.accent)
-        Text("Latest version: \(latest)")
-          .font(.footnote)
-          .foregroundStyle(.secondary)
         Button {
           if let url = versionGate.updateURL { openURL(url) }
         } label: {
@@ -355,6 +353,15 @@ struct SettingsView: View {
         .foregroundStyle(.secondary)
     case .unknown:
       EmptyView()
+    }
+  }
+
+  /// RemoteConfig 가 내려준 최신 버전 행. 현재 앱 버전("Version") 바로 아래에 표시한다.
+  /// 값을 받기 전(미구성·fetch 전·값 없음)에는 표시하지 않는다.
+  @ViewBuilder
+  private var latestVersionRow: some View {
+    if let latest = versionGate.latestKnownVersion {
+      LabeledContent("Latest Version") { Text(verbatim: latest) }
     }
   }
 

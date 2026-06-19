@@ -38,6 +38,11 @@ final class VersionGateService {
   /// 업데이트 버튼이 여는 스토어 URL. RemoteConfig 값이 있으면 그것을, 없으면 기본값을 쓴다.
   private(set) var updateURL: URL?
 
+  /// RemoteConfig 가 내려준 최신 버전(`latest_app_version`). 업데이트 필요 여부와 무관하게,
+  /// 최신 상태여도 값이 있으면 보관한다(설정 화면에서 "현재/최신" 표시에 쓴다). fetch 전·
+  /// 미구성·값 없음이면 nil.
+  private(set) var latestKnownVersion: String?
+
   /// RemoteConfig 키. 콘솔에서 이 키로 값을 내린다(iOS·macOS 공통, 필요 시 분리 가능).
   private enum Key {
     /// 사용 가능한 최신 앱 버전(예: "1.2.0"). 현재 < 이 값이면 선택 업데이트 안내.
@@ -93,6 +98,11 @@ final class VersionGateService {
     updateURL = values.storeURLString.isEmpty
       ? URL(string: Self.defaultStoreURLString)
       : (URL(string: values.storeURLString) ?? URL(string: Self.defaultStoreURLString))
+
+    // 최신 버전은 업데이트 필요 여부와 무관하게 보관한다(설정 화면 "현재/최신" 표시용).
+    if !values.latestVersion.isEmpty {
+      latestKnownVersion = values.latestVersion
+    }
 
     let current = Self.currentVersion
 

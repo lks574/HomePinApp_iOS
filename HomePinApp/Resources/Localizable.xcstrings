@@ -1679,6 +1679,16 @@
         }
       }
     },
+    "Latest Version" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "최신 버전"
+          }
+        }
+      }
+    },
     "Latest version: %@" : {
       "localizations" : {
         "ko" : {
