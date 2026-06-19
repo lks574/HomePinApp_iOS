@@ -11,7 +11,24 @@ status: draft
 UI 우선 1차(시안 C 화면 골격: 5탭·장소·레시피·홈·추가 시트) 완료 후의 다음 후보.
 보류 상세는 `docs/follow-ups.md`.
 
-> 최근 완료: **영수증 OCR 입력 어댑터 제거(screen-22 removed)** — 영수증 스캔 입력
+> 최근 완료: **Firebase 도입(Analytics·Crashlytics + RemoteConfig 버전 게이트)** — 두 번째
+> 외부 의존성. `firebase-ios-sdk` 12.15.0 `.exact`, product 는 Analytics·Crashlytics·
+> RemoteConfig 셋. AdMob 과 달리 **iOS·macOS 두 타깃 모두 링크**(Firebase macOS 지원),
+> macOS 샌드박스에 `network.client` entitlement 추가. **코드만 먼저** —
+> `GoogleService-Info.plist`(앱별 시크릿)는 `.gitignore` 비커밋, 타깃별 분리
+> (`Resources-iOS/**`·`Resources-macOS/**`, 샘플만 커밋). `FirebaseBootstrap` 가 plist
+> 있을 때만 `configure()`(없으면 skip → 빌드 green·앱 정상). `AppAnalytics` 얇은 래퍼.
+> `VersionGateService`(`@MainActor @Observable`)가 RemoteConfig
+> `latest_app_version`·`min_required_app_version`·`update_store_url` fetch →
+> `.numeric` 버전 비교 → forced/optional/upToDate. `AppRootView` 소유·주입,
+> `AppModel.start()` 에서 광고·스플래시와 병렬 check. **강제=차단**(`ForcedUpdateView`
+> 전체 화면), **선택=1회 안내 알럿**, 설정 About 에 업데이트 상태 행. fetch 완료 핸들러는
+> `nonisolated static`+continuation 으로 메인 액터 hop(격리 트랩 회피). Crashlytics dSYM
+> 업로드는 guarded post 스크립트. iOS·macOS 빌드 둘 다 green(plist 미주입), 동시성 경고 0.
+> 결정: `docs/wiki/Decision/2026-06-18-Firebase-analytics-crashlytics-remoteconfig.md`.
+> 잔여: Firebase 콘솔 앱 등록 + plist 주입, RemoteConfig 파라미터 생성, 출시 후 실제
+> App Store 링크 교체, 실기기 게이트·크래시 리포팅 검증.
+> 이전 완료: **영수증 OCR 입력 어댑터 제거(screen-22 removed)** — 영수증 스캔 입력
 > 어댑터를 전체 제거(사유: 보수적 규칙 필터의 영수증 포맷 한계, 온디바이스 LLM OCR
 > 깨짐/게이팅 비용). 삭제 — `Features/Capture/ReceiptScanSheet.swift`, `Shared/OCR/`
 > (`ReceiptTextRecognizer`·`ReceiptLineFilter`·`CameraImagePicker`·`ReceiptScanViewModel`,
@@ -57,8 +74,7 @@ UI 우선 1차(시안 C 화면 골격: 5탭·장소·레시피·홈·추가 시�
 > "위치미지정" 필터로 노출. 중복은 차단 없는 인라인 경고 배지만(단건 합치기
 > 다이얼로그 미연쇄). iOS·macOS 빌드 green. 결정:
 > `docs/wiki/Decision/2026-06-18-area-생략-캡처-허용-및-멀티-추가.md`. 잔여: 실기기
-> 음성 칩 경계·세션 Area override UX 검증.
-> 이전 완료: **전면 광고 트리거 재설계(광고 고도화)** — 장보기 완료 단일 트리거가
+> 음성 칩 경계·세션 Area override UX 검증.> 이전 완료: **전면 광고 트리거 재설계(광고 고도화)** — 장보기 완료 단일 트리거가
 > 저빈도라 노출이 0 에 수렴하던 문제 해소. 포맷(전면+보상형)은 유지하고 트리거를
 > **마일스톤 완료 경계 2개**로 둠: `recipeAdded`(신규 레시피 생성 후 닫힘),
 > `shoppingSessionCompleted`(유지). **핵심 고빈도 루프(물건 추가)는 UX 부담이 커

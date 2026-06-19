@@ -22,12 +22,15 @@ final class AppModel {
   ///
   /// 광고 준비는 순서대로 ① UMP 동의 → ② ATT → ③ SDK 초기화이며(`AdService.startup()`),
   /// 동의·ATT 거부와 무관하게 앱은 계속 진행한다(차단하지 않음). 최소 스플래시 노출과
-  /// 광고 준비를 병렬로 돌려 둘 다 끝나면 전환한다.
-  func start(adService: AdService) async {
+  /// 광고 준비, 그리고 버전 게이트 점검(RemoteConfig)을 병렬로 돌려 모두 끝나면 전환한다.
+  /// 버전 게이트 결과(강제/선택 업데이트)에 따른 화면 표시는 `AppRootView` 가 담당한다.
+  func start(adService: AdService, versionGate: VersionGateService) async {
     async let minimumSplash: Void = Task.sleep(for: .seconds(1))
     async let adStartup: Void = adService.startup()
+    async let versionCheck: Void = versionGate.check()
     _ = try? await minimumSplash
     await adStartup
+    await versionCheck
     phase = .home
   }
 }

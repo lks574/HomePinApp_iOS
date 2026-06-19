@@ -8,6 +8,10 @@
 	<true/>
 	<key>com.apple.security.device.audio-input</key>
 	<true/>
+	<!-- Firebase(Analytics·Crashlytics·RemoteConfig) 서버 통신용 아웃바운드 네트워크.
+	     샌드박스에서 이 entitlement 가 없으면 Firebase 가 서버에 접속하지 못한다. -->
+	<key>com.apple.security.network.client</key>
+	<true/>
 	<!--
 	  iCloud / CloudKit entitlement 임시 제거 (iOS entitlements 와 동일 사유).
 	  Apple Developer 계정에 iCloud capability + 컨테이너(iCloud.com.sro.homepinapp)
