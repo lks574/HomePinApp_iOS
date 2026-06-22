@@ -22,10 +22,17 @@ Siri / App Intents 로 앱을 열지 않고 물건을 추가하는 첫 외부 �
 
 ### A. 무UI 직접 insert + 결과 dialog
 
-인텐트는 앱을 열지 않는다. SwiftData 에 직접 `Item` 하나를 insert 하고
-`IntentResult & ProvidesDialog` 로 "Added {name} x{qty} ({위치 or 미정리함})" 사후
-확인 dialog 를 돌려준다. 위치가 애매하면 파서가 비워 두므로 area=nil("미정리함")으로
-안전 저장한다(합법). `AddItemIntent`(`Features/Intents/`).
+인텐트는 앱을 열지 않는다. SwiftData 에 직접 `Item` 을 insert 하고
+`IntentResult & ProvidesDialog` 로 사후 확인 dialog 를 돌려준다. 위치가 애매하면 파서가
+비워 두므로 area=nil("미정리함")으로 안전 저장한다(합법). `AddItemIntent`(`Features/Intents/`).
+
+**다건 추가(2026-06-22 추가)**: 입력을 단건 `parse` 대신 **`parse(multiline:)`**(쉼표·줄바꿈
+분절, 공백은 분절 안 함 → 다어절 이름 보존)으로 처리해 "우유, 계란, 빵" 을 한 번에 N건
+insert 한다(분절 없으면 1건 — 단건/다건 통합). 각 건은 단건과 동일한 규칙·불변식
+(이름·수량·위치, `spot?.area ?? area`, `normalizedName` 자동)을 쓴다. dialog 는 1건이면
+"{name} {qty}개 추가됨 ({위치})", N건이면 "{N}개 추가됨: a, b, c". **음성 한계**: Siri
+받아쓰기가 쉼표를 항상 넣어주지는 않아, 음성으로 한 문장 다건은 best-effort(타이핑/일시정지
+시 분절)이고 안정적 분절은 follow-up 검증 대상.
 
 ### B. 프로세스당 단일 공유 컨테이너 (앱 + App Intents 공용)
 

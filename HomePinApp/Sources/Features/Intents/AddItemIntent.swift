@@ -47,24 +47,29 @@ struct AddItemIntent: AppIntent {
     let areas = (try? context.fetch(FetchDescriptor<Area>())) ?? []
     let spots = (try? context.fetch(FetchDescriptor<Spot>())) ?? []
 
-    let draft = ItemQuickAddParser.parse(trimmed, areas: areas, spots: spots)
-    let name = draft.name.trimmingCharacters(in: .whitespacesAndNewlines)
-    guard !name.isEmpty else {
+    // 쉼표·줄바꿈으로 여러 물건을 한 번에 받는다(분절 없으면 1건). 공백은 분절자가 아니라
+    // "유기농 우유" 같은 다어절 이름은 보존된다. 단건/다건이 같은 규칙(이름·수량·위치)을 쓴다.
+    let drafts = ItemQuickAddParser.parse(multiline: trimmed, areas: areas, spots: spots)
+      .filter { !$0.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+    guard !drafts.isEmpty else {
       throw AddItemIntentError.parseFailed
     }
 
-    // 위치 불변식: spot 의 area 를 우선한다(spot 없으면 파서가 고른 area, 둘 다 없으면 nil).
-    let resolvedArea = draft.spot?.area ?? draft.area
-    let quantity = max(1, draft.quantity)
-
-    // `Item(name:)` init 이 normalizedName 을 자동으로 채운다(수동 normalize 불필요).
-    let item = Item(
-      name: name,
-      quantity: quantity,
-      area: resolvedArea,
-      spot: draft.spot
-    )
-    context.insert(item)
+    var addedItems: [Item] = []
+    for draft in drafts {
+      let name = draft.name.trimmingCharacters(in: .whitespacesAndNewlines)
+      // 위치 불변식: spot 의 area 를 우선한다(spot 없으면 파서가 고른 area, 둘 다 없으면 nil).
+      let resolvedArea = draft.spot?.area ?? draft.area
+      // `Item(name:)` init 이 normalizedName 을 자동으로 채운다(수동 normalize 불필요).
+      let item = Item(
+        name: name,
+        quantity: max(1, draft.quantity),
+        area: resolvedArea,
+        spot: draft.spot
+      )
+      context.insert(item)
+      addedItems.append(item)
+    }
 
     do {
       try context.save()
@@ -72,23 +77,20 @@ struct AddItemIntent: AppIntent {
       throw AddItemIntentError.saveFailed
     }
 
-    let location = item.locationPath.isEmpty
-      ? String(localized: "Unsorted")
-      : item.locationPath
-    return .result(
-      dialog: IntentDialog(
-        AddItemIntent.confirmation(name: name, quantity: quantity, location: location)
-      )
-    )
+    return .result(dialog: AddItemIntent.confirmation(for: addedItems))
   }
 
-  /// "Added milk x2 (Fridge)." 형태의 사후 확인 문구. 수량·위치를 함께 보여준다.
-  private static func confirmation(
-    name: String,
-    quantity: Int,
-    location: String
-  ) -> LocalizedStringResource {
-    "Added \(name) x\(quantity) (\(location))."
+  /// 사후 확인 문구. 1건은 "우유 2개 추가됨 (냉장고)." 처럼 수량·위치를, 여러 건은
+  /// "3개 추가됨: 우유, 계란, 빵." 처럼 개수와 이름 목록을 보여준다.
+  private static func confirmation(for items: [Item]) -> IntentDialog {
+    if items.count == 1, let item = items.first {
+      let location = item.locationPath.isEmpty
+        ? String(localized: "Unsorted")
+        : item.locationPath
+      return IntentDialog("Added \(item.name) x\(item.quantity) (\(location)).")
+    }
+    let names = items.map(\.name).joined(separator: ", ")
+    return IntentDialog("Added \(items.count) items: \(names).")
   }
 }
 
