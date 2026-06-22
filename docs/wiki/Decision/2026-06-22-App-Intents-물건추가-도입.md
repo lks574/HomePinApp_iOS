@@ -27,30 +27,32 @@ Siri / App Intents 로 앱을 열지 않고 물건을 추가하는 첫 외부 �
 확인 dialog 를 돌려준다. 위치가 애매하면 파서가 비워 두므로 area=nil("미정리함")으로
 안전 저장한다(합법). `AddItemIntent`(`Features/Intents/`).
 
-### B. 컨테이너 공유 seam + 인텐트 전용 throwing·무부작용 경로
+### B. 프로세스당 단일 공유 컨테이너 (앱 + App Intents 공용)
 
-`AppModelContainer` 에서 스키마(`models`)는 단일 소스로 공유하되 진입점별로 경로를 나눈다.
+`AppModelContainer` 에서 스키마(`models`)는 단일 소스로 공유하고, **컨테이너는 프로세스당
+단 하나**만 만들어 앱과 App Intents 가 같은 인스턴스를 쓴다.
 
-- **`make()`** — 앱 시작 경로. `makeShared()` + (DEBUG) 시드 주입. 동작·회귀 0.
-- **`makeShared()`** — UI 있는 시작 흐름 전용. CloudSync 분기 + 로컬 fallback + DEBUG
-  파괴 리셋/`fatalError`. CloudKit 실패 시 사용자 토글을 자동 OFF
-  (`disableAfterStartupFailure`) 하고 로컬로 fallback 한다(의도된 시작 동작, 그대로 유지).
-- **`makeForIntent() throws`** — App Intents 전용. 같은 스키마·같은 CloudSync 토글을
-  읽되, 사용자 영구 설정(`CloudSyncPreference`)을 **건드리지 않는**(자동 OFF 안 함)
-  무부작용 경로다. CloudKit 컨테이너 생성 실패 시(예: App ID 에 iCloud capability 미등록)
-  토글을 끄지 않고 **로컬 스토어로 fallback** 해 인텐트가 계속 동작하게 하고, 로컬 경로마저
-  실패할 때만 `fatalError`·DEBUG 파괴 리셋 없이 throw 한다.
+- **`shared()`** — 프로세스당 단일 공유 컨테이너. 최초 1회 `makeShared()` 로 만들고 캐시한다.
+  앱·인텐트 모두 이걸 쓴다.
+- **`make()`** — 앱 시작 경로. `shared()` + (DEBUG) 시드 주입. 동작·회귀 0.
+- **`makeShared()`** — 실제 빌더. CloudSync 분기 + 로컬 fallback + DEBUG 파괴 리셋/
+  `fatalError`. CloudKit 실패 시 토글 자동 OFF(`disableAfterStartupFailure`) 후 로컬 fallback.
 
-  > **수정(2026-06-22)**: 최초 구현은 CloudKit 실패 시 곧장 throw 했으나, App ID 에
-  > iCloud capability 가 미등록(entitlement 임시 제거)인 실기기에서 **앱 본체는 로컬
-  > fallback 으로 동작하는데 인텐트만 throw** 해 Siri 추가가 "오류가 있는 것 같아요" 로
-  > 실패했다. 앱 본체(`makeShared()`)와 동일하게 로컬 fallback 하도록 고쳤다(토글 무변경
-  > 원칙은 유지 — fallback 만 추가). 인텐트는 로컬 fallback 도 실패할 때만 graceful dialog.
+인텐트(`AddItemIntent.perform()`)는 `AppModelContainer.shared().mainContext` 를 쓴다.
+`perform()` 을 `@MainActor` 로 두어 `mainContext`(메인 액터 컨텍스트) 접근을 정합시킨다.
 
-인텐트는 `makeForIntent()` 를 `try` 로 호출해 (로컬 fallback 마저) 실패할 때 `storageUnavailable`
-dialog 로 graceful 실패한다(인텐트 프로세스 crash 없음). **인텐트 경로는 CloudKit 실패 시
-사용자 iCloud Sync 토글을 건드리지 않는다** — UI 없는 Siri 호출이 사용자 동기화 설정을
-무음으로 끄지 않게 하기 위함이며, 토글 OFF 판단은 다음 정식 앱 시작(`makeShared()`)에 위임한다.
+  > **수정(2026-06-22)**: 최초 구현은 인텐트가 **자체 컨테이너**(`makeForIntent()`)를 따로
+  > 만들었는데, 앱 실행 중 Siri 가 인텐트를 **같은 프로세스**에서 돌리면 같은 store 파일에
+  > `ModelContainer` 가 둘 생겨 첫 `fetch(FetchDescriptor<Area>())` 에서 **트랩(EXC_BREAKPOINT)
+  > 크래시**했다. Apple 권장대로 **프로세스당 단일 공유 컨테이너**(`shared()`)를 앱·인텐트가
+  > 함께 쓰도록 바꿔 해소했다. 별도 throwing 경로(`makeForIntent()`)와 그에 딸린
+  > `storageUnavailable` 에러 케이스는 제거. (앞선 1차 시도였던 "인텐트 전용 CloudKit→로컬
+  > fallback throwing 경로" 도 이 단일 컨테이너 방식으로 대체됐다.)
+
+> **잔여(알려진 tradeoff)**: 인텐트가 앱이 안 떠 있는 **별도 프로세스**에서 처음 `shared()`
+> 를 만들 때, CloudSync 토글 ON + CloudKit 실패면 `makeShared()` 의 `disableAfterStartupFailure`
+> 로 토글이 무음 OFF 될 수 있다(이전 "토글 무변경" 원칙의 부분 후퇴). 다만 앱이 보통 먼저
+> 떠 컨테이너를 캐시하므로 실제 발생 여지는 작다. 실기기 검증 항목.
 
 ### C. AppShortcuts free-text
 

@@ -8,15 +8,16 @@ import SwiftData
 /// - **릴리스**: 자동 삭제하지 않는다. 1.0 부터 `VersionedSchema` + `SchemaMigrationPlan` 을
 ///   여기 `migrationPlan:` 으로 연결한다.
 ///
-/// 컨테이너 구성은 세 경로로 나뉜다.
-/// - `make()`: 앱 시작 경로. `makeShared()` 위에 (DEBUG) 시드 주입을 더한다.
-/// - `makeShared()`: 스키마 + CloudSync 분기 컨테이너(시드·DEBUG 리셋 포함, 시드 주입 없음).
+/// 컨테이너는 **프로세스당 단 하나**(`shared()` 가 캐시)이며 앱과 App Intents 가 같은
+/// 인스턴스를 공유한다. 같은 store 파일에 ModelContainer 를 둘 이상 만들면 SwiftData
+/// fetch 가 트랩(크래시)하기 때문이다 — 앱 실행 중 Siri 인텐트가 같은 프로세스에서 별도
+/// 컨테이너를 만들면 죽던 원인이라, 인텐트도 새로 만들지 않고 `shared()` 를 재사용한다.
+///
+/// - `shared()`: 프로세스당 단일 공유 컨테이너(앱·App Intents 공용, 최초 1회 `makeShared()`).
+/// - `make()`: 앱 시작 경로. `shared()` 위에 (DEBUG) 시드 주입을 더한다.
+/// - `makeShared()`: 실제 빌더 — 스키마 + CloudSync 분기(+ 로컬 fallback, DEBUG 파괴 리셋).
 ///   CloudKit 실패 시 사용자 토글을 자동 OFF(`disableAfterStartupFailure`) 하고 로컬로
-///   fallback 하는 **UI 있는 시작 흐름 전용** 경로다.
-/// - `makeForIntent()`: App Intents 등 **앱 외부 진입점** 전용. 실패를 `throw` 로 돌려주는
-///   무부작용 경로 — CloudKit 실패 시 사용자 영구 설정(`CloudSyncPreference`)을 건드리지
-///   않고 그냥 throw 한다(인텐트는 graceful dialog 로 안내, 토글은 다음 정식 앱 시작이 판단).
-///   스키마는 단일 소스(`models`)를 공유한다.
+///   fallback 한다. 스키마는 단일 소스(`models`)를 공유한다.
 ///
 /// 결정: `docs/wiki/Decision/2026-06-12-swiftdata-마이그레이션-방침.md`,
 ///       `docs/wiki/Decision/2026-06-22-App-Intents-물건추가-도입.md`
@@ -27,10 +28,23 @@ enum AppModelContainer {
     Recipe.self, RecipeIngredient.self, ShoppingItem.self,
   ]
 
+  /// 프로세스당 단일 공유 컨테이너 캐시. 앱과 App Intents 가 같은 인스턴스를 쓰게 한다.
+  @MainActor private static var cachedContainer: ModelContainer?
+
+  /// 프로세스당 단일 공유 컨테이너. 최초 1회 `makeShared()` 로 만들고 캐시한다. 앱·인텐트
+  /// 모두 이걸 쓴다(같은 store 에 컨테이너를 둘 만들면 fetch 가 트랩하므로 반드시 공유).
+  @MainActor
+  static func shared() -> ModelContainer {
+    if let cachedContainer { return cachedContainer }
+    let container = makeShared()
+    cachedContainer = container
+    return container
+  }
+
   /// 앱 시작 경로 — 공유 컨테이너 + (DEBUG) 시드 주입.
   @MainActor
   static func make() -> ModelContainer {
-    let container = makeShared()
+    let container = shared()
     populateSeedIfNeeded(container)
     return container
   }
@@ -56,30 +70,6 @@ enum AppModelContainer {
     }
 
     return makeLocalContainer(schema: schema)
-  }
-
-  /// App Intents 전용 — 실패를 `throw` 로 돌려주는 무부작용 컨테이너 경로.
-  ///
-  /// `makeShared()` 와 같은 스키마·CloudSync 토글을 읽지만, 실패 시 사용자 영구 설정을
-  /// 바꾸거나(`disableAfterStartupFailure`) `fatalError` 로 프로세스를 죽이지 않는다.
-  /// - CloudSync ON 인데 CloudKit 컨테이너 생성 실패(예: App ID 에 iCloud capability 미등록) →
-  ///   사용자 토글을 끄지 않고 **로컬 스토어로 fallback** 한다(인텐트가 계속 동작하도록).
-  ///   토글 OFF 판단은 다음 정식 앱 시작(`makeShared()`)에 맡긴다. 앱 본체는 같은 상황에서
-  ///   로컬로 fallback 해 동작하므로, 인텐트만 throw 하면 "앱은 되는데 Siri 만 실패" 가 된다.
-  /// - 로컬 컨테이너 생성마저 실패 → throw(DEBUG 파괴 리셋 없음, 인텐트가 dialog 로 안내).
-  @MainActor
-  static func makeForIntent() throws -> ModelContainer {
-    let schema = Schema(models)
-    let isCloudSyncEnabled = UserDefaults.standard.bool(forKey: CloudSyncPreference.storageKey)
-    if isCloudSyncEnabled,
-       let container = try? makeContainer(
-         schema: schema,
-         cloudKitDatabase: .private(CloudSyncPreference.containerIdentifier)
-       ) {
-      return container
-    }
-    // CloudSync OFF 이거나 CloudKit 생성 실패 → 로컬 스토어(토글 무변경).
-    return try makeContainer(schema: schema, cloudKitDatabase: .none)
   }
 
   private static func makeContainer(

@@ -11,12 +11,11 @@ import SwiftData
 /// - 위치가 애매하면 파서가 비워 두므로 area=nil("미정리함")로 안전 저장한다(합법).
 /// - 쓰기 불변식: `Item(name:)` init 이 `normalizedName` 을 자동 채우고, 위치는
 ///   `spot?.area ?? area` 로 일관시킨다(단건/다건 캡처와 동일).
-/// - 격리: App Intents 는 앱과 별도 프로세스에서 실행될 수 있어 자체 컨테이너가 필요하다.
-///   `ModelContext` 는 `Sendable` 이 아니므로 `perform()` 자체를 `@MainActor` 로 두어
-///   `makeForIntent().mainContext` 접근을 메인 액터 컨텍스트로 정합시킨다(격리 hop 트랩 회피).
-/// - 무부작용: 컨테이너는 인텐트 전용 throwing 경로(`makeForIntent()`)로 만든다. CloudKit
-///   구성 실패 시 사용자 iCloud Sync 토글을 건드리지 않고 throw → `storageUnavailable`
-///   dialog 로 graceful 실패한다(UI 없는 Siri 호출이 설정을 무음 변경하지 않게).
+/// - 컨테이너 공유: 앱과 **프로세스당 단일 컨테이너**(`AppModelContainer.shared()`)를
+///   재사용한다. 인텐트가 자체 컨테이너를 새로 만들면 같은 store 에 ModelContainer 가 둘
+///   생겨 fetch 가 트랩(크래시)한다 — 앱 실행 중 Siri 호출 시 죽던 원인이다.
+/// - 격리: `ModelContext` 는 `Sendable` 이 아니므로 `perform()` 자체를 `@MainActor` 로 두어
+///   `shared().mainContext` 접근을 메인 액터 컨텍스트로 정합시킨다(격리 hop 트랩 회피).
 ///
 /// 결정: `docs/wiki/Decision/2026-06-22-App-Intents-물건추가-도입.md`
 struct AddItemIntent: AppIntent {
@@ -41,12 +40,9 @@ struct AddItemIntent: AppIntent {
       throw AddItemIntentError.emptyInput
     }
 
-    let context: ModelContext
-    do {
-      context = try AppModelContainer.makeForIntent().mainContext
-    } catch {
-      throw AddItemIntentError.storageUnavailable
-    }
+    // 앱과 같은 프로세스당 단일 공유 컨테이너를 쓴다. 인텐트가 별도 컨테이너를 만들면
+    // 같은 store 에 컨테이너가 둘 생겨 fetch 가 트랩(크래시)한다.
+    let context = AppModelContainer.shared().mainContext
 
     let areas = (try? context.fetch(FetchDescriptor<Area>())) ?? []
     let spots = (try? context.fetch(FetchDescriptor<Spot>())) ?? []
@@ -100,7 +96,6 @@ struct AddItemIntent: AppIntent {
 enum AddItemIntentError: Error, CustomLocalizedStringResourceConvertible {
   case emptyInput
   case parseFailed
-  case storageUnavailable
   case saveFailed
 
   var localizedStringResource: LocalizedStringResource {
@@ -109,8 +104,6 @@ enum AddItemIntentError: Error, CustomLocalizedStringResourceConvertible {
       "Tell me what to add, like \"milk 2\"."
     case .parseFailed:
       "I couldn't read an item name. Try again."
-    case .storageUnavailable:
-      "HomePin storage is unavailable right now."
     case .saveFailed:
       "Couldn't save the item. Try again."
     }
