@@ -55,20 +55,36 @@ struct AddItemIntent: AppIntent {
       throw AddItemIntentError.parseFailed
     }
 
-    var addedItems: [Item] = []
+    // 기존 재고와 같은 이름(normalizedName)이면 새 Item 을 만들지 않고 **수량을 가산**한다
+    // (자동 병합 — UI 없는 Siri 의 자연스러운 동작). 같은 키가 여럿이면 최근 수정 대표
+    // 하나에만 가산하고(결정적), 위치(area/spot)는 기존 Item 을 그대로 유지한다.
+    // `ItemBulkAddModel.bulkInsert` 의 합치기 규칙과 동일하다(거기선 사용자 토글, 여기선 자동).
+    let existingItems = (try? context.fetch(FetchDescriptor<Item>())) ?? []
+    var representatives = Self.representativesByNormalizedName(existingItems)
+
+    var resultItems: [Item] = []
     for draft in drafts {
       let name = draft.name.trimmingCharacters(in: .whitespacesAndNewlines)
-      // 위치 불변식: spot 의 area 를 우선한다(spot 없으면 파서가 고른 area, 둘 다 없으면 nil).
-      let resolvedArea = draft.spot?.area ?? draft.area
-      // `Item(name:)` init 이 normalizedName 을 자동으로 채운다(수동 normalize 불필요).
+      let key = Item.normalize(name)
+      let amount = max(1, draft.quantity)
+      if let existing = representatives[key] {
+        existing.quantity += amount
+        existing.updatedAt = .now
+        resultItems.append(existing)
+        continue
+      }
+      // 신규 insert — 위치 불변식: spot 의 area 우선(spot 없으면 파서 area, 둘 다 없으면 nil).
       let item = Item(
         name: name,
-        quantity: max(1, draft.quantity),
-        area: resolvedArea,
+        normalizedName: key,
+        quantity: amount,
+        area: draft.spot?.area ?? draft.area,
         spot: draft.spot
       )
       context.insert(item)
-      addedItems.append(item)
+      // 같은 문장 안 동일 이름 중복도 이 새 Item 에 가산되게 대표로 등록한다.
+      representatives[key] = item
+      resultItems.append(item)
     }
 
     do {
@@ -77,7 +93,21 @@ struct AddItemIntent: AppIntent {
       throw AddItemIntentError.saveFailed
     }
 
-    return .result(dialog: AddItemIntent.confirmation(for: addedItems))
+    return .result(dialog: AddItemIntent.confirmation(for: resultItems))
+  }
+
+  /// 기존 Item 들을 normalizedName 키로 묶어 키마다 최근 수정(`updatedAt` 최신) 대표를 고른다.
+  /// 같은 이름이 여럿일 때 가산 대상이 결정적이고 중복 가산이 없게 한다(빈 키 제외).
+  /// `ItemBulkAddModel` 의 동명 헬퍼와 같은 규칙(자동 병합 단일 소스가 아니라 미러).
+  private static func representativesByNormalizedName(_ items: [Item]) -> [String: Item] {
+    var result: [String: Item] = [:]
+    for item in items {
+      let key = item.normalizedName
+      guard !key.isEmpty else { continue }
+      if let current = result[key], current.updatedAt >= item.updatedAt { continue }
+      result[key] = item
+    }
+    return result
   }
 
   /// 사후 확인 문구. 1건은 "우유 2개 추가됨 (냉장고)." 처럼 수량·위치를, 여러 건은
