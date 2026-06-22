@@ -62,18 +62,23 @@ enum AppModelContainer {
   ///
   /// `makeShared()` 와 같은 스키마·CloudSync 토글을 읽지만, 실패 시 사용자 영구 설정을
   /// 바꾸거나(`disableAfterStartupFailure`) `fatalError` 로 프로세스를 죽이지 않는다.
-  /// - CloudSync ON 인데 CloudKit 컨테이너 생성 실패 → 토글 무변경, throw(인텐트가 dialog 로 안내).
-  /// - CloudSync OFF → 로컬 컨테이너 생성, 실패 시 throw(DEBUG 파괴 리셋 없음).
+  /// - CloudSync ON 인데 CloudKit 컨테이너 생성 실패(예: App ID 에 iCloud capability 미등록) →
+  ///   사용자 토글을 끄지 않고 **로컬 스토어로 fallback** 한다(인텐트가 계속 동작하도록).
+  ///   토글 OFF 판단은 다음 정식 앱 시작(`makeShared()`)에 맡긴다. 앱 본체는 같은 상황에서
+  ///   로컬로 fallback 해 동작하므로, 인텐트만 throw 하면 "앱은 되는데 Siri 만 실패" 가 된다.
+  /// - 로컬 컨테이너 생성마저 실패 → throw(DEBUG 파괴 리셋 없음, 인텐트가 dialog 로 안내).
   @MainActor
   static func makeForIntent() throws -> ModelContainer {
     let schema = Schema(models)
     let isCloudSyncEnabled = UserDefaults.standard.bool(forKey: CloudSyncPreference.storageKey)
-    if isCloudSyncEnabled {
-      return try makeContainer(
-        schema: schema,
-        cloudKitDatabase: .private(CloudSyncPreference.containerIdentifier)
-      )
+    if isCloudSyncEnabled,
+       let container = try? makeContainer(
+         schema: schema,
+         cloudKitDatabase: .private(CloudSyncPreference.containerIdentifier)
+       ) {
+      return container
     }
+    // CloudSync OFF 이거나 CloudKit 생성 실패 → 로컬 스토어(토글 무변경).
     return try makeContainer(schema: schema, cloudKitDatabase: .none)
   }
 

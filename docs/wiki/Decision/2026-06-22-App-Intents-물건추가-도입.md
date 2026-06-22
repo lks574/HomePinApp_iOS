@@ -36,14 +36,21 @@ Siri / App Intents 로 앱을 열지 않고 물건을 추가하는 첫 외부 �
   파괴 리셋/`fatalError`. CloudKit 실패 시 사용자 토글을 자동 OFF
   (`disableAfterStartupFailure`) 하고 로컬로 fallback 한다(의도된 시작 동작, 그대로 유지).
 - **`makeForIntent() throws`** — App Intents 전용. 같은 스키마·같은 CloudSync 토글을
-  읽되, 실패를 **`throw` 로 돌려주는 무부작용 경로**다. CloudKit 컨테이너 생성 실패 시
-  사용자 영구 설정(`CloudSyncPreference`)을 **건드리지 않고**(자동 OFF 안 함) throw 하고,
-  로컬 경로도 실패 시 `fatalError`·DEBUG 파괴 리셋 없이 throw 한다.
+  읽되, 사용자 영구 설정(`CloudSyncPreference`)을 **건드리지 않는**(자동 OFF 안 함)
+  무부작용 경로다. CloudKit 컨테이너 생성 실패 시(예: App ID 에 iCloud capability 미등록)
+  토글을 끄지 않고 **로컬 스토어로 fallback** 해 인텐트가 계속 동작하게 하고, 로컬 경로마저
+  실패할 때만 `fatalError`·DEBUG 파괴 리셋 없이 throw 한다.
 
-인텐트는 `makeForIntent()` 를 `try` 로 호출해 실패 시 `storageUnavailable` dialog 로
-graceful 실패한다(인텐트 프로세스 crash 없음). **인텐트 경로는 CloudKit 실패 시 사용자
-iCloud Sync 토글을 건드리지 않는다** — UI 없는 Siri 호출이 사용자 동기화 설정을 무음으로
-끄지 않게 하기 위함이며, 토글 OFF 판단은 다음 정식 앱 시작(`makeShared()`)에 위임한다.
+  > **수정(2026-06-22)**: 최초 구현은 CloudKit 실패 시 곧장 throw 했으나, App ID 에
+  > iCloud capability 가 미등록(entitlement 임시 제거)인 실기기에서 **앱 본체는 로컬
+  > fallback 으로 동작하는데 인텐트만 throw** 해 Siri 추가가 "오류가 있는 것 같아요" 로
+  > 실패했다. 앱 본체(`makeShared()`)와 동일하게 로컬 fallback 하도록 고쳤다(토글 무변경
+  > 원칙은 유지 — fallback 만 추가). 인텐트는 로컬 fallback 도 실패할 때만 graceful dialog.
+
+인텐트는 `makeForIntent()` 를 `try` 로 호출해 (로컬 fallback 마저) 실패할 때 `storageUnavailable`
+dialog 로 graceful 실패한다(인텐트 프로세스 crash 없음). **인텐트 경로는 CloudKit 실패 시
+사용자 iCloud Sync 토글을 건드리지 않는다** — UI 없는 Siri 호출이 사용자 동기화 설정을
+무음으로 끄지 않게 하기 위함이며, 토글 OFF 판단은 다음 정식 앱 시작(`makeShared()`)에 위임한다.
 
 ### C. AppShortcuts free-text
 
