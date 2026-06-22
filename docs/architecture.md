@@ -160,6 +160,22 @@ side-effect**(알림·광고·버전 게이트 등)는 `@MainActor @Observable` 
   모델에 service 의존을 주입하지 않고 View 가 전체 Item fetch 후 호출한다.
   결정: [[2026-06-22-유통기한-로컬알림-스케줄링]].
 
+### 외부 진입점 — App Intents
+
+UI 없이 SwiftData 에 직접 쓰는 **앱 외부 진입점**(Siri / Shortcuts)은 별도 service 셸을
+두지 않고 인텐트 안에서 처리한다. 영속화는 SwiftData 직결 원칙 그대로다.
+
+- **물건 추가 — `AddItemIntent`**(`Features/Intents/`): 자유 텍스트 한 줄을
+  `ItemQuickAddParser`(무변경) 로 파싱해 `Item` 하나를 insert 하고 `ProvidesDialog` 로
+  사후 확인 dialog 를 돌려준다. 앱을 열지 않고 별도 프로세스에서 실행될 수 있어
+  **인텐트 전용 팩토리 `AppModelContainer.makeForIntent()`**(스키마 + CloudSync 분기,
+  시드·시작 부수효과 제외, 실패 시 throw)로 같은 스토어를 재사용한다. `ModelContext` 가 `Sendable` 이
+  아니라 `perform()` 을 `@MainActor` 로 두어 `mainContext` 접근을 정합시킨다(격리 hop
+  트랩 회피). 쓰기 불변식은 캡처와 동일(`normalizedName` 자동, `spot?.area ?? area`,
+  area=nil 합법). `HomePinShortcuts: AppShortcutsProvider` 가 한/영 발화 phrase 등록.
+  `AppRouter`·`Project.swift`·Info.plist 무변경. 결정:
+  [[2026-06-22-App-Intents-물건추가-도입]].
+
 ## 미확정 (정해지면 작성)
 
 > [!note] 작성 예정

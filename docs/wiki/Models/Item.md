@@ -45,6 +45,7 @@ status: in-progress
 - [[RecipeDetail]]/[[Recipes]] — `RecipeIngredient.item` 연결을 통해 보유/부족 판정.
 
 - [[DataTransfer]] — 전체 백업 export/import 대상(2-pass id upsert). CSV 대량 입력은 Item·Recipe 와 위치/분류/태그 이름 조회→생성. 결정: [[2026-06-17-데이터-백업-번들포맷]]·[[2026-06-17-CSV-대량입력-스키마]].
+- App Intents (`AddItemIntent`, `screen-24`) — Siri / Shortcuts 에서 앱 없이 `Item` 하나를 직접 insert(UI 없음). 단건 캡처와 같은 파서·불변식 재사용. 결정: [[2026-06-22-App-Intents-물건추가-도입]].
 
 ## 메모
 
