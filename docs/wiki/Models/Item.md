@@ -2,7 +2,7 @@
 aliases: [Item, 물건]
 tags: [model]
 created: 2026-06-12
-updated: 2026-06-18
+updated: 2026-06-22
 status: in-progress
 ---
 
@@ -48,5 +48,5 @@ status: in-progress
 
 ## 메모
 
-- 결정: [[2026-06-12-위치-물건-데이터모델]], [[2026-06-18-area-생략-캡처-허용-및-멀티-추가]]
+- 결정: [[2026-06-12-위치-물건-데이터모델]], [[2026-06-18-area-생략-캡처-허용-및-멀티-추가]], [[2026-06-22-유통기한-로컬알림-스케줄링]] (`expiresAt` 읽어 D-1·D-0 로컬 알림 예약 — 스키마 변경 없음, `Item.daysUntilExpiry`/`isExpiringSoon` 임박 단일 소스 재사용).
 - 연속 입력(여러 개 추가, `screen-20`)으로 한 번에 여러 Item 을 insert 할 때도 단건과 같은 불변식(name→normalizedName 동기화, `spot?.area ?? area`)을 적용한다 — `ItemBulkAddModel.bulkInsert(into:existingItems:)`. 멀티 추가의 이름 중복은 차단 없는 경고가 기본이되, **기존 재고와 충돌하는 칩은 사용자가 합치기 토글로 기존 Item 수량에 가산**할 수 있다(새 Item 미생성, area/spot 은 기존 Item 유지, `updatedAt=.now`; 같은 `normalizedName` 기존 Item 여럿이면 최근 수정 대표 하나에만 가산). 자동 합치기·자동 저장은 아니다(명시적 "추가" + 토글). 유니크 제약 검토는 별도(`docs/follow-ups.md`).

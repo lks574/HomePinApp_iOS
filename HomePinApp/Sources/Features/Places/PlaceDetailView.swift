@@ -6,6 +6,8 @@ struct PlaceDetailView: View {
   @Environment(\.dismiss) private var dismiss
   @Environment(\.modelContext) private var modelContext
   @Environment(AppRouter.self) private var router
+  @Environment(ExpiryNotificationService.self) private var expiryNotifications
+  @AppStorage(ExpiryNotificationPreference.storageKey) private var notificationsEnabled = false
   @State private var editorRoute: ItemEditorRoute?
   @State private var placeEditorRoute: PlaceEditorRoute?
   @State private var spotEditorRoute: SpotEditorRoute?
@@ -111,6 +113,15 @@ struct PlaceDetailView: View {
   private func deleteItem(_ item: Item) {
     modelContext.delete(item)
     pendingItemDelete = nil
+    rescheduleExpiryNotifications()
+  }
+
+  /// 물건 삭제 후 유통기한 알림을 전체 재계산한다(cancel-and-reschedule). 토글 OFF·권한
+  /// 미허용이면 서비스가 내부에서 보류 알림만 정리한다.
+  private func rescheduleExpiryNotifications() {
+    let items = (try? modelContext.fetch(FetchDescriptor<Item>())) ?? []
+    let isEnabled = notificationsEnabled
+    Task { await expiryNotifications.reschedule(for: items, isEnabled: isEnabled) }
   }
 
   private var backButton: some View {

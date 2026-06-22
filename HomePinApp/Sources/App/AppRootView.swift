@@ -6,12 +6,16 @@ struct AppRootView: View {
   @State private var appModel = AppModel()
   @State private var adService = AdService()
   @State private var versionGate = VersionGateService()
+  @State private var expiryNotifications = ExpiryNotificationService()
   /// 선택 업데이트 안내 알럿을 이번 실행에서 한 번만 띄우기 위한 플래그/표시 상태.
   @State private var didPromptOptionalUpdate = false
   @State private var showingOptionalUpdate = false
   @Environment(\.openURL) private var openURL
+  @Environment(\.modelContext) private var modelContext
+  @Environment(\.scenePhase) private var scenePhase
   @AppStorage(AppThemePreference.storageKey) private var themeRaw = AppThemePreference.system.rawValue
   @AppStorage(AppLanguagePreference.storageKey) private var languageRaw = AppLanguagePreference.system.rawValue
+  @AppStorage(ExpiryNotificationPreference.storageKey) private var notificationsEnabled = false
 
   var body: some View {
     ZStack {
@@ -37,8 +41,20 @@ struct AppRootView: View {
     .applyLanguage(language)
     .environment(adService)
     .environment(versionGate)
+    .environment(expiryNotifications)
     .task {
-      await appModel.start(adService: adService, versionGate: versionGate)
+      await appModel.start(
+        adService: adService,
+        versionGate: versionGate,
+        expiryNotifications: expiryNotifications,
+        modelContext: modelContext,
+        notificationsEnabled: notificationsEnabled
+      )
+    }
+    // 시스템 설정에서 권한이 바뀐 채 돌아온 경우를 반영하려고 활성화 시 권한 상태를 갱신한다.
+    .onChange(of: scenePhase) { _, phase in
+      guard phase == .active else { return }
+      Task { await expiryNotifications.refreshAuthorizationStatus() }
     }
     // 선택 업데이트: 닫기 가능한 1회성 안내 알럿. 강제일 때는 차단 화면이 우선이라 띄우지 않는다.
     .onChange(of: versionGate.hasOptionalUpdate) { _, hasUpdate in

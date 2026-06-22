@@ -2,7 +2,7 @@
 aliases: [architecture, 아키텍처]
 tags: [doc/code, architecture]
 created: 2026-06-12
-updated: 2026-06-18
+updated: 2026-06-22
 status: draft
 ---
 
@@ -146,10 +146,23 @@ HomePinApp/
 - **위치 2레벨 UI ↔ 3레벨 모델**: `Space` 숨김(단일 기본), UI "장소"=`Area`,
   "수납공간"=`Spot`.
 
+## 의존성 / side-effect (일부 확정)
+
+영속화는 SwiftData 직결이라 별도 service 로 감싸지 않는다. 그러나 **비영속 외부
+side-effect**(알림·광고·버전 게이트 등)는 `@MainActor @Observable` 셸 service 로
+분리하고, `AppRootView` 가 `@State` 로 소유 + `.environment` 주입한다(선례
+`AdService`·`VersionGateService`).
+
+- **알림 — `ExpiryNotificationService`**(`Features/Notifications/`): 유통기한 임박
+  로컬 알림(UserNotifications, 순수 온디바이스). D-1·D-0·09:00 / 전체
+  cancel-and-reschedule / 64 상한 / 권한 on-demand. 진입점 = `AppModel.start` 합류,
+  물건 추가/편집/삭제 후(ItemEditor·CaptureSheet·PlaceDetail) View 경계에서 reschedule.
+  모델에 service 의존을 주입하지 않고 View 가 전체 Item fetch 후 호출한다.
+  결정: [[2026-06-22-유통기한-로컬알림-스케줄링]].
+
 ## 미확정 (정해지면 작성)
 
 > [!note] 작성 예정
 
-- 의존성 / side-effect — 알림·파일 등 비영속 외부 작업의 service 경계
-  (영속화는 SwiftData 직결이라 별도 service 불필요)
+- 의존성 / side-effect — 파일 등 나머지 비영속 외부 작업의 service 경계
 - 금지 패턴 — 도입하지 않을 안티패턴

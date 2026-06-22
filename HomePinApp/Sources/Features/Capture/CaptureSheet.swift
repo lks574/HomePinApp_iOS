@@ -22,6 +22,7 @@ struct CaptureSheet: View {
   @Environment(\.dismiss) private var dismiss
   @Environment(\.modelContext) private var modelContext
   @Environment(AppRouter.self) private var router
+  @Environment(ExpiryNotificationService.self) private var expiryNotifications
 
   private let initialMode: InitialMode?
 
@@ -40,6 +41,7 @@ struct CaptureSheet: View {
   /// 스타터 템플릿 선택 시트 표시 여부.
   @State private var showingTemplatePicker = false
   @AppStorage(RecentSearches.storageKey) private var recentSearchesJSON = "[]"
+  @AppStorage(ExpiryNotificationPreference.storageKey) private var notificationsEnabled = false
   @FocusState private var inputFocused: Bool
 
   init(initialMode: InitialMode? = nil) {
@@ -226,7 +228,17 @@ struct CaptureSheet: View {
     // 반환 (inserted, merged) 는 결과 요약용 — 시트 dismiss·범용 토스트 인프라 부재로
     // 표시 UI 는 후속(`docs/follow-ups.md`). 시그니처는 이번에 확정해 둔다.
     _ = bulkModel.bulkInsert(into: modelContext, existingItems: allItems)
+    rescheduleExpiryNotifications()
     dismiss()
+  }
+
+  /// 물건 추가 후 유통기한 알림을 전체 재계산한다(cancel-and-reschedule). 토글 OFF·권한
+  /// 미허용이면 서비스가 내부에서 보류 알림만 정리한다. 신규 insert 를 포함하도록 현재
+  /// modelContext 의 전체 물건을 다시 fetch 해 넘긴다.
+  private func rescheduleExpiryNotifications() {
+    let items = (try? modelContext.fetch(FetchDescriptor<Item>())) ?? []
+    let isEnabled = notificationsEnabled
+    Task { await expiryNotifications.reschedule(for: items, isEnabled: isEnabled) }
   }
 
   @ViewBuilder

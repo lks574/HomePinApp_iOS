@@ -1,17 +1,24 @@
 import SwiftData
 import SwiftUI
+import UserNotifications
 
-/// 설정 — 표시(테마) · 데이터(현황·전체 정리) · 정보.
+#if canImport(UIKit)
+import UIKit
+#endif
+
+/// 설정 — 표시(테마) · 알림 · 데이터(현황·전체 정리) · 정보.
 struct SettingsView: View {
   @Environment(\.modelContext) private var modelContext
   @Environment(\.openURL) private var openURL
   @Environment(VersionGateService.self) private var versionGate
+  @Environment(ExpiryNotificationService.self) private var expiryNotifications
   @AppStorage(AppThemePreference.storageKey) private var themeRaw = AppThemePreference.system.rawValue
   @AppStorage(AppLanguagePreference.storageKey) private var languageRaw = AppLanguagePreference.system.rawValue
   @AppStorage(CloudSyncPreference.storageKey) private var cloudSyncEnabled = false
   @AppStorage(CloudSyncPreference.fallbackReasonKey) private var cloudSyncFallbackReason = ""
   @AppStorage(HomeShareService.acceptedAtKey) private var acceptedHomeShareAt = 0.0
   @AppStorage(HomeShareService.lastImportedAtKey) private var lastImportedHomeShareAt = 0.0
+  @AppStorage(ExpiryNotificationPreference.storageKey) private var notificationsEnabled = false
 
   @Query private var items: [Item]
   @Query private var areas: [Area]
@@ -41,10 +48,14 @@ struct SettingsView: View {
     NavigationStack {
       List {
         displaySection
+        notificationsSection
         dataSection
         infoSection
       }
       .navigationTitle("Settings")
+      .task {
+        await expiryNotifications.refreshAuthorizationStatus()
+      }
       .confirmationDialog(
         "Clear all data?",
         isPresented: $showingClearConfirm,
@@ -98,6 +109,87 @@ struct SettingsView: View {
         }
       }
     }
+  }
+
+  // MARK: - 알림
+
+  /// 유통기한 임박 로컬 알림 설정. 토글을 켜면 그 자리에서 권한을 요청하고(on-demand),
+  /// 시스템에서 거부됐으면 토글은 사용자 의도로 유지하되 별도 안내 행("허용 안 됨 — 설정
+  /// 열기")으로 분기한다. 끄면 보류 알림을 모두 취소한다.
+  private var notificationsSection: some View {
+    Section("Notifications") {
+      VStack(alignment: .leading, spacing: 8) {
+        Toggle("Expiry Reminders", isOn: notificationsBinding)
+        Text("Get a local reminder the day before and on the expiry date (9 AM) for items with an expiration date. All scheduling happens on this device.")
+          .font(.footnote)
+          .foregroundStyle(.secondary)
+        notificationsAuthorizationRow
+      }
+    }
+  }
+
+  /// 토글이 켜져 있는데 시스템 권한이 허용 상태가 아닐 때만 안내 행을 보여준다. 거부면
+  /// "허용 안 됨 — 설정 열기", 미결정이면 다시 켜 보라는 안내. 허용 상태면 행을 숨긴다.
+  @ViewBuilder
+  private var notificationsAuthorizationRow: some View {
+    if notificationsEnabled {
+      switch expiryNotifications.authorizationStatus {
+      case .denied:
+        VStack(alignment: .leading, spacing: 6) {
+          Label("Notifications are not allowed", systemImage: "exclamationmark.triangle")
+            .font(.footnote)
+            .foregroundStyle(.orange)
+          Button {
+            openSystemNotificationSettings()
+          } label: {
+            Label("Open Settings", systemImage: "gear")
+          }
+        }
+      case .notDetermined:
+        Label("Turn the toggle off and on again to allow notifications.", systemImage: "info.circle")
+          .font(.footnote)
+          .foregroundStyle(.secondary)
+      default:
+        EmptyView()
+      }
+    }
+  }
+
+  private var notificationsBinding: Binding<Bool> {
+    Binding {
+      notificationsEnabled
+    } set: { newValue in
+      guard notificationsEnabled != newValue else { return }
+      notificationsEnabled = newValue
+      if newValue {
+        enableExpiryNotifications()
+      } else {
+        expiryNotifications.cancelAll()
+      }
+    }
+  }
+
+  /// 토글 ON 시 권한을 요청하고(거부해도 토글 유지·차단 없음), 허용되면 현재 재고로 전체
+  /// 스케줄을 재계산한다.
+  private func enableExpiryNotifications() {
+    Task {
+      await expiryNotifications.requestAuthorization()
+      let allItems = (try? modelContext.fetch(FetchDescriptor<Item>())) ?? []
+      await expiryNotifications.reschedule(for: allItems, isEnabled: notificationsEnabled)
+    }
+  }
+
+  /// 시스템 알림 설정 화면을 연다. iOS 는 앱 설정 deep link, macOS 는 알림 환경설정 패널.
+  private func openSystemNotificationSettings() {
+    #if canImport(UIKit)
+    if let url = URL(string: UIApplication.openSettingsURLString) {
+      openURL(url)
+    }
+    #elseif os(macOS)
+    if let url = URL(string: "x-apple.systempreferences:com.apple.preference.notifications") {
+      openURL(url)
+    }
+    #endif
   }
 
   // MARK: - 데이터

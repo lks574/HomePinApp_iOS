@@ -2,7 +2,7 @@
 aliases: [Settings, 설정]
 tags: [screen, screen/settings]
 created: 2026-06-12
-updated: 2026-06-18
+updated: 2026-06-22
 status: in-progress
 screen-id: screen-08
 ---
@@ -53,6 +53,8 @@ screen-id: screen-08
 - CloudKit: [[2026-06-17-CloudKit-private-동기화-골격]],
   [[2026-06-18-CloudKit-가족공유-1차-스냅샷]],
   [[2026-06-18-CloudKit-가족공유-2차-가져오기]] (`[screen-19]`).
+- 유통기한 알림 토글·권한 상태 행: [[2026-06-22-유통기한-로컬알림-스케줄링]] (`[screen-23]`,
+  `ExpiryNotificationService`·`ExpiryNotificationPreference`).
 
 ## 메모
 
@@ -60,5 +62,7 @@ screen-id: screen-08
   `App/AppRootView.swift`(테마·언어 적용), `Shared/DesignSystem/AppThemePreference.swift`,
   `Shared/DesignSystem/AppLanguagePreference.swift`,
   `Features/Sync/CloudSyncPreference.swift`, `Features/Sync/HomeShareService.swift`,
-  `Features/Sync/HomeShareSheet.swift`
-- 후속: CloudKit 실기기 동기화/공유 검증, 참가자 push/충돌 처리, 유통기한 알림, AI/입력 토글.
+  `Features/Sync/HomeShareSheet.swift`,
+  `Features/Notifications/ExpiryNotificationService.swift`,
+  `Features/Notifications/ExpiryNotificationPreference.swift`
+- 후속: CloudKit 실기기 동기화/공유 검증, 참가자 push/충돌 처리, AI/입력 토글, 알림 탭 → 물건 상세 액션.

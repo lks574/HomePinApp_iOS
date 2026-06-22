@@ -6,6 +6,8 @@ import SwiftUI
 struct ItemEditorView: View {
   @Environment(\.dismiss) private var dismiss
   @Environment(\.modelContext) private var modelContext
+  @Environment(ExpiryNotificationService.self) private var expiryNotifications
+  @AppStorage(ExpiryNotificationPreference.storageKey) private var notificationsEnabled = false
   @Query(sort: \Area.sortOrder) private var areas: [Area]
   @Query(sort: \Spot.name) private var spots: [Spot]
   @Query(sort: \ItemCategory.sortOrder) private var categories: [ItemCategory]
@@ -239,7 +241,17 @@ struct ItemEditorView: View {
       onSavedItem?(item)
     }
     onSaved?()
+    rescheduleExpiryNotifications()
     dismiss()
+  }
+
+  /// 물건 추가/편집/삭제 후 유통기한 알림을 전체 재계산한다(cancel-and-reschedule).
+  /// 토글 OFF·권한 미허용이면 서비스가 내부에서 보류 알림만 정리한다. 현재 modelContext 의
+  /// 전체 물건을 넘긴다(서비스 의존을 모델이 아닌 View 경계에서만 둔다).
+  private func rescheduleExpiryNotifications() {
+    let items = (try? modelContext.fetch(FetchDescriptor<Item>())) ?? []
+    let isEnabled = notificationsEnabled
+    Task { await expiryNotifications.reschedule(for: items, isEnabled: isEnabled) }
   }
 
   /// create 모드에서 위치가 비어 있으면 직전 추가 위치를 기본값으로 채운다. 저장된 id 가
@@ -268,6 +280,7 @@ struct ItemEditorView: View {
   private func deleteItem() {
     model.delete(from: modelContext)
     onSaved?()
+    rescheduleExpiryNotifications()
     dismiss()
   }
 
