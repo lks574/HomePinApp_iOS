@@ -2,7 +2,7 @@
 aliases: [next-task, 다음 할 일]
 tags: [doc/code, tasks]
 created: 2026-06-12
-updated: 2026-06-18
+updated: 2026-06-22
 status: draft
 ---
 
@@ -11,7 +11,31 @@ status: draft
 UI 우선 1차(시안 C 화면 골격: 5탭·장소·레시피·홈·추가 시트) 완료 후의 다음 후보.
 보류 상세는 `docs/follow-ups.md`.
 
-> 최근 완료: **Firebase 도입(Analytics·Crashlytics + RemoteConfig 버전 게이트)** — 두 번째
+> 최근 완료: **Siri/App Intents 물건 추가(screen-24)** — 앱 없이 SwiftData 에 직접 insert 하는
+> 첫 외부 진입점(새 화면 아님). `AddItemIntent`(자유 텍스트 → 규칙 기반 `ItemQuickAddParser` →
+> `Item` insert → `ProvidesDialog` 사후 확인) + `HomePinShortcuts`(한/영 발화 phrase). 무UI 직접
+> insert(규칙 파서 결정적, AI 경로 자동저장 우려 비해당). 인텐트 전용 무부작용 throwing 컨테이너
+> 경로 `AppModelContainer.makeForIntent() throws` 분리 — CloudKit 실패 시 사용자 `cloudSync` 토글을
+> 무음 OFF 하지 않고 graceful 실패(시작 경로 `makeShared()`/`make()` 회귀 0). `@MainActor perform()`
+> 로 격리 트랩 회피. 외부 의존성·계정·entitlement·`Project.swift`·Info.plist·`AppRouter`·파서·`Item`
+> 무변경. iOS·macOS 빌드 green, 동시성 경고 0. 결정:
+> `docs/wiki/Decision/2026-06-22-App-Intents-물건추가-도입.md`. 잔여(`docs/follow-ups.md`): 실기기
+> Siri 음성·한국어 구문 정확도, 실행 중 Siri 추가 후 앱 `@Query` 갱신 시점, iCloud Sync ON 시
+> 인텐트↔앱 실계정 동기화, 검색·다건·레시피·Spotlight·딥링크 확장(후속).
+> 이전 완료: **유통기한 로컬 알림(screen-23)** — 만료일(`Item.expiresAt`) 있는 물건에 **D-1·D-0
+> 오전 9시(로컬 TZ)** 로컬 알림(UserNotifications, 순수 온디바이스). 임박 판정 단일 소스
+> (`Item.daysUntilExpiry`/`isExpiringSoon` 0~3일) 재사용. **전체 cancel-and-reschedule**
+> (`removeAllPendingNotificationRequests` 후 재등록), 마감 빠른 순 정렬·트리거 시각 기준 **64 슬롯**
+> 상한·지난 시각 skip. 식별자 `expiry-<itemID>-d1`/`-d0`(멱등). 진입점 = 앱 시작 + 물건 추가/편집/
+> 삭제·bulk insert 후 View 경계 전체 fetch → reschedule. 신규 `@MainActor @Observable
+> ExpiryNotificationService`(`Features/Notifications/`, modern `requestAuthorization async` — 격리 트랩
+> 회피)·`ExpiryNotificationPreference`(`@AppStorage`). `AppRootView` 소유·주입(선례 AdService·
+> VersionGate). **권한 on-demand** — Settings 토글 ON 시에만 요청(시작 자동요청 없음), 거부해도
+> 토글 유지·`UNAuthorizationStatus` 별도 안내 행("허용 안 됨 — 설정 열기", iOS/macOS 분기). en/ko.
+> iOS·macOS 빌드 green, 동시성 경고 0. 결정:
+> `docs/wiki/Decision/2026-06-22-유통기한-로컬알림-스케줄링.md`. 잔여: 실기기 권한 팝업·발사 타이밍,
+> 백그라운드 reschedule(앱 미실행 중 만료 경과) 한계, 알림 탭 → 물건 상세 액션(후속).
+> 이전 완료: **Firebase 도입(Analytics·Crashlytics + RemoteConfig 버전 게이트)** — 두 번째
 > 외부 의존성. `firebase-ios-sdk` 12.15.0 `.exact`, product 는 Analytics·Crashlytics·
 > RemoteConfig 셋. AdMob 과 달리 **iOS·macOS 두 타깃 모두 링크**(Firebase macOS 지원),
 > macOS 샌드박스에 `network.client` entitlement 추가. **코드만 먼저** —
