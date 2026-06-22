@@ -24,6 +24,10 @@ let baseSettings: SettingsDictionary = [
 let sharedInfoPlist: [String: Plist.Value] = [
   "CFBundleDevelopmentRegion": "en",
   "CFBundleLocalizations": ["en", "ko"],
+  // 사용자 표시 이름(브랜드). 영문 기본은 "HomePin", ko 로케일은 InfoPlist.xcstrings 의
+  // CFBundleDisplayName(ko="홈핀")으로 현지화된다. 지정하지 않으면 타깃명(HomePinApp 등)이
+  // 홈 화면·Siri 발화에 노출되어 어색하다("HomePinApp에 물건 추가").
+  "CFBundleDisplayName": "HomePin",
   // 버전은 빌드 세팅(MARKETING_VERSION·CURRENT_PROJECT_VERSION)을 단일 소스로 쓴다.
   // Tuist 기본 Info.plist 는 CFBundleShortVersionString 을 리터럴 "1.0" 으로 박으므로,
   // 빌드 변수를 참조하도록 명시 매핑해 baseSettings 의 버전이 실제 번들에 반영되게 한다.
@@ -80,9 +84,10 @@ let iOSInfoPlist: [String: Plist.Value] = sharedInfoPlist.merging([
 
 let macOSInfoPlist: [String: Plist.Value] = sharedInfoPlist.merging([
   // 표시 이름을 명시한다. 지정하지 않으면 타깃명(HomePinApp-macOS)이 노출되고, Xcode 가
-  // 공유 InfoPlist.xcstrings 를 그 값으로 덮어쓴다. iOS 앱과 동일하게 "HomePinApp" 로 둔다.
-  "CFBundleDisplayName": "HomePinApp",
-  "CFBundleName": "HomePinApp",
+  // 공유 InfoPlist.xcstrings 를 그 값으로 덮어쓴다. 사용자 표시 이름(브랜드)은 "HomePin"
+  // 으로 두고, ko 로케일은 공유 InfoPlist.xcstrings 의 CFBundleDisplayName(ko="홈핀")으로 현지화된다.
+  "CFBundleDisplayName": "HomePin",
+  "CFBundleName": "HomePin",
   // macOS 도 백업 번들 UTType 을 선언한다(파일 Import/Export 로 .homepinbackup 을 다룬다).
   "UTExportedTypeDeclarations": [
     [
